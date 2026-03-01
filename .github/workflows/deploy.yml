@@ -35,7 +35,7 @@ jobs:
         run: npm install -g @ionic/cli
 
       - name: Build project
-        run: ionic build -- --base-href=/lingis/
+        run: ionic build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
