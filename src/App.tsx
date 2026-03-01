@@ -49,21 +49,13 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter>
+    <IonReactRouter basename='lingis'>
       <IonTabs>
         <IonRouterOutlet>
-          <Route path="/tab1">
-            <Tab1 />
-          </Route>
-          <Route path="/tab2">
-            <Tab2 />
-          </Route>
-          <Route path="/tab3">
-            <Tab3 />
-          </Route>
-          <Route exact path="/">
-            <Redirect to="/tab1" />
-          </Route>
+          <Route path="/tab1" component={Tab1} exact/>
+          <Route path="/tab2" component={Tab2} exact/>
+          <Route path="/tab3" component={Tab3} exact/>
+          <Redirect exact from='/' to="/tab1"/>
         </IonRouterOutlet>
         <IonTabBar slot="bottom">
           <IonTabButton tab="tab1" href="/tab1">
