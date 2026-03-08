@@ -1,0 +1,8 @@
+.add-assignments-button {
+  position: absolute;
+  bottom: 50px;
+  right: 30px;
+  height: 30px;
+  width: 30px;
+  transform: translate(-50%, -50%);
+}

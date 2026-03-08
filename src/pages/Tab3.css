@@ -1,0 +1,10 @@
+.start-session-button {
+  position: absolute;
+  font-size: 30px;
+  height:100px;
+  width: 200px;
+  left: 50%;
+  top: 70%;          /* lower half of the page */
+  transform: translate(-50%, -50%);
+  background-color: lightblue; /* light transparent */
+}
