@@ -1,83 +1,90 @@
-import FullCalendar, { DateClickData, DateSelectData, EventApi, EventClickData, EventDisplayData } from '@fullcalendar/react'
+import FullCalendar, { DateSelectData, EventApi } from '@fullcalendar/react'
 import themePlugin from '@fullcalendar/react/themes/breezy' // YOUR THEME
 import interactionPlugin from '@fullcalendar/react/interaction'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
 import timeGridPlugin from '@fullcalendar/react/timegrid'
-import listPlugin from '@fullcalendar/react/list'
-import multimonthPlugin from '@fullcalendar/react/multimonth'
 
 import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
-// import '@fullcalendar/react/themes/breezy/palettes/emerald.css' // YOUR THEME + PALETTE
 import "../theme/emerald.css"
 
-import { INITIAL_EVENTS, createEventId } from './event-utils'
-
+import { FreeTimeEvent, mergeRanges, removeRange } from './event-utils'
+import { useState } from 'react'
 interface CalendarProps {
   weekendsVisible: boolean;
+  editing: boolean;
+  adding: boolean;
   handleEvents: (events: EventApi[]) => void;
 }
 
-const Calender: React.FC<CalendarProps> = ({ weekendsVisible, handleEvents }) => {
-  const handleDateSelect = (selectInfo: DateSelectData) => {
-    let title = prompt('Please enter a new title for your event')
-    let calendarApi = selectInfo.view.calendar
+const Calender: React.FC<CalendarProps> = ({ weekendsVisible, editing, adding, handleEvents }) => {
+  const [events, setEvents] = useState<FreeTimeEvent[]>([]);
 
-    calendarApi.unselect() // clear date selection
+  const handleSelect = (selectInfo: DateSelectData) => {
+    setEvents(prev => {
+      if (adding)
+        return mergeRanges(prev, selectInfo.start, selectInfo.end);
+      else
+        return removeRange(prev, selectInfo.start, selectInfo.end);
+    });
 
-    if (title) {
-      calendarApi.addEvent({
-        id: createEventId(),
-        title,
-        start: selectInfo.startStr,
-        end: selectInfo.endStr,
-        allDay: selectInfo.allDay
-      })
-    }
-  }
+    selectInfo.view.calendar.unselect();
+  };
 
-  const handleEventClick = (clickInfo: EventClickData) => {
-    if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
-      clickInfo.event.remove()
-    }
-  }
 
   return (
-     <FullCalendar
+    <FullCalendar
       plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin]}
       headerToolbar={{
         left: 'prev,next today',
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       }}
-      initialView='dayGridMonth'
+      initialView='timeGridWeek'
       height="100%"
-      editable={true}
-      selectable={true}
-      selectMirror={true}
+      selectAllow={() => {
+        disableScroll();
+        return true;
+      }}
+      unselectAuto={false}
+      unselect={enableScroll}
+      selectable={editing}
       dayMaxEvents={true}
+      nowIndicator={true}
+      selectLongPressDelay={300}
+      selectMinDistance={5}
+      firstDay={1}
+      weekNumbers={true}
+      allDaySlot={false}
+      eventTimeFormat={{
+        hour: "numeric",
+        minute: "2-digit",
+        meridiem: false,
+        hour12: false,
+      }}
+      slotHeaderFormat={{
+        hour: "numeric",
+        minute: "2-digit",
+        meridiem: false,
+        hour12: false
+      }}
+      expandRows={false}
       weekends={weekendsVisible}
-      initialEvents={INITIAL_EVENTS} // alternatively, use the `events` setting to fetch from a feed
-      select={handleDateSelect}
-      eventContent={renderEventContent} // custom render function
-      eventClick={handleEventClick}
-      eventsSet={handleEvents} // called after events are initialized/added/changed/removed
-      /* you can update a remote database when these fire:
-      eventAdd={function(){}}
-      eventChange={function(){}}
-      eventRemove={function(){}}
-      */
+      events={events}
+      select={handleSelect}
+      eventsSet={handleEvents}
     />
   )
 }
 
-function renderEventContent(eventInfo: EventDisplayData) {
-  return (
-    <>
-      <b>{eventInfo.timeText}</b>
-      <i>{eventInfo.event.title}</i>
-    </>
-  )
-}
+const disableScroll = () => {
+  document.body.style.overflow = "hidden";
+  document.body.style.touchAction = "none";
+};
+
+const enableScroll = () => {
+  document.body.style.overflow = "";
+  document.body.style.touchAction = "";
+};
 
 export default Calender;
