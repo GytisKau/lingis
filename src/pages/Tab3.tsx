@@ -16,7 +16,7 @@ const Tab3: React.FC = () => {
             <IonTitle size="large">Tab 3</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonButton  href="lingis/tab4" color="coral" className="start-session-button">Start session</IonButton>
+        <IonButton routerLink="/tab4" color="coral" className="start-session-button">Start session</IonButton>
         <ExploreContainer name="Tab 3 page" />
       </IonContent>
     </IonPage>
