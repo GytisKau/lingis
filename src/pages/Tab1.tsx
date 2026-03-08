@@ -151,7 +151,7 @@ const Tab1: React.FC = () => {
               <IonIcon icon={isEditing ? (isAdding ? add : remove) : pencil}></IonIcon>
             </IonFabButton>
             <IonFabList side="top">
-              <IonFabButton id="open-modal" onClick={openModal}>
+              <IonFabButton id="open-freeTime-modal" onClick={openModal}>
               {/* <IonFabButton id="open-modal"> */}
                 <IonIcon icon={timeOutline}></IonIcon>
               </IonFabButton>
@@ -163,7 +163,7 @@ const Tab1: React.FC = () => {
               </IonFabButton>
             </IonFabList>
           </IonFab>
-          <IonModal ref={modal} trigger="open-modal" onWillDismiss={(event) => onWillDismiss(event)}>
+          <IonModal ref={modal} trigger="open-freeTime-modal" onWillDismiss={(event) => onWillDismiss(event)}>
             <IonHeader>
               <IonToolbar>
                 <IonButtons slot="start">
