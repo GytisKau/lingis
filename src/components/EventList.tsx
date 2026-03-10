@@ -6,10 +6,7 @@ interface EventListProps {
 
 const EventList: React.FC<EventListProps> = () => {
   const events = useLiveQuery(
-    async () => {
-      const events = await db.events.toArray()
-      return events
-    },
+    async () => await db.events.toArray(),
     []
   )
 
@@ -17,7 +14,7 @@ const EventList: React.FC<EventListProps> = () => {
     <ul>
       {events?.map((event) => (
         <li key={event.id}>
-          {event.start.toLocaleString()}, {event.end.toLocaleString()}, {event.is_free}
+          {event.start.toLocaleString()}, {event.end.toLocaleString()}, {event.is_free ? "free" : "busy"}
         </li>
       ))}
     </ul>

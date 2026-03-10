@@ -7,6 +7,11 @@ import { useRef, useState } from 'react';
 const Assignments: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
 
+
+  const confirm = () => {
+    modal.current?.dismiss({}, 'confirm'); // Set first argument to edited draft events
+  }
+
   function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
     // Lia lia lia
   }
@@ -26,31 +31,28 @@ const Assignments: React.FC = () => {
         </IonHeader>
         <IonText className="centered-text">*Informacija apie egzaminą*</IonText>
          <div className="session-buttons">
-        <IonButton routerLink='/session' id ="mental-test" color="coral" className="session-button">Mental test</IonButton>
+        <IonButton id ="mental-test" color="coral" className="session-button">Mental test</IonButton>
         <IonButton routerLink='/session' id ="edit-session" color="coral" className="session-button">Edit session</IonButton>
         <IonButton routerLink='/session' id ="start-session" color="coral" className="session-button">Start session</IonButton>
-        <IonButton id ="assignment-picker" color="coral" className="start-session-button">Start session</IonButton>
-          <IonModal ref={modal} trigger="assignment-picker" onWillDismiss={(event) => onWillDismiss(event)}>
+         <IonModal ref={modal} trigger="mental-test" onWillDismiss={(event) => onWillDismiss(event)}>
             <IonHeader>
               <IonToolbar>
                 <IonButtons slot="start">
                   <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
+                  </IonButtons>
+                  <IonButtons slot="end">
+                  <IonButton strong={true} onClick={() => confirm()}>
+                    Confirm
+                  </IonButton>
                 </IonButtons>
-                <IonTitle>Pick the assignment</IonTitle>
+                <IonTitle>Questionnaire</IonTitle>
                 <IonButtons slot="end">
 
                 </IonButtons>
               </IonToolbar>
             </IonHeader>
             <IonContent className="ion-padding">
-              {[...Array(5)].map((_, i) => (
-              <IonItem key={i}>
-                <IonButton routerLink="/viewsession" size="large" fill="clear" onClick={() => modal.current?.dismiss()}>
-                  Egzaminas {i}
-                </IonButton>
-                <IonRippleEffect />
-              </IonItem>
-            ))}
+              <IonText className="centered-text">*Čia bus pateikti klausimai apie savijautą, pasiruošimą ir pan.*</IonText>
             </IonContent>
           </IonModal>
         </div>
