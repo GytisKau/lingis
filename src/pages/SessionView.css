@@ -1,28 +1,17 @@
 
 .session-buttons{
-    display:inline-block
+    display:flex;
+    justify-content: center; /* centers the buttons horizontally */
+    gap: 12px;   
+    top: 50%;
+    position: relative;
 }
-.start-session-button {
-  position: absolute;
-  display:inline-block;
+.session-button {
+  flex: 1;                 /* optional: makes them equal width */
+  max-width: 200px;
   font-size: 30px;
   height:100px;
   width: 200px;
-  left: 50%;
-  top: 70%;          /* lower half of the page */
-  transform: translate(-50%, -50%);
-  background-color: lightblue; /* light transparent */
-}
-
-.edit-session-button {
-  position: absolute;
-  display:inline-block;
-  font-size: 30px;
-  height:100px;
-  width: 200px;
-  left: 50%;
-  top: 55%;          /* lower half of the page */
-  transform: translate(-50%, -50%);
   background-color: lightblue; /* light transparent */
 }
 
