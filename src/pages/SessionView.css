@@ -1,0 +1,37 @@
+
+.session-buttons{
+    display:inline-block
+}
+.start-session-button {
+  position: absolute;
+  display:inline-block;
+  font-size: 30px;
+  height:100px;
+  width: 200px;
+  left: 50%;
+  top: 70%;          /* lower half of the page */
+  transform: translate(-50%, -50%);
+  background-color: lightblue; /* light transparent */
+}
+
+.edit-session-button {
+  position: absolute;
+  display:inline-block;
+  font-size: 30px;
+  height:100px;
+  width: 200px;
+  left: 50%;
+  top: 55%;          /* lower half of the page */
+  transform: translate(-50%, -50%);
+  background-color: lightblue; /* light transparent */
+}
+
+.centered-text{
+  position: absolute;
+  font-style: italic;
+  font-size: 30px;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%); 
+  padding: 2em;
+}

@@ -1,5 +1,5 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton,
-   IonModal, IonButtons, IonItem, IonInput, IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
+   IonModal, IonButtons, IonItem, IonInput, IonLabel, IonSegment, IonSegmentButton, IonRippleEffect } from '@ionic/react';
 import { OverlayEventDetail } from '@ionic/core/components';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab4.css';
@@ -35,6 +35,14 @@ const Tab4: React.FC = () => {
             <IonTitle size="large">Assignments</IonTitle>
           </IonToolbar>
         </IonHeader>
+        {[...Array(5)].map((_, i) => (
+                            <IonItem key={i}>
+                              <IonButton routerLink="/viewassignment" size="large" fill="clear" onClick={() => modal.current?.dismiss()}>
+                                Egzaminas {i}
+                              </IonButton>
+                              <IonRippleEffect />
+                            </IonItem>
+                          ))}
         <IonButton fill="outline" shape="round" id="open-modal"className="add-assignments-button"> + </IonButton>
         {/* <ExploreContainer name="Assignments" /> */}
         <IonModal ref={modal} trigger="open-modal" onWillDismiss={(event) => onWillDismiss(event)}>
@@ -45,7 +53,7 @@ const Tab4: React.FC = () => {
               </IonButtons>
               <IonTitle>Add assignment</IonTitle>
               <IonButtons slot="end">
-                <IonButton strong={true} onClick={() => confirm()}>
+                <IonButton strong={true} routerLink='/viewassignment'onClick={() => confirm()}>
                   Confirm
                 </IonButton>
               </IonButtons>
