@@ -1,18 +1,17 @@
-
 .session-buttons{
-    display:flex;
-    justify-content: center; /* centers the buttons horizontally */
+    display: flex;
+    flex-direction: column;   /* stack vertically */
+    align-items: center;      /* center horizontally */
     gap: 12px;   
-    top: 50%;
     position: relative;
+    top: 50%;
 }
+
 .session-button {
-  flex: 1;                 /* optional: makes them equal width */
-  max-width: 200px;
-  font-size: 30px;
-  height:100px;
-  width: 200px;
-  background-color: lightblue; /* light transparent */
+  width: 200px;             /* fixed width for each button */
+  height: 50px;
+  font-size: 20px;
+  background-color: lightblue; /* optional styling */
 }
 
 .centered-text{

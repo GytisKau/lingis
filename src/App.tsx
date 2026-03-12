@@ -19,7 +19,7 @@ import Tab5 from './pages/Tab5';
 import Session from './pages/Session';
 import SessionView from './pages/SessionView';
 import AssignmentView from './pages/AssignmentView';
-
+import LoginWizard from './pages/LoginWizard';
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -65,6 +65,7 @@ const App: React.FC = () => (
           <Route path="/session" component={Session} exact/>
           <Route path="/viewsession" component={SessionView} exact/>
           <Route path="/viewassignment" component={AssignmentView} exact/>
+          <Route path="/loginwizard" component={LoginWizard} exact/>
           <Redirect exact from='/' to="/tab1"/>
         </IonRouterOutlet>
         <IonTabBar slot="bottom">
