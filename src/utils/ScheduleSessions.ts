@@ -1,54 +1,51 @@
-import { Event, Session } from "../db/db"
+import { LingisEvent, Session } from "../db/db"
 
-function ScheduleSessions(freeTimeEvents: Event[], timeForAssignment: number, timeForSession: number, timeforBreak: number) {
-    // timeforsession - 25 min, time for break - 5 min
-    // timeForAssignment - 2 h -- 120 min
+function ScheduleSessions(
+  freeTimeEvents: LingisEvent[],
+  timeForAssignment: number,
+  timeForSession: number,
+  timeforBreak: number
+): Session[] {
 
-    const fullSessionTime = timeForSession + timeforBreak;
+  const fullSessionTime = timeForSession + timeforBreak
+  const sessionsNeeded = Math.ceil(timeForAssignment / timeForSession)
 
-    const totalFreeTime = freeTimeEvents
-        .map((event) => {
-            const duration = (event.end.getTime() - event.start.getTime()) / (1000 * 60);
-            console.log(`Duration: ${duration}`);
-            return duration;
-        })
-        .reduce((prev, curr) => prev + curr, 0);
-    
-    var sessions: Session[] = [];
+  let sessionsLeft = sessionsNeeded
+  const sessions: Session[] = []
 
-    console.log(`Total free time available: ${totalFreeTime} minutes. Time needed for assignment: ${timeForAssignment} minutes.`);
-        // skaiciuoti kiek liko laiko is timeforassignment, vadinas timeleft
-        // var assignmentTimeLeft = timeForAssignment;
-        var numberOfTotalSessions = Math.ceil(timeForAssignment / timeForSession);
-        var sessionsLeft = numberOfTotalSessions;
-        
-        console.log(`Enough free time available. Scheduling sessions...`);
-        for (var freeTimeEvent of freeTimeEvents) {
-            var duration = (freeTimeEvent.end.getTime() - freeTimeEvent.start.getTime()) / (1000 * 60);
-            var sessionsInFreeTimeEvent = Math.floor(duration / fullSessionTime); // kiek sesiju tilps i free time eventa
-            
-            if (sessionsInFreeTimeEvent * fullSessionTime + timeForSession <= duration) {
-                sessionsInFreeTimeEvent += 1; // jei tilps dar viena sesija, pridedam
-            }
+  for (const freeTimeEvent of freeTimeEvents) {
 
-            console.log(`Free time event from ${freeTimeEvent.start.toLocaleString()} to ${freeTimeEvent.end.toLocaleString()} has duration ${duration} minutes, can fit ${sessionsInFreeTimeEvent} sessions.`);
+    if (sessionsLeft <= 0) break
 
-            for (var i = 0; i < sessionsInFreeTimeEvent; i++) {
-                const sessionStart = new Date(freeTimeEvent.start.getTime() + i * fullSessionTime * 60 * 1000);
-                const sessionEnd = new Date(sessionStart.getTime() + timeForSession * 60 * 1000);
+    const windowStart = new Date(freeTimeEvent.start)
+    const windowEnd = new Date(freeTimeEvent.end)
 
-                // assignmentTimeLeft -= sessionsInFreeTimeEvent * timeForSession;
-                sessions.push({start: sessionStart, end: sessionEnd});
-                sessionsLeft--;
-                if (sessionsLeft <= 0) { break; }
-            }
-            
-        }
-        console.log(`Scheduled ${sessions.length} sessions.`);
-    
+    let cursor = new Date(windowStart)
 
-    return sessions;
+    while (sessionsLeft > 0) {
 
+      const sessionEnd =
+        new Date(cursor.getTime() + timeForSession * 60000)
+
+      if (sessionEnd > windowEnd) break
+
+      sessions.push({
+        start: new Date(cursor),
+        end: sessionEnd,
+        is_done: false
+      })
+
+      sessionsLeft--
+
+      if (sessionsLeft <= 0) break
+
+      cursor = new Date(
+        cursor.getTime() + fullSessionTime * 60000
+      )
+    }
+  }
+
+  return sessions
 }
 
-export default ScheduleSessions;
+export default ScheduleSessions

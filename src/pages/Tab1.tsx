@@ -1,24 +1,51 @@
-import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonMenu, IonMenuButton, IonModal, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonItem, IonLabel, IonMenu, IonMenuButton, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
-import { EventApi, EventInput, formatDate } from '@fullcalendar/react'
-import { useRef, useState } from 'react';
-import { timeOutline, add, remove, pencil, trash } from 'ionicons/icons';
-import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
+import { EventInput, formatDate } from '@fullcalendar/react'
+import { useMemo, useRef, useState } from 'react';
+import { add, remove, pencil, trash } from 'ionicons/icons';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db/db';
+import type { LingisEvent, Session } from '../db/db';
+import ScheduleSessions from '../utils/ScheduleSessions';
 
 const Tab1: React.FC = () => {
   const [weekendsVisible, setWeekendsVisible] = useState(true)
-  const [events, setEvents] = useState<EventInput[]>([])
+  const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
+  
+  const sessions = useMemo(() => {
+    if (!lingisEvents) return []
+
+    const freeTimes = lingisEvents.filter(e => e.is_free)
+
+    return ScheduleSessions(
+      freeTimes,
+      16 * 60, // timeForAssignment
+      60,  // session length
+      15    // break
+    )
+
+  }, [lingisEvents])
+
+  const calendarEvents = useMemo(() => {
+
+    if (!lingisEvents) return []
+
+    const freeEvents = freeTimesToCalendarEvents(lingisEvents)
+    const sessionEvents = sessionsToCalendarEvents(sessions)
+
+    return [
+      ...freeEvents,
+      ...sessionEvents
+    ]
+
+  }, [lingisEvents, sessions])
 
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
 
   const handleWeekendsToggle = () => {
     setWeekendsVisible(!weekendsVisible)
-  }
-
-  const handleEvents = (events: EventApi[]) => {
-    setEvents(events.map(event => event.toPlainObject()))
   }
 
   const handleEditing = (adding: boolean)=> {
@@ -36,58 +63,6 @@ const Tab1: React.FC = () => {
 
   const modal = useRef<HTMLIonModalElement>(null);
 
-  const openModal = () => {
-    setIsEditing(false);
-    // Set Free Time events to edit in modal
-  };
-
-
-  const confirm = () => {
-    modal.current?.dismiss({}, 'confirm'); // Set first argument to edited draft events
-  }
-
-  function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
-    if (event.detail.role === 'confirm') {
-      // Set new Free Time as draft events from `event.detail.data`
-    }
-  }
-
-  const updateDraft = (
-    id: string,
-    field: "start" | "end",
-    value: string
-  ) => {
-
-    // setDraftEvents(prev =>
-    //   prev.map(e =>
-    //     e.id === id
-    //       ? { ...e, [field]: new Date(value) }
-    //       : e
-    //   )
-    // );
-
-  };
-
-  const deleteDraft = (id: string) => {
-    // setDraftEvents(prev => prev.filter(e => e.id !== id));
-  };
-  
-  const addDraft = () => {
-    // const now = new Date();
-    // setDraftEvents(prev => [
-    //   ...prev,
-    //   {
-    //     id: createEventId(),
-    //     start: now,
-    //     end: new Date(now.getTime() + 60 * 60 * 1000),
-    //     display: "background",
-    //     title: "Free Time",
-    //     color: "silver",
-    //   }
-    // ]);
-  };
-
-  const formatInput = (date: Date) => new Date(date).toLocaleString().slice(0, 16);
 
   return (
     <>
@@ -115,18 +90,23 @@ const Tab1: React.FC = () => {
           </IonItem>
           <IonItem>
             <IonLabel>
-              <h2>All Events ({events.length})</h2>
+              <h2>All Events ({calendarEvents.length})</h2>
               <ul>
-              {events.map((event) => (
+              {calendarEvents.map((event) => (
                 <li key={event.id}>
-                  <b>{formatDate(event.start!, {year: 'numeric', month: 'short', day: 'numeric'})}</b>
+                  <b>{formatDate(event.start!, {year:'numeric', month:'short', day:'numeric'})}</b>
                   {" "}
-                  <i>{event.title}</i>
+                  <i>{event.title ?? "Free Time"}</i>
                 </li>
               ))}
-            </ul>
+              </ul>
             </IonLabel>
           </IonItem>
+          <IonButton onClick={() => db.events.where("id").above(0).delete()} color={'danger'} expand='block'>
+            Remove all Free Time
+            <IonIcon slot="end" icon={trash}></IonIcon>
+          </IonButton>
+           
         </IonContent>
       </IonMenu>
       <IonPage id="main-content">
@@ -145,16 +125,17 @@ const Tab1: React.FC = () => {
               <IonTitle size="large">Calendar</IonTitle>
             </IonToolbar>
           </IonHeader>
-          <Calendar weekendsVisible={weekendsVisible} handleEvents={handleEvents} editing={isEditing} adding={isAdding}/>
+          <Calendar
+            weekendsVisible={weekendsVisible}
+            events={calendarEvents}
+            editing={isEditing}
+            adding={isAdding}
+          />
           <IonFab slot="fixed" vertical="bottom" horizontal="end">
             <IonFabButton>
               <IonIcon icon={isEditing ? (isAdding ? add : remove) : pencil}></IonIcon>
             </IonFabButton>
             <IonFabList side="top">
-              <IonFabButton id="open-freeTime-modal" onClick={openModal}>
-              {/* <IonFabButton id="open-modal"> */}
-                <IonIcon icon={timeOutline}></IonIcon>
-              </IonFabButton>
               <IonFabButton onClick={() => handleEditing(true)} color={isEditing && isAdding ? "primary" : undefined}>
                 <IonIcon icon={add}></IonIcon>
               </IonFabButton>
@@ -163,70 +144,43 @@ const Tab1: React.FC = () => {
               </IonFabButton>
             </IonFabList>
           </IonFab>
-          <IonModal ref={modal} trigger="open-freeTime-modal" onWillDismiss={(event) => onWillDismiss(event)}>
-            <IonHeader>
-              <IonToolbar>
-                <IonButtons slot="start">
-                  <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
-                </IonButtons>
-                <IonTitle>Edit Free Time</IonTitle>
-                <IonButtons slot="end">
-                  <IonButton strong={true} onClick={confirm}>
-                    Confirm
-                  </IonButton>
-                </IonButtons>
-              </IonToolbar>
-            </IonHeader>
-            <IonContent className="ion-padding">
-              <IonList>
-                {events.map(event => (
-                  <IonItem key={event.id}>
-                    <IonInput
-                      type="datetime-local"
-                      value={formatInput(event.start as Date)}
-                      onIonChange={e =>
-                        updateDraft(
-                          event.id!,
-                          "start",
-                          e.detail.value!
-                        )
-                      }
-                    />
-
-                    <IonInput
-                      type="datetime-local"
-                      value={formatInput(event.end as Date)}
-                      onIonChange={e =>
-                        updateDraft(
-                          event.id!,
-                          "end",
-                          e.detail.value!
-                        )
-                      }
-                    />
-
-                    <IonButton
-                      fill="clear"
-                      color="danger"
-                      onClick={() => deleteDraft(event.id!)}
-                    >
-                      <IonIcon icon={trash} />
-                    </IonButton>
-
-                  </IonItem>
-
-                ))}
-              </IonList>
-
-              <IonButton expand="block" onClick={addDraft}>
-                Add new free time
-              </IonButton>
-            </IonContent>
-          </IonModal>
         </IonContent>
       </IonPage>
     </>
   );
 };
+
+
+function sessionsToCalendarEvents(
+  sessions: Session[]
+): EventInput[] {
+
+  return sessions.map((s, i) => ({
+    id: `session-${i}`,
+    start: s.start,
+    end: s.end,
+    title: "Session",
+    display: "auto",
+    backgroundColor: s.is_done ? "#8bc34a" : "#2196f3",
+    borderColor: s.is_done ? "#8bc34a" : "#2196f3"
+  }))
+
+}
+
+function freeTimesToCalendarEvents(
+  events: LingisEvent[]
+): EventInput[] {
+
+  return events
+    .filter(e => e.is_free)
+    .map(e => ({
+      id: `free-${e.id}`,
+      start: e.start,
+      end: e.end,
+      display: "background",
+      backgroundColor: "#aaaaaa"
+    }))
+
+}
 
 export default Tab1;
