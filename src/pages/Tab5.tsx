@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab5.css';
 
@@ -16,7 +16,7 @@ const Tab5: React.FC = () => {
             <IonTitle size="large">Tab 5</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer name="Tab 5 page" />
+        <IonButton routerLink='/loginwizard'>Wizard preferences</IonButton>
       </IonContent>
     </IonPage>
   );
