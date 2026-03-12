@@ -1,9 +1,16 @@
 import { useState } from "react"
 import { db } from "../db/db"
+import { IonButton } from "@ionic/react"
+
+function formatDateTimeLocal(date: Date) {
+  const d = new Date(date) // copy
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 16)
+}
 
 export function AddEventForm() {
-  const [start, setStart] = useState<Date>(new Date(Date.now()))
-  const [end, setEnd] = useState<Date>(new Date(Date.now()))
+  const [start, setStart] = useState<Date>(new Date())
+  const [end, setEnd] = useState<Date>(new Date((Date.now() + (1*60*60*1000))))
   const [isFree, setIsFree] = useState<boolean>(true)
   const [status, setStatus] = useState("")
 
@@ -18,8 +25,8 @@ export function AddEventForm() {
       })
 
       setStatus(`Friend ${start} - ${end} successfully added. Got id ${id}`)
-      setStart(new Date(Date.now()))
-      setEnd(new Date(Date.now()))
+      setStart(new Date())
+      setEnd(new Date((Date.now() + (60*60*1000))))
       setIsFree(true)
     } catch (error) {
       setStatus(`Failed to add ${start} - ${end}: ${error}`)
@@ -32,22 +39,22 @@ export function AddEventForm() {
       Start:
       <input
         type="datetime-local"
-        value={start.toLocaleString()}
+        value={formatDateTimeLocal(start)}
         onChange={(ev) => setStart(new Date(ev.target.value))}
       />
       End:
       <input
         type="datetime-local"
-        value={end.toLocaleString()}
+        value={formatDateTimeLocal(end)}
         onChange={(ev) => setEnd(new Date(ev.target.value))}
       />
       Is free:
       <input
         type="checkbox"
-        value={isFree ? 1 : 0}
-        onChange={(ev) => setIsFree(ev.target.value == "1")}
+        checked={isFree}
+        onChange={(ev) => setIsFree(ev.target.checked)}
       />
-      <button onClick={addFriend}>Add</button>
+      <IonButton onClick={addFriend}>Add</IonButton>
     </>
   )
 }

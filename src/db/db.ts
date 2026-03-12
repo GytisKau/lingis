@@ -32,8 +32,14 @@ interface Assignment {
   fk_user: number;
 }
 
-const db = new Dexie("FriendsDatabase") as Dexie & {
-  events: EntityTable<Event, "id">,
+interface Session {
+  id?: number;
+  start: Date;
+  end: Date;
+}
+
+const db = new Dexie("LingisDatabase") as Dexie & {
+  events: EntityTable<Event, "id">
 }
 
 // Schema declaration:
@@ -41,5 +47,5 @@ db.version(1).stores({
   events: "++id, start, end, is_free", // primary key "id" (for the runtime!)
 })
 
-export type { Event }
+export type { Event, Session }
 export { db }
