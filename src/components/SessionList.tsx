@@ -9,7 +9,7 @@ const SessionList: React.FC<{}> = () => {
     []
   )
 
-  const sessions = useMemo(() => ScheduleSessions(events || [], 120, 30, 15), [events]);
+  const sessions = useMemo(() => ScheduleSessions(events || [], 120, 60, 5), [events]);
   
   return (
     <>

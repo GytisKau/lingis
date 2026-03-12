@@ -20,8 +20,7 @@ export function AddEventForm() {
       const id = await db.events.add({
         start: start,
         end: end,
-        is_free: isFree,
-        fk_user: 1
+        is_free: isFree
       })
 
       setStatus(`Friend ${start} - ${end} successfully added. Got id ${id}`)
