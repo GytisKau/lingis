@@ -1,11 +1,35 @@
 // db.ts
 import { Dexie, type EntityTable } from "dexie"
 
+interface User {
+  id: number;
+  email: string;
+  username: string;
+  avg_theory_time: number;
+  avg_practice_time: number;
+  preffered_session_time: number;
+  work_hours_start: number; // minutes
+  work_hours_end: number; // minutes
+  effectiveness_rating: number;
+  study_field: number;
+  chronotype: number;
+}
+
 interface Event {
   id: number;
   start: Date;
   end: Date;
   is_free: boolean;
+  fk_user: number;
+}
+
+interface Assignment {
+  id: number;
+  title: string;
+  date: Date;
+  est_hours: number;
+  assignment_type: number;
+  fk_user: number;
 }
 
 const db = new Dexie("FriendsDatabase") as Dexie & {
