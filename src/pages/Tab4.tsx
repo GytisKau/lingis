@@ -4,6 +4,9 @@ import { OverlayEventDetail } from '@ionic/core/components';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab4.css';
 import { useRef, useState } from 'react';
+import { AddAssignmentForm } from '../forms/AddAssignmentForm';
+import AssignmentList from '../components/AssignmentList';
+
 
 const Tab4: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
@@ -35,14 +38,18 @@ const Tab4: React.FC = () => {
             <IonTitle size="large">Assignments</IonTitle>
           </IonToolbar>
         </IonHeader>
-        {[...Array(5)].map((_, i) => (
+
+        <AssignmentList />
+        {/* {[...Array(5)].map((_, i) => (
                             <IonItem key={i}>
                               <IonButton routerLink="/viewassignment" size="large" fill="clear" onClick={() => modal.current?.dismiss()}>
                                 Egzaminas {i}
                               </IonButton>
                               <IonRippleEffect />
                             </IonItem>
-                          ))}
+                          ))} */}
+
+
         <IonButton fill="outline" shape="round" id="open-modal"className="add-assignments-button"> + </IonButton>
         {/* <ExploreContainer name="Assignments" /> */}
         <IonModal ref={modal} trigger="open-modal" onWillDismiss={(event) => onWillDismiss(event)}>
@@ -60,50 +67,7 @@ const Tab4: React.FC = () => {
             </IonToolbar>
           </IonHeader>
           <IonContent className="ion-padding">
-            <IonItem>
-              <IonInput
-                label="Title"
-                labelPlacement="stacked"
-                ref={input}
-                type="text"
-                placeholder="Assignment title"
-              />
-            </IonItem>
-            <IonItem>
-              <IonInput
-                label="Due date"
-                labelPlacement="stacked"
-                ref={input}
-                type="date"
-                placeholder="Due date"
-              />
-            </IonItem>
-            <IonItem>
-              <IonInput
-                label="Time estimate (hours)"
-                labelPlacement="stacked"
-                ref={input}
-                type="number"
-                placeholder="Time estimate (hours)"
-              />
-            </IonItem>
-            <IonItem>
-              <IonLabel>Test type</IonLabel>
-              {/* <IonSegment value={testType} onIonChange={(e) => setTestType(e.detail.value)}> */}
-               <IonSegment>
-                <IonSegmentButton value="Exam">
-                  <IonLabel>Exam</IonLabel>
-                </IonSegmentButton>
-
-                <IonSegmentButton value="Lab">
-                  <IonLabel>Lab</IonLabel>
-                </IonSegmentButton>
-
-                <IonSegmentButton value="Other">
-                  <IonLabel>Other</IonLabel>
-                </IonSegmentButton>
-              </IonSegment>
-            </IonItem>
+            <AddAssignmentForm />
           </IonContent>
         </IonModal>
 

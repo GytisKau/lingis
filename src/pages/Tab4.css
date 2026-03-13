@@ -6,3 +6,13 @@
   width: 30px;
   transform: translate(-50%, -50%);
 }
+
+.centered-text{
+  position: absolute;
+  font-style: italic;
+  font-size: 30px;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%); 
+  padding: 2em;
+}

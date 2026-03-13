@@ -77,7 +77,7 @@ db.version(1).stores({
   users: "++id, email, username, avg_theory_time, avg_practice_time, preffered_session_time, work_hours_start, work_hours_end, effectiveness_rating, study_field, chronotype, *events, *assignments",
   // questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
   events: "++id, start, end, is_free",
-  // assignments: "++id, title, date, est_hours, assignment_type, *sessions, *tasks",
+  assignments: "++id, title, date, est_hours, assignment_type, *sessions, *tasks",
   // sessions: "++id, start, end, is_done, fk_assignment",
   // tasks: "++id, start, end, is_done"
 })

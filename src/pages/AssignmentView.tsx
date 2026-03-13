@@ -6,6 +6,13 @@ import ExploreContainer from '../components/ExploreContainer';
 import { OverlayEventDetail, ReorderEndCustomEvent } from '@ionic/core/components';
 import './AssignmentView.css';
 import { useRef, useState } from 'react';
+import { RouteComponentProps } from 'react-router';
+
+interface AssignmentViewProps 
+    extends RouteComponentProps<{
+    id: string;
+  }>{}
+
 
 const AssignmentsView: React.FC = () => {
   const [isDisabled, setIsDisabled] = useState(true);
