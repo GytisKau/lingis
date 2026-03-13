@@ -22,6 +22,7 @@ const AssignmentList: React.FC<AssignmentListProps> = () => {
               <IonButton routerLink={`/viewassignment`} size="large" fill="clear">
               {assignment.title}
             </IonButton>
+            <IonLabel> {new Date(assignment.date).toLocaleDateString()}, {assignment.est_hours/60} hours </IonLabel>
             <IonRippleEffect />
           </IonItem>
         ))}
