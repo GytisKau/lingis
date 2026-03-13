@@ -6,26 +6,31 @@ import { useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, trash } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import type { LingisEvent, Session } from '../db/db';
+import type { LingisEvent, Session, Assignment } from '../db/db';
 import ScheduleSessions from '../utils/ScheduleSessions';
 
 const Tab1: React.FC = () => {
   const [weekendsVisible, setWeekendsVisible] = useState(true)
   const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
-  
+  const timeForAssignments = useLiveQuery( async () => {
+    const assignments = await db.assignments.toArray()
+    return assignments.reduce((total, a) => total + a.est_hours * 60, 0)
+  }, [])
+
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
 
     const freeTimes = lingisEvents.filter(e => e.is_free)
 
+    
     return ScheduleSessions(
       freeTimes,
-      16 * 60, // timeForAssignment
+      timeForAssignments ?? 0, // timeForAssignment
       60,  // session length
       15    // break
     )
 
-  }, [lingisEvents])
+  }, [lingisEvents, timeForAssignments])
 
   const calendarEvents = useMemo(() => {
 
