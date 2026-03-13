@@ -14,13 +14,14 @@ const Tab1: React.FC = () => {
   const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
   const timeForAssignments = useLiveQuery( async () => {
     const assignments = await db.assignments.toArray()
-    return assignments.reduce((total, a) => total + a.est_hours * 60, 0)
+    return assignments.reduce((total, a) => total + a.est_hours, 0)
   }, [])
 
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
 
     const freeTimes = lingisEvents.filter(e => e.is_free)
+    console.log(timeForAssignments)
 
     
     return ScheduleSessions(
