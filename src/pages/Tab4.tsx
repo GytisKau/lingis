@@ -40,15 +40,6 @@ const Tab4: React.FC = () => {
         </IonHeader>
 
         <AssignmentList />
-        {/* {[...Array(5)].map((_, i) => (
-                            <IonItem key={i}>
-                              <IonButton routerLink="/viewassignment" size="large" fill="clear" onClick={() => modal.current?.dismiss()}>
-                                Egzaminas {i}
-                              </IonButton>
-                              <IonRippleEffect />
-                            </IonItem>
-                          ))} */}
-
 
         <IonButton fill="outline" shape="round" id="open-modal"className="add-assignments-button"> + </IonButton>
         {/* <ExploreContainer name="Assignments" /> */}

@@ -5,8 +5,10 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonText,
 import ExploreContainer from '../components/ExploreContainer';
 import { OverlayEventDetail, ReorderEndCustomEvent } from '@ionic/core/components';
 import './AssignmentView.css';
+import { db } from '../db/db';
 import { useRef, useState } from 'react';
 import { RouteComponentProps } from 'react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 interface AssignmentViewProps 
     extends RouteComponentProps<{
@@ -14,7 +16,8 @@ interface AssignmentViewProps
   }>{}
 
 
-const AssignmentsView: React.FC = () => {
+const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
+  const id = Number(match.params.id);
   const [isDisabled, setIsDisabled] = useState(true);
   const [tasks, setTasks] = useState([
   { name: "Task 1", difficulty: 2, type: "P", editing: false },
