@@ -64,7 +64,7 @@ const App: React.FC = () => (
           <Route path="/tab5" component={Tab5} exact/>
           <Route path="/session" component={Session} exact/>
           <Route path="/viewsession" component={SessionView} exact/>
-          <Route path="/viewassignment" component={AssignmentView} exact />
+          <Route path="/viewassignment/:id" component={AssignmentView} exact />          
           <Route path="/loginwizard" component={LoginWizard} exact/>
           <Redirect exact from='/' to="/tab1"/>
         </IonRouterOutlet>
