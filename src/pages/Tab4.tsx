@@ -51,7 +51,7 @@ const Tab4: React.FC = () => {
               </IonButtons>
               <IonTitle>Add assignment</IonTitle>
               <IonButtons slot="end">
-                <IonButton strong={true} routerLink='/viewassignment'onClick={() => confirm()}>
+                <IonButton strong={true} routerLink='/tab4'onClick={() => confirm()}>
                   Confirm
                 </IonButton>
               </IonButtons>

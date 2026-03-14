@@ -57,10 +57,12 @@ interface Session {
 
 interface Task {
   id: number;
-  start: Date;
-  end: Date;
-  is_done: Date;
+  title: string;
+  difficulty_rating: number;
+  is_done: boolean;
+  task_type: number;
   fk_assignment: number;
+  toggle_order: number;
 }
 
 const db = new Dexie("LingisDatabase") as Dexie & {
@@ -79,7 +81,7 @@ db.version(1).stores({
   events: "++id, start, end, is_free",
   assignments: "++id, title, date, est_hours, assignment_type, *sessions, *tasks",
   // sessions: "++id, start, end, is_done, fk_assignment",
-  // tasks: "++id, start, end, is_done"
+  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order"
 })
 
 // const user_id = await db.users.add({
