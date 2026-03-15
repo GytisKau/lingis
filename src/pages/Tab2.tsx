@@ -19,12 +19,6 @@ const Tab2: React.FC = () => {
             <IonTitle size="large">Tab 2</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <h1>Add Event</h1>
-        <AddEventForm/>
-        <h1>Event List</h1>
-        <EventList/>
-        <h1>Session List</h1>
-        <SessionList/>
       </IonContent>
     </IonPage>
   );

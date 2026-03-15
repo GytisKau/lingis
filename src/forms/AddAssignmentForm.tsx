@@ -16,19 +16,6 @@ export function AddAssignmentForm() {
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
 
-  //   assignments: "++id, title, date, est_hours, assignment_type, *sessions, *tasks",
-
-  // interface Assignment {
-  //   id: number;
-  //   title: string;
-  //   date: Date;
-  //   est_hours: number;
-  //   assignment_type: number;
-  //   fk_user: number;
-  //   sessions: Session[];
-  //   tasks: Task[];
-  // }
-
   async function addAssignment() {
     if (!title || timeEst <= 0 || !date) {
     setStatus("Please fill all required fields")

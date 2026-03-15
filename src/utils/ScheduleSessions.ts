@@ -13,6 +13,10 @@ function ScheduleSessions(
   let sessionsLeft = sessionsNeeded
   const sessions: Session[] = []
 
+  freeTimeEvents.sort(
+    (a,b)=>a.start.getTime()-b.start.getTime()
+  )
+
   for (const freeTimeEvent of freeTimeEvents) {
 
     if (sessionsLeft <= 0) break
