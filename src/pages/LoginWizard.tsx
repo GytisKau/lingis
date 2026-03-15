@@ -2,32 +2,120 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonTex
   IonButtons, IonInput, IonItem, IonRippleEffect, IonLabel, IonSelect, IonSelectOption } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './LoginWizard.css';
+import { db, User } from '../db/db';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 import { useRef, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect } from "react";
+
+interface FormData{
+  email?: string,
+  username?: string,
+  avg_theory_time?: number,
+  avg_practice_time?: number,
+  avg_sleep_hours?: number,
+  preffered_session_time?: number,
+  work_hours_start?: number,
+  work_hours_end?: number,
+  effectiveness_rating?: number,
+  study_field?: number,
+  chronotype?: number
+}
 
 const LoginWizard: React.FC = () => {
+  const [status, setStatus] = useState("")
   const [fromHours, setFromHours] = useState<string>("");
   const [toHours, setToHours] = useState<string>("");
   const [sleepHours, setSleepHours] = useState<string>("");
-  const questions = [
-  "What is your average theory studying time?",
-  "What is your average practical studying time?",
-  "What is your prefered study session time?",
-  "Do you feel mentally energised right now?",
-];
-
   const [confirmData, setConfirmData] = useState<{ timestamp: string; hour: number } | null>(null);
 
-const handleConfirm = () => {
-  const now = new Date();
+  const [form, setForm] = useState<FormData>({})
+  
+  const questions = [
+    "What is your average theory studying time?",
+    "What is your average practical studying time?",
+    "What is your prefered study session time?"
+  ];
+  const timeOptions = [
+  {label:"<5 min", value:5},
+  {label:"10 min", value:10},
+  {label:"20 min", value:20},
+  {label:"30 min", value:30},
+  {label:"60 min", value:60},
+  {label:"90 min", value:90},
+  {label:">90 min", value:120}
+];
 
-  const data = {
-    timestamp: now.toISOString(),
-    hour: now.getHours()
+  const users = useLiveQuery(
+    async () => await db.users.toArray(),
+    []
+  )
+
+  useEffect(() => {
+    if (users && users.length > 0) {
+      setForm(users[0]);
+    }
+  }, [users]);
+
+  if (users == undefined){
+    return (
+      <p>Loading...</p>
+    )
+  }
+
+  const handleConfirm = async () => {
+
+    if (form == undefined || form.avg_practice_time == undefined || form.avg_sleep_hours == undefined ||
+        form.avg_theory_time == undefined || form.chronotype == undefined || form.effectiveness_rating == undefined || 
+        form.email == undefined || form.preffered_session_time == undefined || form.study_field == undefined ||
+        form.username == undefined || form.work_hours_end == undefined || form.work_hours_start == undefined
+    ){
+      setStatus("Please fill in all required fields")
+      console.log(form)
+      return;
+    }
+    else{
+    setStatus("")
+    if (users.length == 0){
+      try {
+        const id = await db.users.add({
+          email: form.email,
+          username: form.username,
+          avg_theory_time: -1,
+          avg_practice_time: -1,
+          avg_sleep_hours: -1,
+          preffered_session_time: -1,
+          work_hours_start: -1,
+          work_hours_end: -1,
+          effectiveness_rating: -1,
+          study_field: -1,
+          chronotype: -1
+        });
+      }
+      catch (error) {
+        setStatus(`Failed to add: ${error}`);
+      }
+    }else
+      {
+      setStatus("Successfully updated!")
+
+      await db.users.update(users[0].id!, {
+      email: form.email,
+      username: form.username,
+      avg_theory_time: form.avg_theory_time,
+      avg_practice_time: form.avg_practice_time,
+      avg_sleep_hours: form.avg_sleep_hours,
+      preffered_session_time: form.preffered_session_time,
+      work_hours_start: form.work_hours_start,
+      work_hours_end: form.work_hours_end,
+      effectiveness_rating: form.effectiveness_rating,
+      study_field: form.study_field,
+      chronotype: form.chronotype
+    });
+  }
+    }
   };
 
-  setConfirmData(data);
-};
 
   return (
     <IonPage>
@@ -44,20 +132,19 @@ const handleConfirm = () => {
         </IonHeader>
 
         <IonContent className="ion-padding">
+  <p>{status}</p>
 
-        <IonLabel>Name, username ir t.t. db sudėti tik kol kas, paskui jų nereikės kai padarys login page</IonLabel>
-
-
-        <IonItem>
+        {/* <IonItem>
           <IonLabel>Name</IonLabel>
           <IonInput
             type="text"
             placeholder="name"
             value={sleepHours}
-            onIonChange={e => setSleepHours(e.detail.value!)}
+            // onIonChange={e => setSleepHours(e.detail.value!)}
+            onIonChange={e => setForm({...form, username: e.detail.value ?? ""})}
             style={{ width: '70px', textAlign: 'right' }} // optional: make the input smaller and right-aligned
           />
-        </IonItem>
+        </IonItem> */}
 
 
         <IonItem>
@@ -65,8 +152,9 @@ const handleConfirm = () => {
           <IonInput
             type="text"
             placeholder="username"
-            value={sleepHours}
-            onIonChange={e => setSleepHours(e.detail.value!)}
+            value={form?.username}
+            // onIonChange={e => setSleepHours(e.detail.value!)}
+            onIonChange={e => setForm({...form, username: e.detail.value ?? ""})}
             style={{ width: '70px', textAlign: 'right' }} // optional: make the input smaller and right-aligned
           />
         </IonItem>
@@ -76,24 +164,30 @@ const handleConfirm = () => {
             <IonInput
               type="text"
               placeholder="email"
-              value={sleepHours}
-              onIonChange={e => setSleepHours(e.detail.value!)}
+              value={form?.email}
+              // onIonChange={e => setSleepHours(e.detail.value!)}
+              onIonChange={e => setForm({...form, email: e.detail.value ?? ""})}
               style={{ width: '70px', textAlign: 'right' }} // optional: make the input smaller and right-aligned
             />
           </IonItem>
 
           <IonItem>
-          <IonSelect label="What is your study field?" placeholder="STEM...">
-          <IonSelectOption value="stem">STEM</IonSelectOption>
-          <IonSelectOption value="sochum">Social and humanitarian studies</IonSelectOption>
-          <IonSelectOption value="arts">Arts and creative studies</IonSelectOption>
-          <IonSelectOption value="finance">Finance and management</IonSelectOption>
-          </IonSelect>
+            <IonSelect label="What is your study field?" placeholder="STEM..."
+              onIonChange={e => setForm({...form, study_field: e.detail.value ?? 0})}
+              value={form?.study_field}
+              >
+              <IonSelectOption value="0">STEM</IonSelectOption>
+              <IonSelectOption value="1">Social and humanitarian studies</IonSelectOption>
+              <IonSelectOption value="2">Arts and creative studies</IonSelectOption>
+              <IonSelectOption value="3">Finance and management</IonSelectOption>
+            </IonSelect>
           </IonItem>
 
 
           <IonItem>
-          <IonSelect label="What is your chronotype?" placeholder="Chronotype...">
+          <IonSelect label="What is your chronotype?" placeholder="Chronotype..."
+            onIonChange={e => setForm({...form, chronotype: e.detail.value ?? 0})}
+            value={form?.chronotype}>
           <IonSelectOption value="morning">Morning person</IonSelectOption>
           <IonSelectOption value="noon">Noon person</IonSelectOption>
           <IonSelectOption value="evening">Evening person</IonSelectOption>
@@ -102,12 +196,14 @@ const handleConfirm = () => {
 
           
           <IonItem>
-          <IonSelect label="How effective are your current studying habits?" placeholder="Rate...">
-          <IonSelectOption value="1">Terrible</IonSelectOption>
-          <IonSelectOption value="2">Not good</IonSelectOption>
-          <IonSelectOption value="3">Okay</IonSelectOption>
-          <IonSelectOption value="4">Good</IonSelectOption>
-          <IonSelectOption value="5">Excellent</IonSelectOption>
+          <IonSelect label="How effective are your current studying habits?" placeholder="Rate..."
+            onIonChange={e => setForm({...form, effectiveness_rating: e.detail.value ?? 0})}
+            value={form?.effectiveness_rating}>
+          <IonSelectOption value="0">Terrible</IonSelectOption>
+          <IonSelectOption value="1">Not good</IonSelectOption>
+          <IonSelectOption value="2">Okay</IonSelectOption>
+          <IonSelectOption value="3">Good</IonSelectOption>
+          <IonSelectOption value="4">Excellent</IonSelectOption>
           </IonSelect>
           </IonItem>
 
@@ -116,11 +212,12 @@ const handleConfirm = () => {
           <IonInput
             type="number"
             placeholder="3-13"
-            value={sleepHours}
+            value={form?.avg_sleep_hours}
             onIonChange={e => {
               // Convert to integer
-              const val = e.detail.value ? Math.floor(Number(e.detail.value)) : "";
-              setSleepHours(val.toString());
+              const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 0;
+              //setSleepHours(val.toString())
+              setForm({...form, avg_sleep_hours: val});
             }}
             min={3}
             max={13}
@@ -130,12 +227,26 @@ const handleConfirm = () => {
     
 
             {questions.map((q, i) => (
-            <IonItem key={i}>
-              <IonLabel>{q}</IonLabel>
-              <IonSelect placeholder="Choose prefered">
-                {["10 min","20 min","30 min","60 min","90 min"].map(n => (
-                  <IonSelectOption key={n} value={n}>
-                    {n}
+              <IonItem key={i}>
+                <IonLabel>{q}</IonLabel>
+                <IonSelect
+                  placeholder="Choose prefered"
+                  value={
+                    i === 0 ? form.avg_theory_time :
+                    i === 1 ? form.avg_practice_time :
+                    form.preffered_session_time
+                  }
+                  onIonChange={e => {
+                    const val = e.detail.value;
+
+                    if (i === 0) setForm({...form, avg_theory_time: val});
+                    if (i === 1) setForm({...form, avg_practice_time: val});
+                    if (i === 2) setForm({...form, preffered_session_time: val});
+                  }}
+                >
+                {timeOptions.map(opt => (
+                  <IonSelectOption key={opt.value} value={opt.value}>
+                    {opt.label}
                   </IonSelectOption>
                 ))}
               </IonSelect>
@@ -147,30 +258,36 @@ const handleConfirm = () => {
               <IonInput
                 type="number"
                 placeholder="From"
-                value={fromHours}
-                onIonChange={e => {
-                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : "";
-                  setFromHours(val.toString());
+                value={form?.work_hours_start}
+                onIonChange={e => { 
+                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 0;
+                  setForm({...form, work_hours_start: val})
                 }}
+                //onIonChange={e => setForm({...form, username: e.detail.value ?? ""})}
                 min={0}
-                max={24}
+                max={form?.work_hours_end}
                 style={{ width: '50px', textAlign: 'right', marginRight: '5px' }}
               />
               <span style={{ margin: '0 5px' }}>–</span>
               <IonInput
                 type="number"
                 placeholder="To"
-                value={toHours}
-                onIonChange={e => {
-                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : "";
-                  setToHours(val.toString());
+                value={form?.work_hours_end}
+                 onIonChange={e => { 
+                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 24;
+                  setForm({...form, work_hours_end: val})
                 }}
-                min={0}
+                min={form?.work_hours_start}
                 max={24}
                 style={{ width: '50px', textAlign: 'right', marginLeft: '5px' }}
               />
             </IonItem>
 
+            <IonItem>
+              <IonButton onClick={handleConfirm}>
+                Confirm
+              </IonButton>
+            </IonItem>
             </IonContent>                
       </IonContent>
     </IonPage>
