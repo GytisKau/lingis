@@ -68,6 +68,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ assignment_id }) => {
     difficulty_rating: difficultyRating,
     is_done: false,
     task_type: taskType,
+    toggle_order: tasks.length, // WHAT IS WRONG WITH THIS LINE?
     fk_assignment: assignment_id
   });
 
