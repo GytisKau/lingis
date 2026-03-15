@@ -18,107 +18,7 @@ interface Props {
 }
 
 const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) => {
-  async function addFreeTime(start: Date, end: Date) {
-
-    const all = await db.events.toArray()
-
-    const free = all.filter(e => e.is_free)
-
-    const current = free.map(e => ({
-      id: e.id,
-      start: new Date(e.start),
-      end: new Date(e.end)
-    }))
-
-    const next = normalizeRanges([
-      ...current.map(r => ({ start: r.start, end: r.end })),
-      { start, end }
-    ])
-
-    if (
-      rangesEqual(
-        current.map(r => ({ start: r.start, end: r.end })),
-        next
-      )
-    ) return
-
-    const { toDelete, toAdd } = diffRanges(current, next)
-
-    await db.transaction("rw", db.events, async () => {
-
-      if (toDelete.length)
-        await db.events.bulkDelete(toDelete)
-
-      if (toAdd.length)
-        await db.events.bulkAdd(
-          toAdd.map(r => ({
-            start: r.start,
-            end: r.end,
-            is_free: true
-          }))
-        )
-
-    })
-
-  }
-
-  async function removeFreeTime(start: Date, end: Date) {
-
-    const all = await db.events.toArray()
-
-    const free = all.filter(e => e.is_free)
-
-    const current = free.map(e => ({
-      id: e.id,
-      start: new Date(e.start),
-      end: new Date(e.end)
-    }))
-
-    const result: { start: Date; end: Date }[] = []
-
-    for (const r of current) {
-
-      if (end <= r.start || start >= r.end) {
-        result.push({ start: r.start, end: r.end })
-        continue
-      }
-
-      if (start > r.start)
-        result.push({ start: r.start, end: start })
-
-      if (end < r.end)
-        result.push({ start: end, end: r.end })
-
-    }
-
-    const next = normalizeRanges(result)
-
-    if (
-      rangesEqual(
-        current.map(r => ({ start: r.start, end: r.end })),
-        next
-      )
-    ) return
-
-    const { toDelete, toAdd } = diffRanges(current, next)
-
-    await db.transaction("rw", db.events, async () => {
-
-      if (toDelete.length)
-        await db.events.bulkDelete(toDelete)
-
-      if (toAdd.length)
-        await db.events.bulkAdd(
-          toAdd.map(r => ({
-            start: r.start,
-            end: r.end,
-            is_free: true
-          }))
-        )
-
-    })
-
-  }
+  // TODO: Pridėt merging prie formos
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -174,6 +74,143 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) 
       select={handleSelect}
     />
   )
+}
+
+export async function updateEdited(updated: {start:Date, end: Date}[]){
+  const all = await db.events.toArray()
+
+  const free = all.filter(e => e.is_free)
+
+  const current = free.map(e => ({
+    id: e.id,
+    start: new Date(e.start),
+    end: new Date(e.end)
+  }))
+
+  const next = normalizeRanges(updated)
+
+  if (rangesEqual(current.map(r => ({ start: r.start, end: r.end })), next)
+  ) return
+
+  const { toDelete, toAdd } = diffRanges(current, next)
+
+  await db.transaction("rw", db.events, async () => {
+
+    if (toDelete.length)
+      await db.events.bulkDelete(toDelete)
+
+    if (toAdd.length)
+      await db.events.bulkAdd(
+        toAdd.map(r => ({
+          start: r.start,
+          end: r.end,
+          is_free: true
+        }))
+      )
+
+  })
+}
+
+async function addFreeTime(start: Date, end: Date) {
+
+  const all = await db.events.toArray()
+
+  const free = all.filter(e => e.is_free)
+
+  const current = free.map(e => ({
+    id: e.id,
+    start: new Date(e.start),
+    end: new Date(e.end)
+  }))
+
+  const next = normalizeRanges([
+    ...current.map(r => ({ start: r.start, end: r.end })),
+    { start, end }
+  ])
+
+  if (
+    rangesEqual(
+      current.map(r => ({ start: r.start, end: r.end })),
+      next
+    )
+  ) return
+
+  const { toDelete, toAdd } = diffRanges(current, next)
+
+  await db.transaction("rw", db.events, async () => {
+
+    if (toDelete.length)
+      await db.events.bulkDelete(toDelete)
+
+    if (toAdd.length)
+      await db.events.bulkAdd(
+        toAdd.map(r => ({
+          start: r.start,
+          end: r.end,
+          is_free: true
+        }))
+      )
+
+  })
+
+}
+
+async function removeFreeTime(start: Date, end: Date) {
+
+  const all = await db.events.toArray()
+
+  const free = all.filter(e => e.is_free)
+
+  const current = free.map(e => ({
+    id: e.id,
+    start: new Date(e.start),
+    end: new Date(e.end)
+  }))
+
+  const result: { start: Date; end: Date }[] = []
+
+  for (const r of current) {
+
+    if (end <= r.start || start >= r.end) {
+      result.push({ start: r.start, end: r.end })
+      continue
+    }
+
+    if (start > r.start)
+      result.push({ start: r.start, end: start })
+
+    if (end < r.end)
+      result.push({ start: end, end: r.end })
+
+  }
+
+  const next = normalizeRanges(result)
+
+  if (
+    rangesEqual(
+      current.map(r => ({ start: r.start, end: r.end })),
+      next
+    )
+  ) return
+
+  const { toDelete, toAdd } = diffRanges(current, next)
+
+  await db.transaction("rw", db.events, async () => {
+
+    if (toDelete.length)
+      await db.events.bulkDelete(toDelete)
+
+    if (toAdd.length)
+      await db.events.bulkAdd(
+        toAdd.map(r => ({
+          start: r.start,
+          end: r.end,
+          is_free: true
+        }))
+      )
+
+  })
+
 }
 
 

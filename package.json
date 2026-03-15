@@ -27,6 +27,7 @@
     "ionicons": "^7.4.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.71.2",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "temporal-polyfill": "^0.3.0"

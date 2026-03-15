@@ -3,18 +3,21 @@ import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput, formatDate } from '@fullcalendar/react'
 import { useMemo, useRef, useState } from 'react';
-import { add, remove, pencil, trash } from 'ionicons/icons';
+import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import type { LingisEvent, Session, Assignment } from '../db/db';
+import type { LingisEvent, Session} from '../db/db';
 import ScheduleSessions from '../utils/ScheduleSessions';
+import FreeTimeModal from '../components/FreeTimeModal';
 
 const Tab1: React.FC = () => {
   const [weekendsVisible, setWeekendsVisible] = useState(true)
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(true);
   const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
   const timeForAssignments = useLiveQuery( async () => {
     const assignments = await db.assignments.toArray()
-    return assignments.reduce((total, a) => total + a.est_hours * 60, 0)
+    return assignments.reduce((total, a) => total + a.est_hours, 0)
   }, [])
 
   const sessions = useMemo(() => {
@@ -37,17 +40,14 @@ const Tab1: React.FC = () => {
     if (!lingisEvents) return []
 
     const freeEvents = freeTimesToCalendarEvents(lingisEvents)
-    const sessionEvents = sessionsToCalendarEvents(sessions)
+    const sessionEvents = isEditing ? [] : sessionsToCalendarEvents(sessions)
 
     return [
       ...freeEvents,
       ...sessionEvents
     ]
 
-  }, [lingisEvents, sessions])
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(true);
+  }, [lingisEvents, sessions, isEditing])
 
   const handleWeekendsToggle = () => {
     setWeekendsVisible(!weekendsVisible)
@@ -78,15 +78,6 @@ const Tab1: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          <IonItem>
-            <IonLabel>
-              <ul>
-                <li>Select dates and you will be prompted to create a new event</li>
-                <li>Drag, drop, and resize events</li>
-                <li>Click an event to delete it</li>
-              </ul>
-            </IonLabel>
-          </IonItem>
           <IonItem>
             <IonToggle
               checked={weekendsVisible}
@@ -141,6 +132,9 @@ const Tab1: React.FC = () => {
               <IonIcon icon={isEditing ? (isAdding ? add : remove) : pencil}></IonIcon>
             </IonFabButton>
             <IonFabList side="top">
+              <IonFabButton id="event-form-modal" onClick={() => setIsEditing(false)}>
+                <IonIcon icon={addCircleOutline}></IonIcon>
+              </IonFabButton>
               <IonFabButton onClick={() => handleEditing(true)} color={isEditing && isAdding ? "primary" : undefined}>
                 <IonIcon icon={add}></IonIcon>
               </IonFabButton>
@@ -149,6 +143,9 @@ const Tab1: React.FC = () => {
               </IonFabButton>
             </IonFabList>
           </IonFab>
+
+          {/* <EventFormModal trigger="event-form-modal" /> */}
+          <FreeTimeModal trigger="event-form-modal" freeTimes={lingisEvents ?? []}/>
         </IonContent>
       </IonPage>
     </>
