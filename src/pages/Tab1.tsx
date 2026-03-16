@@ -21,6 +21,22 @@ const Tab1: React.FC = () => {
     const assignments = await db.assignments.toArray()
     return assignments.reduce((total, a) => total + a.est_hours, 0)
   }, [])
+  const sessionTime = useLiveQuery( async () => {
+    const users = await db.users.toArray()
+    return users[0].preffered_session_time
+  }, [])
+
+  const breakTime = (sessionTime: number) => {
+    console.log(sessionTime)
+    if (sessionTime == 5) return 2
+    else if (sessionTime == 10) return 3
+    else if (sessionTime == 20) return 5
+    else if (sessionTime == 30) return 10
+    else if (sessionTime == 60) return 10
+    else if (sessionTime == 90) return 15
+    else if (sessionTime == 120) return 30
+    else return 10
+  }
 
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
@@ -30,11 +46,11 @@ const Tab1: React.FC = () => {
     return ScheduleSessions(
       freeTimes,
       timeForAssignments ?? 0, // timeForAssignment
-      60,  // session length
-      15    // break
+      sessionTime ?? 60,  // session length
+      breakTime(sessionTime ?? 60)   // break
     )
 
-  }, [lingisEvents, timeForAssignments])
+  }, [lingisEvents, timeForAssignments, sessionTime])
 
   const calendarEvents = useMemo(() => {
 
