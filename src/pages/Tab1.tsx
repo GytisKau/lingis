@@ -31,7 +31,7 @@ const Tab1: React.FC = () => {
     if (sessionTime == 5) return 2
     else if (sessionTime == 10) return 3
     else if (sessionTime == 20) return 5
-    else if (sessionTime == 30) return 7
+    else if (sessionTime == 30) return 10
     else if (sessionTime == 60) return 10
     else if (sessionTime == 90) return 15
     else if (sessionTime == 120) return 30
