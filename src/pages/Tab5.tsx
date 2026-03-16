@@ -1,5 +1,4 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/react';
-import ExploreContainer from '../components/ExploreContainer';
 import './Tab5.css';
 
 const Tab5: React.FC = () => {
@@ -10,13 +9,13 @@ const Tab5: React.FC = () => {
           <IonTitle>Tab 5</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent fullscreen className='ion-padding'>
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">Tab 5</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonButton routerLink='/loginwizard'>Wizard preferences</IonButton>
+        <IonButton routerLink='/loginwizard' expand='block'>Wizard preferences</IonButton>
       </IonContent>
     </IonPage>
   );

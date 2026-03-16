@@ -40,7 +40,7 @@ const AssignmentList: React.FC<AssignmentListProps> = () => {
       {assignments?.map((assignment) => (
         <IonRow key={assignment.id}>
           <IonCol>
-            <IonButton routerLink={`/viewassignment/${assignment.id}`} size="large" fill="clear">
+            <IonButton routerLink={`/tabs/tab4/viewassignment/${assignment.id}`} size="large" fill="clear">
               {assignment.title}
             </IonButton>
             <IonLabel>

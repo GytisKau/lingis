@@ -12,17 +12,12 @@ const Tab4: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
   const input = useRef<HTMLIonInputElement>(null);
 
-  const [message, setMessage] = useState(
-    'This modal example uses triggers to automatically open a modal when the button is clicked.'
-  );
-
   function confirm() {
     modal.current?.dismiss(input.current?.value, 'confirm');
   }
 
   function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
     if (event.detail.role === 'confirm') {
-      setMessage(`Hello, ${event.detail.data}!`);
     }
   }
   return (
@@ -42,7 +37,6 @@ const Tab4: React.FC = () => {
         <AssignmentList />
 
         <IonButton fill="outline" shape="round" id="open-modal"className="add-assignments-button"> + </IonButton>
-        {/* <ExploreContainer name="Assignments" /> */}
         <IonModal ref={modal} trigger="open-modal" onWillDismiss={(event) => onWillDismiss(event)}>
           <IonHeader>
             <IonToolbar>
@@ -51,7 +45,7 @@ const Tab4: React.FC = () => {
               </IonButtons>
               <IonTitle>Add assignment</IonTitle>
               <IonButtons slot="end">
-                <IonButton strong={true} routerLink='/tab4'onClick={() => confirm()}>
+                <IonButton strong={true} routerLink='/tabs/tab4' onClick={() => confirm()}>
                   Confirm
                 </IonButton>
               </IonButtons>
