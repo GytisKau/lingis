@@ -40,7 +40,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 import TabsLayout from './components/TabsLayout';
 import { AuthProvider } from './hooks/useAuth';
-import Login from './pages/login';
+import Login from './pages/Login';
 import RootRedirect from './components/RootRedirect';
 
 setupIonicReact();
