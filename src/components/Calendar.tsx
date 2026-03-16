@@ -18,7 +18,6 @@ interface Props {
 }
 
 const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) => {
-  // TODO: Pridėt merging prie formos
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -37,7 +36,6 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) 
       plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin]}
       headerToolbar={{
         left: 'prev,next today',
-        center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       }}
       initialView='timeGridWeek'

@@ -16,7 +16,7 @@ const AssignmentList: React.FC<AssignmentListProps> = () => {
     <ul>
       {assignments?.map((assignment) => (
           <IonItem key={assignment.id}>
-          <IonButton routerLink={`/viewassignment/${assignment.id}`} size="large" fill="clear">
+          <IonButton routerLink={`/tabs/tab4/viewassignment/${assignment.id}`} size="large" fill="clear">
             {assignment.title}
           </IonButton>
           <IonRippleEffect />

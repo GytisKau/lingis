@@ -1,25 +1,14 @@
-import { Redirect, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import {
   IonApp,
-  IonIcon,
-  IonLabel,
   IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
-  IonTabs,
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ellipse, square, triangle } from 'ionicons/icons';
-import Tab1 from './pages/Tab1';
-import Tab2 from './pages/Tab2';
-import Tab3 from './pages/Tab3';
-import Tab4 from './pages/Tab4';
-import Tab5 from './pages/Tab5';
-import Session from './pages/Session';
-import SessionView from './pages/SessionView';
-import AssignmentView from './pages/AssignmentView';
 import LoginWizard from './pages/LoginWizard';
+import RequireLogin from './components/RequireLogin'
+import RequireWizard from './components/RequireWizard'
+
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -49,50 +38,48 @@ import '@ionic/react/css/palettes/dark.system.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import TabsLayout from './components/TabsLayout';
+import { AuthProvider } from './hooks/useAuth';
+import Login from './pages/login';
+import RootRedirect from './components/RootRedirect';
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter basename='lingis'>
-      <IonTabs>
+    <AuthProvider>
+      <IonReactRouter basename="lingis">
         <IonRouterOutlet>
-          <Route path="/tab1" component={Tab1} exact/>
-          <Route path="/tab2" component={Tab2} exact/>
-          <Route path="/tab3" component={Tab3} exact/>
-          <Route path="/tab4" component={Tab4} exact/>
-          <Route path="/tab5" component={Tab5} exact/>
-          <Route path="/session" component={Session} exact/>
-          <Route path="/viewsession" component={SessionView} exact/>
-          <Route path="/viewassignment/:id" component={AssignmentView} exact />          
-          <Route path="/loginwizard" component={LoginWizard} exact/>
-          <Redirect exact from='/' to="/tab1"/>
+          {/* Public */}
+          <Route path="/" component={RootRedirect} exact />
+          <Route path="/login" render={() => <Login/>} exact />
+
+          {/* Wizard requires login */}
+          <Route
+            path="/loginwizard"
+            render={() => (
+              <RequireLogin>
+                <LoginWizard />
+              </RequireLogin>
+            )}
+            exact
+          />
+
+          {/* Main app requires login + wizard */}
+          <Route
+            path="/tabs"
+            render={() => (
+              <RequireLogin>
+                <RequireWizard>
+                  <TabsLayout />
+                </RequireWizard>
+              </RequireLogin>
+            )}
+          />
         </IonRouterOutlet>
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="tab1" href="/tab1">
-            <IonIcon aria-hidden="true" icon={triangle} />
-            <IonLabel>Calendar</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab2" href="/tab2">
-            <IonIcon aria-hidden="true" icon={ellipse} />
-            <IonLabel>Stats</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab3" href="/tab3">
-            <IonIcon aria-hidden="true" icon={square} />
-            <IonLabel>Home</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab4" href="/tab4">
-            <IonIcon aria-hidden="true" icon={ellipse} />
-            <IonLabel>Plan</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab5" href="/tab5">
-            <IonIcon aria-hidden="true" icon={square} />
-            <IonLabel>Profile</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
+      </IonReactRouter>
+    </AuthProvider>
   </IonApp>
-);
+)
 
 export default App;
