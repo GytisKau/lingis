@@ -11,7 +11,6 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const id = Number(match.params.id);
   
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
-  const db_tasks = useLiveQuery(() => db.tasks.where("fk_assignment").equals(id).toArray(), [id]) ?? [];
 
   return (
     <IonPage>
@@ -30,7 +29,7 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
           <p><IonText> Current tasks: </IonText></p>
           
           {/* Use the new component */}
-          <TaskList assignmentId={id} dbTasks={db_tasks} />
+          <TaskList assignmentId={id}/>
           
         </div>
       </IonContent>

@@ -3,8 +3,9 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonText, IonButto
  } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Session.css';
-
+import TaskList from '../components/TaskList'
 import { useState, useEffect } from "react";
+import { RouteComponentProps } from 'react-router';
 
 export function Timer() {
   const totalSeconds = 300; // 5 minutes
@@ -48,8 +49,10 @@ export function Timer() {
     </div>
   );
 }
+interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
-const Assignments: React.FC = () => {
+const Assignments: React.FC<AssignmentViewProps> = ({match}) => {
+  const id = Number(match.params.id);
   return (
     <IonPage>
       <IonHeader>
@@ -57,19 +60,9 @@ const Assignments: React.FC = () => {
           <IonTitle>Session</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent fullscreen className='ion-padding'>
         <Timer/>
-        <IonList>
-          <IonItem>
-            <IonCheckbox labelPlacement="end">Task 1: Solve 5 problems</IonCheckbox>
-          </IonItem>
-          <IonItem>
-            <IonCheckbox labelPlacement="end">Task 2: Write an essay</IonCheckbox>
-          </IonItem>
-          <IonItem>
-            <IonCheckbox labelPlacement="end">Task 3: Take a quiz</IonCheckbox>
-          </IonItem>
-        </IonList>
+        <TaskList assignmentId={id}/>
       </IonContent>
     </IonPage>
   );

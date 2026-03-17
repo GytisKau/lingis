@@ -8,16 +8,18 @@ import { pencil, trash } from 'ionicons/icons';
 import { ReorderEndCustomEvent } from '@ionic/core/components';
 import { db } from '../db/db';
 import type { Task } from '../db/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 interface TaskListProps {
   assignmentId: number;
-  dbTasks: any[];
 }
 
-const TaskList: React.FC<TaskListProps> = ({ assignmentId, dbTasks }) => {
+const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [isDisabled, setIsDisabled] = useState(true);
+  const dbTasks = useLiveQuery(() => db.tasks.where("fk_assignment").equals(assignmentId).toArray(), [assignmentId]) ?? [];
 
+  
   useEffect(() => {
   setTasks(
     dbTasks // Fixed from db_tasks

@@ -20,8 +20,8 @@ const TabsLayout: React.FC = () => (
       <Route path="/tabs/tab4" component={Tab4} exact />
       <Route path="/tabs/tab5" component={Tab5} exact />
 
-      <Route path="/tabs/tab3/session" component={Session} exact />
-      <Route path="/tabs/tab3/viewsession" component={SessionView} exact />
+      <Route path="/tabs/tab3/session/:id" component={Session} exact />
+      <Route path="/tabs/tab3/viewsession/:id" component={SessionView} exact />
       <Route path="/tabs/tab4/viewassignment/:id" component={AssignmentsView} exact />
 
       <Redirect exact from="/tabs" to="/tabs/tab1" />
