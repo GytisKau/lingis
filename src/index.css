@@ -1,0 +1,15 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+
+  background: black url('/background_pc.png') center center / cover no-repeat fixed;
+}
+
+@media (max-width: 600px) {
+  html,
+  body {
+    background-image: url('/background_phone.png');
+  }
+}

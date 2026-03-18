@@ -55,7 +55,7 @@ const LoginWizard: React.FC = () => {
     }
   }, [users]);
 
-  if (users == undefined){
+ /* if (users == undefined){
     return (
       <IonPage>
         <IonHeader>
@@ -76,7 +76,17 @@ const LoginWizard: React.FC = () => {
     </IonPage>
     )
   }
+*/
 
+if (users == undefined){
+  return (
+    <IonPage>
+      <IonContent fullscreen>
+        <IonProgressBar type="indeterminate"></IonProgressBar>
+      </IonContent>
+    </IonPage>
+  )
+}
   const handleConfirm = async () => {
 
     if (form == undefined || form.avg_practice_time == undefined || form.avg_sleep_hours == undefined ||
@@ -131,7 +141,7 @@ const LoginWizard: React.FC = () => {
 
 
   return (
-    <IonPage>
+    /*<IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>LoginWizard</IonTitle>
@@ -144,13 +154,21 @@ const LoginWizard: React.FC = () => {
           </IonToolbar>
         </IonHeader>
 
-        <IonContent className="ion-padding">
-        <p>{status}</p>
+        <IonContent className="ion-padding register-content">
+          <img src="/lingis/logo.png" alt="Logo" className="register-logo" />*/
+          
+      <IonPage>
+          <IonContent fullscreen>
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '20px' }}>
+              <img src="/lingis/logo.png" alt="Logo" className="register-logo" />
+            </div>
+
+        <div className="status-message">{status}</div>
         <IonList>
-        <IonItem>
+        <p className="auth-label">Username</p>
+
+        <IonItem className="auth-item">
           <IonInput
-            label='Username'
-            labelPlacement='stacked'
             type="text"
             placeholder="Enter text"
             value={form?.username}
@@ -158,19 +176,20 @@ const LoginWizard: React.FC = () => {
           />
         </IonItem>
 
-          <IonItem>
+          <p className="auth-label">Email</p>
+          <IonItem className="auth-item">
             <IonInput
-              label='Email'
-              labelPlacement='stacked'
               type="email"
               placeholder="email@mail.com"
               value={form?.email}
               onIonChange={e => setForm({...form, email: e.detail.value ?? ""})}
             />
           </IonItem>
+          
+          <p className="auth-label">Study field</p>
 
-          <IonItem>
-            <IonSelect label="Study field" placeholder="STEM..." labelPlacement='stacked'
+          <IonItem className="auth-item">
+            <IonSelect placeholder="STEM..." labelPlacement='stacked'
               onIonChange={e => setForm({...form, study_field: Number(e.detail.value) ?? 0})}
               value={String(form?.study_field)}
               >
@@ -181,9 +200,11 @@ const LoginWizard: React.FC = () => {
             </IonSelect>
           </IonItem>
 
+          <p className="auth-label">Chronotype</p>
 
-          <IonItem>
-            <IonSelect label="Chronotype" placeholder="Chronotype..." labelPlacement='stacked'
+          <IonItem className="auth-item">
+            <IonSelect 
+              placeholder="Chronotype..." 
               onIonChange={e => setForm({...form, chronotype: e.detail.value ?? 0})}
               value={form?.chronotype}>
               <IonSelectOption value="morning">Morning person</IonSelectOption>
@@ -192,9 +213,11 @@ const LoginWizard: React.FC = () => {
             </IonSelect>
           </IonItem>
 
-          
-          <IonItem>
-            <IonSelect label="Study habits" placeholder="My study habits are..." labelPlacement='stacked'
+          <p className="auth-label">Study habits</p>
+
+          <IonItem className="auth-item">
+            <IonSelect 
+              placeholder="My study habits are..." 
               onIonChange={e => setForm({...form, effectiveness_rating: Number(e.detail.value) ?? 0})}
               value={String(form?.effectiveness_rating)}>
               <IonSelectOption value="0">Terrible</IonSelectOption>
@@ -205,10 +228,10 @@ const LoginWizard: React.FC = () => {
             </IonSelect>
           </IonItem>
 
-          <IonItem>
+          <p className="auth-label">Average well rested sleep hours</p>
+
+          <IonItem className="auth-item">
             <IonInput
-              label='Average well rested sleep hours'
-              labelPlacement='stacked'
               type="number"
               placeholder="3-13"
               value={form?.avg_sleep_hours}
@@ -223,37 +246,41 @@ const LoginWizard: React.FC = () => {
     
 
             {questions.map((q, i) => (
-              <IonItem key={i}>
-                {/* <IonLabel>{q}</IonLabel> */}
-                <IonSelect
-                  label={q}
-                  labelPlacement='stacked'
-                  value={
-                    i === 0 ? form.avg_theory_time :
-                    i === 1 ? form.avg_practice_time :
-                    form.preffered_session_time
-                  }
-                  onIonChange={e => {
-                    const val = e.detail.value;
+              <div key={i}>
+                
+                <p className="auth-label">{q}</p>
 
-                    if (i === 0) setForm({...form, avg_theory_time: val});
-                    if (i === 1) setForm({...form, avg_practice_time: val});
-                    if (i === 2) setForm({...form, preffered_session_time: val});
-                  }}
-                >
-                {timeOptions.map(opt => (
-                  <IonSelectOption key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </IonSelectOption>
-                ))}
-              </IonSelect>
-            </IonItem>
-          ))}
+                <IonItem className="auth-item">
+                  <IonSelect
+                    placeholder="Select..."
+                    value={
+                      i === 0 ? form.avg_theory_time :
+                      i === 1 ? form.avg_practice_time :
+                                form.preffered_session_time
+                    }
+                    onIonChange={e => {
+                      const val = e.detail.value;
 
-          <IonItem>
+                      if (i === 0) setForm({...form, avg_theory_time: val});
+                      if (i === 1) setForm({...form, avg_practice_time: val});
+                      if (i === 2) setForm({...form, preffered_session_time: val});
+                    }}
+                  >
+                    {timeOptions.map(opt => (
+                      <IonSelectOption key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </IonSelectOption>
+                    ))}
+                  </IonSelect>
+                </IonItem>
+
+              </div>
+            ))}
+
+          <p className="auth-label">Working hours start</p>
+
+          <IonItem className="auth-item">
             <IonInput
-              label='Working hours start'
-              labelPlacement='stacked'
               type="number"
               placeholder="From"
               value={form?.work_hours_start}
@@ -265,10 +292,11 @@ const LoginWizard: React.FC = () => {
               max={form?.work_hours_end}
             />
           </IonItem>    
-          <IonItem>
+
+          <p className="auth-label">Working hours end</p>
+
+          <IonItem className="auth-item">
             <IonInput
-              label='Working hours end'
-              labelPlacement='stacked'
               type="number"
               placeholder="To"
               value={form?.work_hours_end}
@@ -283,11 +311,10 @@ const LoginWizard: React.FC = () => {
           </IonItem>
 
           </IonList>
-          <IonButton onClick={handleConfirm} expand='block'>
+          <IonButton onClick={handleConfirm} expand='block' className="auth-button">
             Confirm
           </IonButton>
         </IonContent>                
-      </IonContent>
     </IonPage>
   );
 };

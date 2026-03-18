@@ -1,7 +1,27 @@
 /* For information on how to create your own theme, please refer to:
 http://ionicframework.com/docs/theming/ */
+/* Make all Ionic containers transparent */
+ion-app,
+ion-page,
+ion-content,
+ion-header,
+ion-toolbar,
+ion-menu {
+  --background: transparent !important;
+  background: transparent !important;
+  --ion-background-color: transparent !important;
+}
 
+/* Remove background inside IonContent shadow DOM */
+ion-content::part(background),
+ion-content::part(scroll),
+ion-content::part(inner) {
+  background: transparent !important;
+}
 
-.stiliukai{
-    color: yellowgreen;
+/* Remove background from menu pages */
+ion-menu::part(container),
+ion-menu::part(backdrop),
+ion-menu::part(content) {
+  background: transparent !important;
 }

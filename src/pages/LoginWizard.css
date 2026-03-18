@@ -1,0 +1,158 @@
+.register-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centers horizontally */
+  justify-content: flex-start; /* top of page */
+  width: 100%; /* ensure full width */
+  padding-top: 20px;
+  box-sizing: border-box;
+}
+
+.register-logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
+}
+
+
+/* ============================
+   INPUT BOXES
+   ============================ */
+/* Outer IonItem wrapper */
+.auth-item {
+  max-width: 320px;       /* narrower box */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  --background: transparent; /* prevents Ionic from overriding */
+}
+
+/* Apply border + rounding to the actual white box */
+.auth-item::part(native) {
+  background: white;
+  border: 2px solid #491B6D;   /* purple border */
+  border-radius: 20px;         /* more rounded */
+  padding: 8px 14px;           /* smaller height */
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+
+  width: 100%;                 /* keep responsive */
+  max-width: 320px;            /* match outer width */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.auth-label {
+  max-width: 320px;        /* match input width */
+  width: 100%;
+  margin: 0 auto 6px auto; /* center horizontally */
+  text-align: left;        /* align text with input box */
+  font-weight: 600;
+  color: #491B6D;
+  font-size: 14px;
+}
+
+/* ============================
+   LABELS
+   ============================ */
+.auth-item ion-label {
+  font-weight: 600;
+  color: #491B6D;                      /* dark purple label */
+}
+
+
+/* ============================
+   INPUT TEXT
+   ============================ */
+.auth-item ion-input,
+.auth-item ion-select {
+  --color: #000;                       /* black text */
+}
+
+
+/* ============================
+   BUTTON
+   ============================ */
+.auth-button {
+  --background: #491B6D;               /* dark purple button */
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.status-message {
+  color: #491B6D !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  font-size: 16px !important;
+
+  max-width: 320px;
+  width: 100%;
+  margin: 10px auto 20px auto !important;
+  display: block !important;
+}
+
+/* ----------------------------- */
+/* ION SELECT POPUP (ALERT)     */
+/* ----------------------------- */
+
+/* Popup container */
+.alert-wrapper {
+  background: white !important;
+  border: 2px solid #491B6D !important;
+  border-radius: 20px !important;
+  color: #491B6D !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  padding: 10px !important;
+}
+
+/* Popup text */
+/* Popup title stays bold */
+.alert-title {
+  color: #491B6D !important;
+  font-weight: 600 !important;
+}
+
+/* Popup message normal weight */
+.alert-message {
+  color: #491B6D !important;
+  font-weight: 400 !important;
+}
+
+/* Option labels NOT bold */
+.alert-radio-label,
+.alert-checkbox-label {
+  color: #491B6D !important;
+  font-weight: 400 !important;   /* <-- normal text */
+}
+
+/* Radio button styling */
+.alert-radio-inner {
+  background: #491B6D !important;
+}
+
+.alert-radio-icon {
+  border-color: #491B6D !important;
+}
+
+/* Buttons at the bottom */
+.alert-button {
+  color: #491B6D !important;
+  font-weight: 600 !important;
+}
+
+.alert-button-group {
+  border-top: 1px solid #491B6D33 !important;
+}
+
+/* Background overlay behind popup */
+.alert-backdrop {
+  background: rgba(0,0,0,0.05) !important; /* soft light overlay */
+  /* or use this for NO overlay:
+     background: transparent !important;
+  */
+}
