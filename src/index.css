@@ -1,0 +1,103 @@
+/* ============================
+   BACKGROUND (YOUR IMAGES)
+   ============================ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+
+  background: black url('/background_pc.png') center center / cover no-repeat fixed;
+}
+
+@media (max-width: 600px) {
+  html,
+  body {
+    background: black url('/background_phone.png') center center / cover no-repeat fixed;
+  }
+}
+
+
+/* ============================
+   FIX ALL IONIC POPUPS
+   ============================ */
+
+/* ALERT (ion-select, ion-alert) */
+ion-alert {
+  --background: #D4D1D9 !important;
+}
+
+ion-alert .alert-wrapper {
+  background: #D4D1D9 !important;
+  border-radius: 20px !important;
+}
+
+/* Ensure inner parts are solid */
+ion-alert .alert-head,
+ion-alert .alert-message,
+ion-alert .alert-radio-group,
+ion-alert .alert-checkbox-group {
+  background: #D4D1D9 !important;
+}
+
+
+/* MODALS */
+ion-modal {
+  --background: #D4D1D9 !important;
+}
+
+ion-modal::part(content) {
+  background: #D4D1D9 !important;
+}
+
+
+/* ACTION SHEETS */
+ion-action-sheet {
+  --background: #D4D1D9 !important;
+}
+
+ion-action-sheet .action-sheet-wrapper {
+  background: #D4D1D9 !important;
+}
+
+
+/* ============================
+   BACKDROP (DIM BACKGROUND)
+   ============================ */
+ion-alert::part(backdrop),
+ion-modal::part(backdrop),
+ion-action-sheet::part(backdrop) {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Fix logout popup transparency (JS alerts use shadow parts) */
+ion-alert::part(backdrop) {
+  background: rgba(0, 0, 0, 0.05) !important; /* soft overlay */
+}
+
+ion-alert::part(wrapper) {
+  background: white !important;
+  border: 2px solid #491B6D !important;
+  border-radius: 20px !important;
+  color: #491B6D !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  max-width: 320px !important;
+  width: 100% !important;
+}
+
+/* Buttons */
+ion-alert::part(button-group) {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+ion-alert::part(button) {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  font-weight: 600 !important;
+  color: #491B6D !important;
+  border-radius: 0 0 20px 20px !important;
+}

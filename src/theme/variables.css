@@ -1,7 +1,58 @@
 /* For information on how to create your own theme, please refer to:
 http://ionicframework.com/docs/theming/ */
 
+:root {
+  /* DO NOT force global background */
+  --ion-background-color: transparent;
 
-.stiliukai{
-    color: yellowgreen;
+  /* keep others if needed */
+  --ion-item-background: transparent;
+  --ion-toolbar-background: transparent;
+  --ion-tab-bar-background: transparent;
+}
+/* make ionic root containers transparent */
+ion-app,
+ion-router-outlet,
+ion-page,
+ion-content,
+ion-header,
+ion-toolbar,
+ion-tabs,
+ion-tab-bar {
+  background: transparent !important;
+  --background: transparent !important;
+}
+
+/* remove shadow DOM backgrounds */
+ion-content::part(background),
+ion-content::part(scroll),
+ion-content::part(inner) {
+  background: transparent !important;
+}
+
+
+/* ============================
+   FIX POPUPS (IMPORTANT)
+   ============================ */
+
+/* Alerts (ion-alert / ion-select popup) */
+ion-alert {
+  --background: #D4D1D9 !important;
+}
+
+/* Modals */
+ion-modal {
+  --background: #D4D1D9 !important;
+}
+
+/* Action sheets */
+ion-action-sheet {
+  --background: #D4D1D9 !important;
+}
+
+/* Stronger fallback (Shadow DOM parts) */
+ion-alert::part(content),
+ion-modal::part(content),
+ion-action-sheet::part(content) {
+  background: #D4D1D9 !important;
 }
