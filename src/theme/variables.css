@@ -1,27 +1,58 @@
 /* For information on how to create your own theme, please refer to:
 http://ionicframework.com/docs/theming/ */
-/* Make all Ionic containers transparent */
+
+:root {
+  /* DO NOT force global background */
+  --ion-background-color: transparent;
+
+  /* keep others if needed */
+  --ion-item-background: transparent;
+  --ion-toolbar-background: transparent;
+  --ion-tab-bar-background: transparent;
+}
+/* make ionic root containers transparent */
 ion-app,
+ion-router-outlet,
 ion-page,
 ion-content,
 ion-header,
 ion-toolbar,
-ion-menu {
-  --background: transparent !important;
+ion-tabs,
+ion-tab-bar {
   background: transparent !important;
-  --ion-background-color: transparent !important;
+  --background: transparent !important;
 }
 
-/* Remove background inside IonContent shadow DOM */
+/* remove shadow DOM backgrounds */
 ion-content::part(background),
 ion-content::part(scroll),
 ion-content::part(inner) {
   background: transparent !important;
 }
 
-/* Remove background from menu pages */
-ion-menu::part(container),
-ion-menu::part(backdrop),
-ion-menu::part(content) {
-  background: transparent !important;
+
+/* ============================
+   FIX POPUPS (IMPORTANT)
+   ============================ */
+
+/* Alerts (ion-alert / ion-select popup) */
+ion-alert {
+  --background: #D4D1D9 !important;
+}
+
+/* Modals */
+ion-modal {
+  --background: #D4D1D9 !important;
+}
+
+/* Action sheets */
+ion-action-sheet {
+  --background: #D4D1D9 !important;
+}
+
+/* Stronger fallback (Shadow DOM parts) */
+ion-alert::part(content),
+ion-modal::part(content),
+ion-action-sheet::part(content) {
+  background: #D4D1D9 !important;
 }
