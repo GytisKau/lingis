@@ -55,29 +55,6 @@ const LoginWizard: React.FC = () => {
     }
   }, [users]);
 
- /* if (users == undefined){
-    return (
-      <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>LoginWizard</IonTitle>
-            <IonProgressBar type="indeterminate"></IonProgressBar>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent fullscreen>
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">Wizard</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
-          </IonContent>                
-      </IonContent>
-    </IonPage>
-    )
-  }
-*/
-
 if (users == undefined){
   return (
     <IonPage>

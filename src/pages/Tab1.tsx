@@ -27,7 +27,6 @@ const Tab1: React.FC = () => {
   }, [])
 
   const breakTime = (sessionTime: number) => {
-    console.log(sessionTime)
     if (sessionTime == 5) return 2
     else if (sessionTime == 10) return 3
     else if (sessionTime == 20) return 5

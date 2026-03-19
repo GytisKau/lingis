@@ -3,7 +3,11 @@ import { useState } from "react"
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton,
    IonModal, IonButtons, IonItem, IonInput, IonLabel, IonCol,
    IonSegment, IonSegmentButton, IonRippleEffect, IonIcon, IonGrid, 
-   IonRow } from '@ionic/react';
+   IonRow, 
+   IonList,
+   IonText,
+   IonChip,
+   IonNote} from '@ionic/react';
 import { db } from "../db/db"
 import { pencil, trash } from 'ionicons/icons'
 import EditAssignmentForm from "../forms/EditAssignmentForm"; // your modal form
@@ -33,39 +37,35 @@ const AssignmentList: React.FC<AssignmentListProps> = () => {
     await db.assignments.delete(assignmentId)
   }
 
+  if (assignments == undefined || assignments.length === 0){
+    return <p className="centered-text">No assignments added yet.</p>;
+  }
+
   return (
     <>
-      {assignments?.length === 0 && <p className="centered-text">No assignments added yet.</p>}
+      <IonList>
+        {assignments.map((assignment) => (
+          <IonItem key={assignment.id} button={true} routerLink={`/tabs/tab4/viewassignment/${assignment.id}`}>
+            <IonNote slot="start">{new Date(assignment.date).toLocaleDateString()}</IonNote>
+            <IonText>{assignment.title}</IonText>
+            <IonNote slot="end">{assignment.est_hours / 60}h</IonNote>
 
-      {assignments?.map((assignment) => (
-        <IonRow key={assignment.id}>
-          <IonCol>
-            <IonButton routerLink={`/tabs/tab4/viewassignment/${assignment.id}`} size="large" fill="clear">
-              {assignment.title}
-            </IonButton>
-            <IonLabel>
-              {new Date(assignment.date).toLocaleDateString()}, {assignment.est_hours / 60} hours
-            </IonLabel>
-            <IonRippleEffect />
-          </IonCol>
+            {/* <IonCol size="1">
+              <IonButton size="small" onClick={() => openEditModal(assignment.id!)}>
+                <IonIcon icon={pencil}></IonIcon>
+              </IonButton>
+            </IonCol> */}
 
-          <IonCol size="1">
-            <IonButton size="small" onClick={() => openEditModal(assignment.id!)}>
-              <IonIcon icon={pencil}></IonIcon>
-            </IonButton>
-          </IonCol>
-
-          <IonCol size="1">
-            <IonButton 
+            {/* <IonButton 
               size="small" 
               color="danger" 
               onClick={() => deleteAssignment(assignment.id!)}
             >
               <IonIcon icon={trash}></IonIcon>
-            </IonButton>
-          </IonCol>
-        </IonRow>
-      ))}
+            </IonButton> */}
+          </IonItem>
+        ))}
+      </IonList>
 
       {/* Modal */}
       {currentAssignmentId !== null && (

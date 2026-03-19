@@ -1,14 +1,3 @@
-
-.task-text{
-  /* position: absolute;
-  font-style: italic;
-  font-size: 30px;
-  left: 55%;
-  top: 80%;
-  transform: translate(-50%, -50%); */
-  padding: 2em;
-}
-
 .add-tasks-button {
   position: absolute;
   bottom: 50px;

@@ -1,25 +1,19 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton,
-   IonModal, IonButtons, IonItem, IonInput, IonLabel, IonSegment, IonSegmentButton, IonRippleEffect } from '@ionic/react';
+   IonModal, IonButtons, IonItem, IonInput, IonLabel, IonSegment, IonSegmentButton, IonRippleEffect, 
+   IonFab,
+   IonFabButton,
+   IonIcon} from '@ionic/react';
 import { OverlayEventDetail } from '@ionic/core/components';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab4.css';
 import { useRef, useState } from 'react';
-import { AddAssignmentForm } from '../forms/AddAssignmentForm';
+import AddAssignmentModal from '../forms/AddAssignmentModal';
 import AssignmentList from '../components/AssignmentList';
+import { add } from 'ionicons/icons';
 
 
 const Tab4: React.FC = () => {
-  const modal = useRef<HTMLIonModalElement>(null);
-  const input = useRef<HTMLIonInputElement>(null);
 
-  function confirm() {
-    modal.current?.dismiss(input.current?.value, 'confirm');
-  }
-
-  function onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
-    if (event.detail.role === 'confirm') {
-    }
-  }
   return (
     <IonPage>
       <IonHeader>
@@ -36,25 +30,13 @@ const Tab4: React.FC = () => {
 
         <AssignmentList />
 
-        <IonButton fill="outline" shape="round" id="open-modal"className="add-assignments-button"> + </IonButton>
-        <IonModal ref={modal} trigger="open-modal" onWillDismiss={(event) => onWillDismiss(event)}>
-          <IonHeader>
-            <IonToolbar>
-              <IonButtons slot="start">
-                <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
-              </IonButtons>
-              <IonTitle>Add assignment</IonTitle>
-              <IonButtons slot="end">
-                <IonButton strong={true} routerLink='/tabs/tab4' onClick={() => confirm()}>
-                  Confirm
-                </IonButton>
-              </IonButtons>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
-            <AddAssignmentForm />
-          </IonContent>
-        </IonModal>
+        <IonFab slot="fixed" vertical="bottom" horizontal="end">
+          <IonFabButton id="open-modal">
+            <IonIcon icon={add}></IonIcon>
+          </IonFabButton>
+        </IonFab>
+
+        <AddAssignmentModal trigger="open-modal" />
 
       </IonContent>
     </IonPage>

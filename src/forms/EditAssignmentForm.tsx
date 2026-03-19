@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { db } from "../db/db"
-import { IonButton, IonItem, IonInput, IonSegment, IonSegmentButton, IonLabel } from "@ionic/react"
+import { IonButton, IonItem, IonInput, IonCard, IonCardContent, IonSelect, IonSelectOption, IonNote } from "@ionic/react"
 
 function formatDateTimeLocal(date: Date) {
   const d = new Date(date)
@@ -9,10 +9,11 @@ function formatDateTimeLocal(date: Date) {
 }
 
 interface EditAssignmentFormProps {
-  assignmentId: number
+  assignmentId: number;
+  onSaved: () => void
 }
 
-export default function EditAssignmentForm({ assignmentId }: EditAssignmentFormProps) {
+export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssignmentFormProps) {
   const [title, setTitle] = useState("")
   const [date, setDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
@@ -50,6 +51,7 @@ export default function EditAssignmentForm({ assignmentId }: EditAssignmentFormP
 
       if (success) {
         setStatus(`Assignment ${title} successfully updated.`)
+        onSaved()
       } else {
         setStatus(`Failed to update assignment.`)
       }
@@ -61,65 +63,60 @@ export default function EditAssignmentForm({ assignmentId }: EditAssignmentFormP
 
   return (
     <>
-      <p>{status}</p>
+    {status != undefined && status != "" ? (
+      <IonNote color="danger">
+        {status}
+      </IonNote>
+    ) : (<></>)}
+    <IonCard>
+      <IonCardContent>
+        <IonItem>
+          <IonInput
+            label="Title"
+            labelPlacement="stacked"
+            type="text"
+            placeholder="Assignment title"
+            value={title}
+            required
+            onIonInput={(e) => setTitle(e.detail.value!)}
+          />
+        </IonItem>
 
-      <IonItem>
-        <IonInput
-          label="Title"
-          labelPlacement="stacked"
-          type="text"
-          placeholder="Assignment title"
-          value={title}
-          required
-          onIonChange={(e) => setTitle(e.detail.value!)}
-        />
-      </IonItem>
+        <IonItem>
+          <IonInput
+            label="Due date"
+            labelPlacement="stacked"
+            type="date"
+            required
+            value={formatDateTimeLocal(date).slice(0,10)}
+            onIonChange={(e) => setDate(new Date(e.detail.value!))}
+          />
+        </IonItem>
 
-      <IonItem>
-        <IonInput
-          label="Due date"
-          labelPlacement="stacked"
-          type="date"
-          required
-          value={formatDateTimeLocal(date).slice(0,10)}
-          onIonChange={(e) => setDate(new Date(e.detail.value!))}
-        />
-      </IonItem>
+        <IonItem>
+          <IonInput
+            label="Time estimate (hours)"
+            labelPlacement="stacked"
+            type="number"
+            placeholder="Time estimate (hours)"
+            value={timeEst / 60} // convert back to hours for display
+            onIonChange={(e) => setTimeEst(Number(e.detail.value) * 60)}
+          />
+        </IonItem>
 
-      <IonItem>
-        <IonInput
-          label="Time estimate (hours)"
-          labelPlacement="stacked"
-          type="number"
-          placeholder="Time estimate (hours)"
-          value={timeEst / 60} // convert back to hours for display
-          onIonChange={(e) => setTimeEst(Number(e.detail.value) * 60)}
-        />
-      </IonItem>
+        <IonItem>
+          <IonSelect label="Test type" labelPlacement="stacked" value={String(testType)} onIonChange={(e) => setTestType(Number(e.detail.value))}>
+            <IonSelectOption value="0">Exam</IonSelectOption>
+            <IonSelectOption value="1">Lab</IonSelectOption>
+            <IonSelectOption value="2">Other</IonSelectOption>
+          </IonSelect>
+        </IonItem>
 
-      <IonItem>
-        <IonLabel>Test type</IonLabel>
-        <IonSegment
-          value={testType}
-          onIonChange={(e) => setTestType(Number(e.detail.value))}
-        >
-          <IonSegmentButton value="0">
-            <IonLabel>Exam</IonLabel>
-          </IonSegmentButton>
-
-          <IonSegmentButton value="1">
-            <IonLabel>Lab</IonLabel>
-          </IonSegmentButton>
-
-          <IonSegmentButton value="2">
-            <IonLabel>Other</IonLabel>
-          </IonSegmentButton>
-        </IonSegment>
-      </IonItem>
-
-      <IonButton expand="block" onClick={updateAssignment}>
-        Save Changes
-      </IonButton>
+        <IonButton expand="block" onClick={updateAssignment}>
+          Save Changes
+        </IonButton>
+      </IonCardContent>
+    </IonCard>
     </>
   )
 }
