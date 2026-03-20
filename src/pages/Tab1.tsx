@@ -2,7 +2,7 @@ import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, Io
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput, formatDate } from '@fullcalendar/react'
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
@@ -13,6 +13,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const Tab1: React.FC = () => {
   const {logout} = useAuth()
+   const fabRef = useRef<HTMLIonFabElement>(null)
   const [weekendsVisible, setWeekendsVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
@@ -81,6 +82,13 @@ const Tab1: React.FC = () => {
     }
   }
 
+  const handleFab = () => {
+    if (isEditing){
+      setIsEditing(false)
+      fabRef.current?.close()
+    }
+  }
+
   return (
     <>
       <IonMenu contentId="main-content">
@@ -124,8 +132,8 @@ const Tab1: React.FC = () => {
             editing={isEditing}
             adding={isAdding}
           />
-          <IonFab slot="fixed" vertical="bottom" horizontal="end">
-            <IonFabButton>
+          <IonFab ref={fabRef} slot="fixed" vertical="bottom" horizontal="end">
+            <IonFabButton onClick={handleFab}>
               <IonIcon icon={isEditing ? (isAdding ? add : remove) : pencil}></IonIcon>
             </IonFabButton>
             <IonFabList side="top">
