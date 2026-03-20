@@ -27,9 +27,9 @@ const Tab1: React.FC = () => {
     return (await db.users.toArray())[0]
   }, [])
 
-  const sessionTime = user?.preffered_session_time
-  const work_hours_start = user?.work_hours_start
-  const work_hours_end = user?.work_hours_end
+  const sessionTime = user?.preffered_session_time ?? 60
+  const work_hours_start = user?.work_hours_start ?? 0
+  const work_hours_end = user?.work_hours_end ?? 24
 
   const breakTime = (sessionTime: number) => {
     if (sessionTime == 5) return 2
@@ -43,10 +43,16 @@ const Tab1: React.FC = () => {
   }
 
   useEffect(() => {
-    var timerID = setInterval(() => setNow(new Date()), 60000);
-
-    return () => clearInterval(timerID);
-  });
+    const timerID = setInterval(() => {
+      const now = new Date()
+      const hours = now.getHours()
+      if (hours >= work_hours_start && hours < work_hours_end) {
+        setNow(now)
+      }
+    }, 60000)
+    
+    return () => clearInterval(timerID)
+  }, [work_hours_start, work_hours_end])
 
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
@@ -56,11 +62,13 @@ const Tab1: React.FC = () => {
     return ScheduleSessions(
       freeTimes,
       timeForAssignments ?? 0, // timeForAssignment
-      sessionTime ?? 60,  // session length
-      breakTime(sessionTime ?? 60)   // break
+      sessionTime,  // session length
+      breakTime(sessionTime),   // break
+      work_hours_start,
+      work_hours_end
     )
 
-  }, [lingisEvents, timeForAssignments, sessionTime, now])
+  }, [lingisEvents, timeForAssignments, sessionTime, now, work_hours_start, work_hours_end])
 
   const calendarEvents = useMemo(() => {
 
@@ -141,8 +149,8 @@ const Tab1: React.FC = () => {
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
-            work_hours_start={work_hours_start ?? 0}
-            work_hours_end={work_hours_end ?? 24}
+            work_hours_start={work_hours_start}
+            work_hours_end={work_hours_end}
           />
           <IonFab ref={fabRef} slot="fixed" vertical="bottom" horizontal="end">
             <IonFabButton onClick={handleFab}>
