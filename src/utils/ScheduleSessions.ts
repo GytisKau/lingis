@@ -1,10 +1,13 @@
+import { filterWorkHours } from "../components/Calendar"
 import { LingisEvent, Session } from "../db/db"
 
 function ScheduleSessions(
   freeTimeEvents: LingisEvent[],
   timeForAssignment: number,
   timeForSession: number,
-  timeforBreak: number
+  timeforBreak: number,
+  work_hours_start: number,
+  work_hours_end: number
 ): Session[] {
 
   const fullSessionTime = timeForSession + timeforBreak
@@ -12,6 +15,11 @@ function ScheduleSessions(
 
   let sessionsLeft = sessionsNeeded
   const sessions: Session[] = []
+
+  const now = new Date()
+  freeTimeEvents = freeTimeEvents.filter(e => e.end >= now)
+
+  freeTimeEvents = filterWorkHours(freeTimeEvents, work_hours_start, work_hours_end)
 
   freeTimeEvents.sort(
     (a,b)=>a.start.getTime()-b.start.getTime()
@@ -21,7 +29,7 @@ function ScheduleSessions(
 
     if (sessionsLeft <= 0) break
 
-    const windowStart = new Date(freeTimeEvent.start)
+    const windowStart = now > freeTimeEvent.start ? now : new Date(freeTimeEvent.start)
     const windowEnd = new Date(freeTimeEvent.end)
 
     let cursor = new Date(windowStart)

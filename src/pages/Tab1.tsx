@@ -2,7 +2,7 @@ import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, Io
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput, formatDate } from '@fullcalendar/react'
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
@@ -13,6 +13,8 @@ import { useAuth } from '../hooks/useAuth';
 
 const Tab1: React.FC = () => {
   const {logout} = useAuth()
+  const fabRef = useRef<HTMLIonFabElement>(null)
+  const [now, setNow] = useState(new Date())
   const [weekendsVisible, setWeekendsVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
@@ -21,10 +23,13 @@ const Tab1: React.FC = () => {
     const assignments = await db.assignments.toArray()
     return assignments.reduce((total, a) => total + a.est_hours, 0)
   }, [])
-  const sessionTime = useLiveQuery( async () => {
-    const users = await db.users.toArray()
-    return users[0].preffered_session_time
+  const user = useLiveQuery( async () => { 
+    return (await db.users.toArray())[0]
   }, [])
+
+  const sessionTime = user?.preffered_session_time ?? 60
+  const work_hours_start = user?.work_hours_start ?? 0
+  const work_hours_end = user?.work_hours_end ?? 24
 
   const breakTime = (sessionTime: number) => {
     if (sessionTime == 5) return 2
@@ -37,6 +42,18 @@ const Tab1: React.FC = () => {
     else return 10
   }
 
+  useEffect(() => {
+    const timerID = setInterval(() => {
+      const now = new Date()
+      const hours = now.getHours()
+      if (hours >= work_hours_start && hours < work_hours_end) {
+        setNow(now)
+      }
+    }, 60000)
+    
+    return () => clearInterval(timerID)
+  }, [work_hours_start, work_hours_end])
+
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
 
@@ -45,11 +62,13 @@ const Tab1: React.FC = () => {
     return ScheduleSessions(
       freeTimes,
       timeForAssignments ?? 0, // timeForAssignment
-      sessionTime ?? 60,  // session length
-      breakTime(sessionTime ?? 60)   // break
+      sessionTime,  // session length
+      breakTime(sessionTime),   // break
+      work_hours_start,
+      work_hours_end
     )
 
-  }, [lingisEvents, timeForAssignments, sessionTime])
+  }, [lingisEvents, timeForAssignments, sessionTime, now, work_hours_start, work_hours_end])
 
   const calendarEvents = useMemo(() => {
 
@@ -78,6 +97,13 @@ const Tab1: React.FC = () => {
     } else {
       setIsEditing(true)
       setIsAdding(adding)
+    }
+  }
+
+  const handleFab = () => {
+    if (isEditing){
+      setIsEditing(false)
+      fabRef.current?.close()
     }
   }
 
@@ -123,9 +149,11 @@ const Tab1: React.FC = () => {
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
+            work_hours_start={work_hours_start}
+            work_hours_end={work_hours_end}
           />
-          <IonFab slot="fixed" vertical="bottom" horizontal="end">
-            <IonFabButton>
+          <IonFab ref={fabRef} slot="fixed" vertical="bottom" horizontal="end">
+            <IonFabButton onClick={handleFab}>
               <IonIcon icon={isEditing ? (isAdding ? add : remove) : pencil}></IonIcon>
             </IonFabButton>
             <IonFabList side="top">

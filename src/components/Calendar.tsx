@@ -8,16 +8,18 @@ import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
 import "../theme/emerald.css"
 
-import { db } from "../db/db";
+import { db, LingisEvent } from "../db/db";
 
 interface Props {
   events: EventInput[]
   weekendsVisible: boolean
   editing: boolean
-  adding: boolean
+  adding: boolean,
+  work_hours_start: number,
+  work_hours_end: number
 }
 
-const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) => {
+const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end }) => {
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -65,6 +67,11 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) 
         minute: "2-digit",
         meridiem: false,
         hour12: false
+      }}
+      businessHours={{
+        daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6],
+        startTime: `${work_hours_start}:00`,
+        endTime: `${work_hours_end}:00`
       }}
       expandRows={false}
       weekends={weekendsVisible}
@@ -293,6 +300,56 @@ function normalizeRanges(ranges: { start: Date; end: Date }[]) {
   }
 
   return merged
+}
+
+export function filterWorkHours(
+  events: LingisEvent[],
+  work_hours_start: number,
+  work_hours_end: number
+) {
+
+  const result: { start: Date; end: Date }[] = []
+
+  for (const event of events) {
+
+    if (!event.is_free) continue
+
+    let current = new Date(event.start)
+
+    const end = new Date(event.end)
+
+    // einam per dienas (jei eventas per kelias dienas)
+    while (current < end) {
+
+      const dayStart = new Date(current)
+      dayStart.setHours(work_hours_start, 0, 0, 0)
+
+      const dayEnd = new Date(current)
+      dayEnd.setHours(work_hours_end, 0, 0, 0)
+
+      // realus intervalas šiai dienai
+      const intervalStart = new Date(
+        Math.max(current.getTime(), dayStart.getTime())
+      )
+
+      const intervalEnd = new Date(
+        Math.min(end.getTime(), dayEnd.getTime())
+      )
+
+      if (intervalStart < intervalEnd) {
+        result.push({
+          start: intervalStart,
+          end: intervalEnd
+        })
+      }
+
+      // pereinam į kitą dieną
+      current.setDate(current.getDate() + 1)
+      current.setHours(0, 0, 0, 0)
+    }
+  }
+
+  return normalizeRanges(result).map(e => ({...e, is_free: true} as LingisEvent))
 }
 
 const disableScroll = () => {
