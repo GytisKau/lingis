@@ -23,10 +23,13 @@ const Tab1: React.FC = () => {
     const assignments = await db.assignments.toArray()
     return assignments.reduce((total, a) => total + a.est_hours, 0)
   }, [])
-  const sessionTime = useLiveQuery( async () => {
-    const users = await db.users.toArray()
-    return users[0].preffered_session_time
+  const user = useLiveQuery( async () => { 
+    return (await db.users.toArray())[0]
   }, [])
+
+  const sessionTime = user?.preffered_session_time
+  const work_hours_start = user?.work_hours_start
+  const work_hours_end = user?.work_hours_end
 
   const breakTime = (sessionTime: number) => {
     if (sessionTime == 5) return 2
@@ -138,6 +141,8 @@ const Tab1: React.FC = () => {
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
+            work_hours_start={work_hours_start ?? 0}
+            work_hours_end={work_hours_end ?? 24}
           />
           <IonFab ref={fabRef} slot="fixed" vertical="bottom" horizontal="end">
             <IonFabButton onClick={handleFab}>

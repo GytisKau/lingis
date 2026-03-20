@@ -14,10 +14,12 @@ interface Props {
   events: EventInput[]
   weekendsVisible: boolean
   editing: boolean
-  adding: boolean
+  adding: boolean,
+  work_hours_start: number,
+  work_hours_end: number
 }
 
-const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) => {
+const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end }) => {
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -65,6 +67,11 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding }) 
         minute: "2-digit",
         meridiem: false,
         hour12: false
+      }}
+      businessHours={{
+        daysOfWeek: [ 0, 1, 2, 3, 4, 5, 6],
+        startTime: `${work_hours_start}:00`,
+        endTime: `${work_hours_end}:00`
       }}
       expandRows={false}
       weekends={weekendsVisible}
