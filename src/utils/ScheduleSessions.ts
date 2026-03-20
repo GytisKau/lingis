@@ -13,6 +13,9 @@ function ScheduleSessions(
   let sessionsLeft = sessionsNeeded
   const sessions: Session[] = []
 
+  const now = new Date()
+  freeTimeEvents = freeTimeEvents.filter(e => e.end >= now)
+
   freeTimeEvents.sort(
     (a,b)=>a.start.getTime()-b.start.getTime()
   )
@@ -21,7 +24,7 @@ function ScheduleSessions(
 
     if (sessionsLeft <= 0) break
 
-    const windowStart = new Date(freeTimeEvent.start)
+    const windowStart = now > freeTimeEvent.start ? new Date() : new Date(freeTimeEvent.start)
     const windowEnd = new Date(freeTimeEvent.end)
 
     let cursor = new Date(windowStart)

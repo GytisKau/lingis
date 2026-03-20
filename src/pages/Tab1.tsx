@@ -2,7 +2,7 @@ import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, Io
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput, formatDate } from '@fullcalendar/react'
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
@@ -13,7 +13,8 @@ import { useAuth } from '../hooks/useAuth';
 
 const Tab1: React.FC = () => {
   const {logout} = useAuth()
-   const fabRef = useRef<HTMLIonFabElement>(null)
+  const fabRef = useRef<HTMLIonFabElement>(null)
+  const [now, setNow] = useState(new Date())
   const [weekendsVisible, setWeekendsVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
@@ -38,6 +39,12 @@ const Tab1: React.FC = () => {
     else return 10
   }
 
+  useEffect(() => {
+    var timerID = setInterval(() => setNow(new Date()), 60000);
+
+    return () => clearInterval(timerID);
+  });
+
   const sessions = useMemo(() => {
     if (!lingisEvents) return []
 
@@ -50,7 +57,7 @@ const Tab1: React.FC = () => {
       breakTime(sessionTime ?? 60)   // break
     )
 
-  }, [lingisEvents, timeForAssignments, sessionTime])
+  }, [lingisEvents, timeForAssignments, sessionTime, now])
 
   const calendarEvents = useMemo(() => {
 
