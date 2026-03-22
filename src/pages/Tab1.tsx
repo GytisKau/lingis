@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import type { LingisEvent, Session} from '../db/db';
+import type { Assignment, LingisEvent, Session} from '../db/db';
 import ScheduleSessions from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
 import { useAuth } from '../hooks/useAuth';
@@ -18,14 +18,12 @@ const Tab1: React.FC = () => {
   const [weekendsVisible, setWeekendsVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
-  const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
-  const timeForAssignments = useLiveQuery( async () => {
-    const assignments = await db.assignments.toArray()
-    return assignments.reduce((total, a) => total + a.est_hours, 0)
-  }, [])
-  const user = useLiveQuery( async () => { 
-    return (await db.users.toArray())[0]
-  }, [])
+  
+  const lingisEvents = useLiveQuery( async () => await db.events.toArray())
+  const assignments = useLiveQuery( async () => await db.assignments.toArray())
+  const user = useLiveQuery( async () => (await db.users.toArray())[0])
+
+  const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
 
   const sessionTime = user?.preffered_session_time ?? 60
   const work_hours_start = user?.work_hours_start ?? 0
@@ -72,17 +70,17 @@ const Tab1: React.FC = () => {
 
   const calendarEvents = useMemo(() => {
 
-    if (!lingisEvents) return []
-
-    const freeEvents = freeTimesToCalendarEvents(lingisEvents)
+    const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
     const sessionEvents = isEditing ? [] : sessionsToCalendarEvents(sessions)
+    const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
 
     return [
       ...freeEvents,
-      ...sessionEvents
+      ...sessionEvents,
+      ...assignmentEvents
     ]
 
-  }, [lingisEvents, sessions, isEditing])
+  }, [lingisEvents, sessions, assignments, isEditing])
 
   const handleWeekendsToggle = () => {
     setWeekendsVisible(!weekendsVisible)
@@ -186,9 +184,8 @@ function sessionsToCalendarEvents(
     start: s.start,
     end: s.end,
     title: "Session",
-    display: "auto",
-    backgroundColor: s.is_done ? "#8bc34a" : "#2196f3",
-    borderColor: s.is_done ? "#8bc34a" : "#2196f3"
+    color: s.is_done ? "#8bc34a" : "#2196f3",
+    extendedProps: {type: "session"}
   }))
 
 }
@@ -205,8 +202,24 @@ function freeTimesToCalendarEvents(
       start: e.start,
       end: e.end,
       display: "background",
-      color: "#aaaaaa"
+      color: "#aaaaaa",
+      extendedProps: {type: "freetime"}
     }))
+
+}
+
+function assignmentsToCalendarEvents(
+  assignemnt: Assignment[]
+): EventInput[] {
+
+  return assignemnt.map((s, i) => ({
+    id: `assignment-${s.id}`,
+    start: s.date,
+    allDay: true,
+    title: s.title,
+    color: "#7104ff",
+    extendedProps: {type: "assignment", dbid: s.id}
+  }))
 
 }
 
