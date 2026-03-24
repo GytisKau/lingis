@@ -9,7 +9,7 @@ import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
 import "../theme/emerald.css"
 
 import { Assignment, db, LingisEvent } from "../db/db";
-import { IonContent, IonHeader, IonTitle, IonToolbar, useIonModal } from '@ionic/react'
+import { IonContent, IonHeader, IonLabel, IonTitle, IonToolbar, useIonModal } from '@ionic/react'
 import { useState } from 'react'
 import AssignmentCard from './AssignmentCard'
 import TaskList from './TaskList'
@@ -20,37 +20,12 @@ interface Props {
   editing: boolean
   adding: boolean,
   work_hours_start: number,
-  work_hours_end: number
+  work_hours_end: number,
+  onSelectAssignment: (id: number) => void,
+  onSelectSession: (start: Date, end: Date, assignment_id: number) => void
 }
 
-const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end }) => {
-  const [currentAssignment, setCurrentAssignment] = useState<Assignment>();
-
-  const ModalExample = () => {
-    
-    if (currentAssignment == undefined){
-      return (
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Nothing to see here</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-      )
-    }
-
-    return (
-      <>
-        <IonContent className="ion-padding">
-          <AssignmentCard assignment={currentAssignment} />
-          <TaskList assignmentId={currentAssignment.id}/>
-        </IonContent>
-      </>
-    );
-  };
-
-  const [present, dismiss] = useIonModal(ModalExample, {
-    dismiss: (data: string, role: string) => dismiss(data, role),
-  });
+const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -66,10 +41,11 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
 
   const handleEventClick = async (info: EventClickData) => {
     const event = info.event
+
     if (event.extendedProps.type == "assignment"){
-      const ass_id = event.extendedProps.dbid
-      setCurrentAssignment(await db.assignments.get(ass_id))
-      present({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75]});
+      onSelectAssignment(event.extendedProps.dbid)
+    } else if(event.extendedProps.type == "session"){
+      onSelectSession(event.start!, event.end!, event.extendedProps.fk_assignment)
     }
   }
 
