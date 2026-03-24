@@ -18,6 +18,7 @@ import { OverlayEventDetail } from "@ionic/core/components"
 
 interface QuestionnaireModal {
   trigger: string
+  onClosed?: () => void
 }
 
 interface FormData {
@@ -32,7 +33,7 @@ interface FormData {
   fk_user: 1
 }
 
-const QuestionnaireModal: React.FC<QuestionnaireModal> = ({ trigger }) => {
+const QuestionnaireModal: React.FC<QuestionnaireModal> = ({ trigger, onClosed }) => {
   const [step, setStep] = useState<"questions" | "result">("questions")
   const modal = useRef<HTMLIonModalElement>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -149,7 +150,10 @@ const QuestionnaireModal: React.FC<QuestionnaireModal> = ({ trigger }) => {
       ref={modal}
       trigger={trigger}
       onWillDismiss={onWillDismiss}
-      onDidDismiss={() => setStep("questions")}
+      onDidDismiss={() => {
+        setStep("questions")
+        onClosed?.()
+      }}
     >
       <IonHeader>
         <IonToolbar>
