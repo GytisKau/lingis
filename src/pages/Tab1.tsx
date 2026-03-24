@@ -7,7 +7,7 @@ import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import type { LingisEvent, Session} from '../db/db';
-import ScheduleSessions from '../utils/ScheduleSessions';
+import ScheduleSessions, { RecommendedSession } from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
 import { useAuth } from '../hooks/useAuth';
 
@@ -54,7 +54,7 @@ const Tab1: React.FC = () => {
     return () => clearInterval(timerID)
   }, [work_hours_start, work_hours_end])
 
-  const sessions = useMemo(() => {
+  const recomendedSessions = useMemo(() => {
     if (!lingisEvents) return []
 
     const freeTimes = lingisEvents.filter(e => e.is_free)
@@ -75,14 +75,14 @@ const Tab1: React.FC = () => {
     if (!lingisEvents) return []
 
     const freeEvents = freeTimesToCalendarEvents(lingisEvents)
-    const sessionEvents = isEditing ? [] : sessionsToCalendarEvents(sessions)
+    const sessionEvents = isEditing ? [] : recommendedSessionsToCalendarEvents(recomendedSessions)
 
     return [
       ...freeEvents,
       ...sessionEvents
     ]
 
-  }, [lingisEvents, sessions, isEditing])
+  }, [lingisEvents, recomendedSessions, isEditing])
 
   const handleWeekendsToggle = () => {
     setWeekendsVisible(!weekendsVisible)
@@ -177,8 +177,8 @@ const Tab1: React.FC = () => {
 };
 
 
-function sessionsToCalendarEvents(
-  sessions: Session[]
+function recommendedSessionsToCalendarEvents(
+  sessions: RecommendedSession[]
 ): EventInput[] {
 
   return sessions.map((s, i) => ({
@@ -186,9 +186,7 @@ function sessionsToCalendarEvents(
     start: s.start,
     end: s.end,
     title: "Session",
-    display: "auto",
-    backgroundColor: s.is_done ? "#8bc34a" : "#2196f3",
-    borderColor: s.is_done ? "#8bc34a" : "#2196f3"
+    display: "auto"
   }))
 
 }

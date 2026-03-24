@@ -32,7 +32,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
   )
 
   const [selectedMinutes, setSelectedMinutes] = useState<number>(25)
-
+  
   useEffect(() => {
     if (preferredMinutes !== undefined) {
       setSelectedMinutes(preferredMinutes)

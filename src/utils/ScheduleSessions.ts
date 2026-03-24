@@ -1,6 +1,12 @@
 import { filterWorkHours } from "../components/Calendar"
 import { LingisEvent, Session } from "../db/db"
 
+export interface RecommendedSession{
+  start: Date,
+  end: Date,
+  fk_assignment: number;
+}
+
 function ScheduleSessions(
   freeTimeEvents: LingisEvent[],
   timeForAssignment: number,
@@ -8,13 +14,13 @@ function ScheduleSessions(
   timeforBreak: number,
   work_hours_start: number,
   work_hours_end: number
-): Session[] {
+): RecommendedSession[] {
 
   const fullSessionTime = timeForSession + timeforBreak
   const sessionsNeeded = Math.ceil(timeForAssignment / timeForSession)
 
   let sessionsLeft = sessionsNeeded
-  const sessions: Session[] = []
+  const sessions: RecommendedSession[] = []
 
   const now = new Date()
   freeTimeEvents = freeTimeEvents.filter(e => e.end >= now)
@@ -44,7 +50,7 @@ function ScheduleSessions(
       sessions.push({
         start: new Date(cursor),
         end: sessionEnd,
-        is_done: false
+        fk_assignment: 1,
       })
 
       sessionsLeft--
