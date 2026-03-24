@@ -50,9 +50,11 @@ interface Assignment {
 }
 
 interface Session {
+  id: number;
   start: Date;
   end: Date;
   is_done: boolean;
+  fk_assignment: number;
 }
 
 interface Task {
@@ -70,7 +72,7 @@ const db = new Dexie("LingisDatabase") as Dexie & {
   questionnaires: EntityTable<Questionnaire, "id">,
   events: EntityTable<LingisEvent, "id">,
   assignments: EntityTable<Assignment, "id">,
-  // sessions: EntityTable<Session, "id">,
+  sessions: EntityTable<Session, "id">,
   tasks: EntityTable<Task, "id">,
 }
 
@@ -80,7 +82,7 @@ db.version(1).stores({
   questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
   events: "++id, start, end, is_free",
   assignments: "++id, title, date, start_date, est_hours, assignment_type",
-  // sessions: "++id, start, end, is_done, fk_assignment",
+  sessions: "++id, start, end, is_done, fk_assignment",
   tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order"
 })
 

@@ -1,21 +1,26 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonAlert, IonButton } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, 
+  IonAlert, IonButton, useIonViewWillLeave,
+  useIonViewWillEnter } from '@ionic/react';
 import './Session.css';
 import TaskList from '../components/TaskList'
 import { useState, useEffect } from "react";
 import { RouteComponentProps } from 'react-router';
 import QuestionnaireModal from '../forms/QuestionnaireModal';
+import { db } from "../db/db"
 
 export function Timer({
   studyMinutes,
   breakMinutes,
   mode,
   setMode,
+  assignmentId,
   onOpenMentalTest
 }: {
   studyMinutes: number
   breakMinutes: number
   mode: "study" | "break"
   setMode: React.Dispatch<React.SetStateAction<"study" | "break">>
+  assignmentId: number
   onOpenMentalTest: () => void
 }) {
   const studySeconds = studyMinutes * 60
@@ -25,6 +30,8 @@ export function Timer({
   const [running, setRunning] = useState(true)
   const [showExtendAlert, setShowExtendAlert] = useState(false)
   const [showBreakExtendAlert, setShowBreakExtendAlert] = useState(false)
+  const [sessionStart, setSessionStart] = useState<Date | null>(new Date())
+
 
   const doMentalTest = () => {
     setShowBreakExtendAlert(false)
@@ -41,7 +48,7 @@ export function Timer({
           setRunning(false)
 
           if (mode === "study") {
-            setShowExtendAlert(true)
+            handleStudyFinished()
             return 0
           } else {
             setShowBreakExtendAlert(true)
@@ -62,24 +69,28 @@ export function Timer({
   const startSession = () => setRunning(true)
   const pauseSession = () => setRunning(false)
 
-  const goToBreak = () => {
-    setRunning(true)
-    setMode("break")
-    setTime(breakSeconds)
-  }
+  const goToBreak = async () => {
+  await saveStudySession()
+  setRunning(true)
+  setMode("break")
+  setTime(breakSeconds)
+}
 
   const goToStudy = () => {
-    setRunning(true)
-    setMode("study")
-    setTime(studySeconds)
-  }
+  setSessionSaved(false)
+  setSessionStart(new Date())
+  setRunning(true)
+  setMode("study")
+  setTime(studySeconds)
+}
 
-  const extendStudy = (minutes: number) => {
-    setMode("study")
-    setTime(minutes * 60)
-    setRunning(true)
-    setShowExtendAlert(false)
-  }
+const extendStudy = (minutes: number) => {
+  setSessionStart(new Date())
+  setMode("study")
+  setTime(minutes * 60)
+  setRunning(true)
+  setShowExtendAlert(false)
+}
 
   const extendBreak = (minutes: number) => {
     setMode("break")
@@ -88,23 +99,70 @@ export function Timer({
     setShowBreakExtendAlert(false)
   }
 
-  const switchToBreak = () => {
-    setRunning(true)
-    setMode("break")
-    setTime(breakSeconds)
-  }
+  const switchToBreak = async () => {
+  await saveStudySession()
+  setRunning(true)
+  setMode("break")
+  setTime(breakSeconds)
+}
 
   const switchToStudy = () => {
-    setRunning(true)
-    setMode("study")
-    setTime(studySeconds)
+  setSessionStart(new Date())
+  setRunning(true)
+  setMode("study")
+  setTime(studySeconds)
+}
+
+  const finishSession = async () => {
+  await saveStudySession()
+  setRunning(false)
+  setTime(studySeconds)
+  alert('Session finished!')
+}
+const [sessionSaved, setSessionSaved] = useState(false)
+
+  const saveStudySession = async () => {
+  if (!sessionStart || sessionSaved) return
+
+  try {
+    await db.sessions.add({
+      start: sessionStart,
+      end: new Date(),
+      is_done: true,
+      fk_assignment: assignmentId
+    })
+    setSessionSaved(true)
+  } catch (error) {
+    console.error("Failed to save session:", error)
+  }
+}
+
+const handleStudyFinished = () => {
+  saveStudySession()
+  setShowExtendAlert(true)
+}
+
+useIonViewWillLeave(() => {
+  // save only if currently studying
+  if (mode === "study" && sessionStart) {
+    saveStudySession()
   }
 
-  const finishSession = () => {
-    setRunning(false)
-    setTime(studySeconds)
-    alert('Session finished!')
-  }
+  // reset timer
+  setRunning(false)
+  setMode("study")
+  setTime(studySeconds)
+  setShowExtendAlert(false)
+  setShowBreakExtendAlert(false)
+})
+
+useIonViewWillEnter(() => {
+  setRunning(true)
+  setMode("study")
+  setTime(studySeconds)
+  setSessionStart(new Date())
+})
+
 
   return (
     <div>
@@ -186,13 +244,15 @@ export function Timer({
   )
 }
 
-interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
+interface AssignmentViewProps extends RouteComponentProps<{ id: string }, any, { studyMinutes?: number }> {}
 
-const Session: React.FC<AssignmentViewProps> = ({ match }) => {
+const Session: React.FC<AssignmentViewProps> = ({ match, location }) => {
   const [mode, setMode] = useState<"study" | "break">("study")
   const [mentalTestTrigger, setMentalTestTrigger] = useState<string | null>(null)
   const id = Number(match.params.id)
-
+const studyMinutes =
+  (location.state as { studyMinutes?: number } | undefined)?.studyMinutes ?? 25
+  
   const openMentalTest = () => {
     const triggerId = `mental-test-${Date.now()}`
     setMentalTestTrigger(triggerId)
@@ -217,10 +277,11 @@ const Session: React.FC<AssignmentViewProps> = ({ match }) => {
 
       <IonContent fullscreen className="ion-padding">
         <Timer
-          studyMinutes={1}
-          breakMinutes={1}
+          studyMinutes={studyMinutes}
+          breakMinutes={5}
           mode={mode}
           setMode={setMode}
+          assignmentId={id}
           onOpenMentalTest={openMentalTest}
         />
 
