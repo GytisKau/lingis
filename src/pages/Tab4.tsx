@@ -21,7 +21,7 @@ const Tab4: React.FC = () => {
           <IonTitle>Assignments</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent  fullscreen className="tab4-page">
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">Assignments</IonTitle>

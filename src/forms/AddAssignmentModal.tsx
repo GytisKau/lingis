@@ -8,11 +8,11 @@ function formatDateTimeLocal(date: Date) {
   return d.toISOString().slice(0, 16)
 }
 
-interface AddAssignmentModal{
+interface AddAssignmentModal {
   trigger: string;
 }
 
-const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
+const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   const [title, setTitle] = useState("")
   const [dueDate, setDueDate] = useState<Date>(new Date())
   const [startDate, setStartDate] = useState<Date>(new Date())
@@ -21,12 +21,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   const [status, setStatus] = useState("")
 
   const modal = useRef<HTMLIonModalElement>(null);
-  
+
   function confirm() {
     addAssignment()
   }
 
-  function clearValues(){
+  function clearValues() {
     setStatus("")
     setTitle("")
     setDueDate(new Date())
@@ -40,6 +40,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
       setStatus("Please fill all required fields")
       return false;
     }
+
     try {
       // Add the new assignment!
       await db.assignments.add({
@@ -61,20 +62,26 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
+            <IonButton onClick={() => modal.current?.dismiss()}>
+              Cancel
+            </IonButton>
           </IonButtons>
+
           <IonTitle>Add assignment</IonTitle>
+
           <IonButtons slot="end">
-            <IonButton strong={true} routerLink='/tabs/tab4' onClick={confirm}>
+            <IonButton strong={true} routerLink="/tabs/tab4" onClick={confirm}>
               Add
             </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
-        {status != undefined || status != "" ? (
+        {status && (
           <IonText color="danger">{status}</IonText>
-        ) : (<></>)}
+        )}
+
         <IonItem>
           <IonInput
             label="Title"
@@ -122,8 +129,9 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
 
         <IonItem>
           <IonLabel>Test type</IonLabel>
+
           <IonSegment
-            value={testType}
+            value={String(testType)}
             onIonChange={(e) => setTestType(Number(e.detail.value))}
           >
             <IonSegmentButton value="0">

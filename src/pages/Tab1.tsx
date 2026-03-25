@@ -1,9 +1,9 @@
 import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonItem, IonLabel, IonMenu, IonMenuButton, IonPage, IonProgressBar, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
-import { EventInput, formatDate } from '@fullcalendar/react'
+import { EventInput } from '@fullcalendar/react'
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
+import { add, remove, pencil, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import type { Assignment, LingisEvent, Session} from '../db/db';
@@ -19,7 +19,6 @@ const Tab1: React.FC = () => {
   const {logout} = useAuth()
   const fabRef = useRef<HTMLIonFabElement>(null)
   const [now, setNow] = useState(new Date())
-  const [weekendsVisible, setWeekendsVisible] = useState(true)
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
 
@@ -134,10 +133,6 @@ const Tab1: React.FC = () => {
     presentSession({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75, 1]});
   }
 
-  const handleWeekendsToggle = () => {
-    setWeekendsVisible(!weekendsVisible)
-  }
-
   const handleEditing = (adding: boolean)=> {
     if(isEditing){
       if(isAdding == adding)
@@ -178,35 +173,9 @@ const Tab1: React.FC = () => {
 
   return (
     <>
-      <IonMenu contentId="main-content">
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Instructions</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent className="ion-padding">
-          <IonItem>
-            <IonToggle
-              checked={weekendsVisible}
-              onIonChange={handleWeekendsToggle}
-            >Toggle weekends</IonToggle>
-          </IonItem>
-          <IonButton onClick={logout} color={'primary'} expand='block'>
-            Logout
-          </IonButton>
-          <IonButton onClick={runModel} color={'primary'} expand='block'>
-            Run Model
-          </IonButton>
-           
-        </IonContent>
-      </IonMenu>
       <IonPage id="main-content">
         <IonHeader>
           <IonToolbar>
-            <IonButtons slot="start">
-              <IonMenuButton>
-              </IonMenuButton>
-            </IonButtons>
             <IonTitle>Calendar</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -216,8 +185,9 @@ const Tab1: React.FC = () => {
               <IonTitle size="large">Calendar</IonTitle>
             </IonToolbar>
           </IonHeader>
+          
           <Calendar
-            weekendsVisible={weekendsVisible}
+            weekendsVisible={true}
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
