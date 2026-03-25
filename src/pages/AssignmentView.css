@@ -6,3 +6,9 @@
   width: 30px;
   transform: translate(-50%, -50%);
 }
+
+.assignment-view-page {
+  background: white;
+  --background: white;  /* Ionic content background */
+  min-height: 100vh;
+}

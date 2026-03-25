@@ -1,4 +1,21 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonIcon, IonProgressBar, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonChip } from '@ionic/react';
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonProgressBar,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonChip,
+  useIonViewWillLeave
+} from '@ionic/react';
+
 import { db } from '../db/db';
 import { RouteComponentProps } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -8,16 +25,25 @@ import { closeOutline, pencil } from 'ionicons/icons';
 import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
 import AssignmentCard from '../components/AssignmentCard';
+import { add } from 'ionicons/icons';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
 const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const [isEditing, setIsEditing] = useState(false);
+
+  // ✅ FIX: blur focus when leaving page
+  useIonViewWillLeave(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
+
   const id = Number(match.params.id);
-  
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
 
-  if (assignment == undefined){
+  // Loading state
+  if (assignment === undefined) {
     return (
       <IonPage>
         <IonHeader>
@@ -25,6 +51,7 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
             <IonTitle>Loading...</IonTitle>
             <IonProgressBar type="indeterminate"></IonProgressBar>
           </IonToolbar>
+          <IonProgressBar type="indeterminate" />
         </IonHeader>
         <IonContent fullscreen>
           <IonHeader collapse="condense">
@@ -41,18 +68,27 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
 
   return (
     <IonPage>
-      <IonContent fullscreen className='ion-padding'>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Assignment View</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent fullscreen className="assignment-view-page ion-padding">
         {isEditing ? (
-          <EditAssignmentForm assignmentId={id} onSaved={() => setIsEditing(false)}/>
+          <EditAssignmentForm
+            assignmentId={id}
+            onSaved={() => setIsEditing(false)}
+          />
         ) : (
           <AssignmentCard assignment={assignment} />
         )}
-        
-        <TaskList assignmentId={id}/>
+
+        <TaskList assignmentId={id} />
 
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton id="open-modal" onClick={() => setIsEditing(before => !before)}>
-            <IonIcon icon={isEditing ? closeOutline : pencil}></IonIcon>
+          <IonFabButton id="open-modal" className="outline-purple">
+            <IonIcon icon={add}></IonIcon>
           </IonFabButton>
         </IonFab>
       </IonContent>
