@@ -1,10 +1,9 @@
 import { useRef, useState } from "react"
 import { db } from "../db/db"
 import { IonButton, IonItem, IonInput, IonSegment, IonSegmentButton, IonLabel, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonContent, IonText  } from "@ionic/react"
-import { IonModalCustomEvent, OverlayEventDetail } from '@ionic/core/components';
 
 function formatDateTimeLocal(date: Date) {
-  const d = new Date(date) // copy
+  const d = new Date(date)
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
   return d.toISOString().slice(0, 16)
 }
@@ -43,15 +42,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
     }
     try {
       // Add the new assignment!
-      const id = await db.assignments.add({
+      await db.assignments.add({
         title: title,
         date: date,
         start_date: startDate,
         est_hours: timeEst * 60,
-        assignment_type: testType,
-        fk_user: 1, // TODO: replace with actual user id when auth is implemented
-        sessions: [],
-        tasks: []
+        assignment_type: testType
       })
 
       modal.current?.dismiss();
@@ -61,7 +57,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   }
 
   return (
-    <IonModal ref={modal} trigger="open-modal" onDidDismiss={clearValues}>
+    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues}>
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">

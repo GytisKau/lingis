@@ -114,7 +114,7 @@ export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssign
             type="number"
             placeholder="Time estimate (hours)"
             value={timeEst / 60} // convert back to hours for display
-            onIonChange={(e) => setTimeEst(Number(e.detail.value) * 60)}
+            onIonInput={(e) => setTimeEst(Number(e.detail.value) * 60)}
           />
         </IonItem>
 

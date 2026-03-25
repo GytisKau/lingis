@@ -7,6 +7,7 @@ import './AssignmentView.css';
 import { closeOutline, pencil } from 'ionicons/icons';
 import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
+import AssignmentCard from '../components/AssignmentCard';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
@@ -21,14 +22,14 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
       <IonPage>
         <IonHeader>
           <IonToolbar>
-            <IonTitle>Assignment view</IonTitle>
+            <IonTitle>Loading...</IonTitle>
             <IonProgressBar type="indeterminate"></IonProgressBar>
           </IonToolbar>
         </IonHeader>
         <IonContent fullscreen>
           <IonHeader collapse="condense">
             <IonToolbar>
-              <IonTitle size="large">Assignment view</IonTitle>
+              <IonTitle size="large">Loading...</IonTitle>
             </IonToolbar>
           </IonHeader>
           <IonContent className="ion-padding">
@@ -40,26 +41,11 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Assignment view</IonTitle>
-        </IonToolbar>
-      </IonHeader>
       <IonContent fullscreen className='ion-padding'>
         {isEditing ? (
           <EditAssignmentForm assignmentId={id} onSaved={() => setIsEditing(false)}/>
         ) : (
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>
-                {assignment.title}
-              </IonCardTitle>
-              <IonCardSubtitle className="ion-justify-content-between">
-                {new Date(assignment.date).toLocaleDateString()}{" "}
-                <IonChip color="primary" className='ion-text-end'>{assignment.est_hours / 60}h</IonChip>
-              </IonCardSubtitle>
-            </IonCardHeader>
-          </IonCard>
+          <AssignmentCard assignment={assignment} />
         )}
         
         <TaskList assignmentId={id}/>
