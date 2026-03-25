@@ -1,13 +1,6 @@
 import * as ort from "onnxruntime-web";
 
-// Point ONNX Runtime to the wasm files served by Vite from /public/ort/
-// Put the ort wasm assets there, for example:
-// public/ort/ort-wasm-simd-threaded.wasm
-// public/ort/ort-wasm-simd-threaded.mjs
-// ort.env.wasm.wasmPaths = "/lingis/dist/";
-// ort.env.wasm.numThreads = 1; // disables multithreading, often simpler in Vite/browser setups
-// ort.env.wasm.proxy = false;
-// ort.env.logLevel = "warning";
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@dev/dist/';
 
 export function computeSleepQuality(
   sleepHours: number,
@@ -70,10 +63,10 @@ let practiceSessionPromise: Promise<ort.InferenceSession> | null = null;
 
 function getSession(type: RecommendationType) {
   if (type === "theory") {
-    theorySessionPromise ??= ort.InferenceSession.create("/models/knn_pipeline_theory.onnx");
+    theorySessionPromise ??= ort.InferenceSession.create("/lingis/models/knn_pipeline_theory.onnx");
     return theorySessionPromise;
   }
-  practiceSessionPromise ??= ort.InferenceSession.create("/models/knn_pipeline_practice.onnx");
+  practiceSessionPromise ??= ort.InferenceSession.create("/lingis/models/knn_pipeline_practice.onnx");
   return practiceSessionPromise;
 }
 
@@ -93,7 +86,27 @@ export async function Recommendation(
   const inputName = session.inputNames[0];
   const outputName = session.outputNames[0];
 
-  const results = await session.run({ [inputName]: inputTensor });
+  const feeds: Record<string, ort.Tensor> = {
+    motivation: new ort.Tensor("float32", Float32Array.from([features.motivation]), [1, 1]),
+    mentalTiredness: new ort.Tensor("float32", Float32Array.from([features.mentalTiredness]), [1, 1]),
+    physicalTiredness: new ort.Tensor("float32", Float32Array.from([features.physicalTiredness]), [1, 1]),
+    mentalEnergy: new ort.Tensor("float32", Float32Array.from([features.mentalEnergy]), [1, 1]),
+    emotional: new ort.Tensor("float32", Float32Array.from([features.emotional]), [1, 1]),
+    physical: new ort.Tensor("float32", Float32Array.from([features.physical]), [1, 1]),
+    sleep_quality: new ort.Tensor("float32", Float32Array.from([
+      computeSleepQuality(features.sleepHours, features.avgSleep)
+    ]), [1, 1]),
+    avgTheory_code: new ort.Tensor("float32", Float32Array.from([features.avgTheory_code]), [1, 1]),
+    avgPractice_code: new ort.Tensor("float32", Float32Array.from([features.avgPractice_code]), [1, 1]),
+    avgPassive_code: new ort.Tensor("float32", Float32Array.from([features.avgPassive_code]), [1, 1]),
+    avgActive_code: new ort.Tensor("float32", Float32Array.from([features.avgActive_code]), [1, 1]),
+    effectiveness: new ort.Tensor("float32", Float32Array.from([features.effectiveness]), [1, 1]),
+  };
+
+
+  // const results = await session.run({[inputName]: inputTensor});
+  const results = await session.run(feeds, ["output_label"]);
+  console.log(results)
   const output = results[outputName].data;
   const code = Number(output[0]);
 

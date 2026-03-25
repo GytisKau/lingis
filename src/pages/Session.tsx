@@ -3,7 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar,
   useIonViewWillEnter } from '@ionic/react';
 import './Session.css';
 import TaskList from '../components/TaskList'
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { RouteComponentProps } from 'react-router';
 import QuestionnaireModal from '../forms/QuestionnaireModal';
 import { db } from "../db/db"
@@ -19,7 +19,7 @@ export function Timer({
   studyMinutes: number
   breakMinutes: number
   mode: "study" | "break"
-  setMode: React.Dispatch<React.SetStateAction<"study" | "break">>
+  setMode: Dispatch<SetStateAction<"study" | "break">>
   assignmentId: number
   onOpenMentalTest: () => void
 }) {

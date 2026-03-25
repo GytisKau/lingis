@@ -10,6 +10,7 @@ import type { LingisEvent, Session} from '../db/db';
 import ScheduleSessions, { RecommendedSession } from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
 import { useAuth } from '../hooks/useAuth';
+import { FeaturesInput, Recommendation } from '../utils/Recommendation';
 
 const Tab1: React.FC = () => {
   const {logout} = useAuth()
@@ -107,6 +108,25 @@ const Tab1: React.FC = () => {
     }
   }
 
+  const runModel = async () => {
+    const input: FeaturesInput = {
+      motivation: 4,
+      mentalTiredness: 2,
+      physicalTiredness: 3,
+      mentalEnergy: 4,
+      emotional: 3,
+      physical: 3,
+      sleepHours: 6,
+      avgSleep: 7,
+      avgTheory_code: 3,
+      avgPractice_code: 4,
+      avgPassive_code: 2,
+      avgActive_code: 3,
+      effectiveness: 4
+    }
+    console.log(await Recommendation(input, 'practice'))
+  }
+
   return (
     <>
       <IonMenu contentId="main-content">
@@ -124,6 +144,9 @@ const Tab1: React.FC = () => {
           </IonItem>
           <IonButton onClick={logout} color={'primary'} expand='block'>
             Logout
+          </IonButton>
+          <IonButton onClick={runModel} color={'primary'} expand='block'>
+            Run Model
           </IonButton>
            
         </IonContent>
