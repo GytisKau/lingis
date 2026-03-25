@@ -45,7 +45,7 @@ const LoginWizard: React.FC = () => {
     { label: ">90 min", value: 120 }
   ];
 
-  const users = useLiveQuery(async () => await db.users.toArray(), []);
+  const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
 
   useEffect(() => {
     if (users && users.length > 0) {
@@ -53,15 +53,15 @@ const LoginWizard: React.FC = () => {
     }
   }, [users]);
 
-  if (users == undefined) {
-    return (
-      <IonPage>
-        <IonContent fullscreen className="login-content">
-          <IonProgressBar type="indeterminate"></IonProgressBar>
-        </IonContent>
-      </IonPage>
-    )
-  }
+  // if (users == undefined) {
+  //   return (
+  //     <IonPage>
+  //       <IonContent fullscreen className="login-content">
+  //         <IonProgressBar type="indeterminate"></IonProgressBar>
+  //       </IonContent>
+  //     </IonPage>
+  //   )
+  // }
 
   const handleConfirm = async () => {
     if (
