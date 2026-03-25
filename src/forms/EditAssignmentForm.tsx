@@ -29,7 +29,8 @@ export default function EditAssignmentForm({
 
   const [title, setTitle] = useState("")
   const [date, setDate] = useState<Date>(new Date())
-  const [timeEst, setTimeEst] = useState<number>(0) // stored in minutes
+  const [startDate, setStartDate] = useState<Date>(new Date())
+  const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
 
@@ -40,7 +41,8 @@ export default function EditAssignmentForm({
       if (assignment) {
         setTitle(assignment.title)
         setDate(new Date(assignment.date))
-        setTimeEst(assignment.est_hours) // already in minutes
+        setStartDate(new Date(assignment.start_date))
+        setTimeEst(assignment.est_hours)
         setTestType(assignment.assignment_type)
       }
     }
@@ -57,6 +59,7 @@ export default function EditAssignmentForm({
       const success = await db.assignments.update(assignmentId, {
         title: title,
         date: date,
+        start_date: startDate,
         est_hours: timeEst,
         assignment_type: testType
       })
@@ -112,20 +115,27 @@ export default function EditAssignmentForm({
             />
           </IonItem>
 
-          {/* Time estimate */}
-          <IonItem>
-            <IonInput
-              label="Time estimate (hours)"
-              labelPlacement="stacked"
-              type="number"
-              placeholder="Time estimate (hours)"
-              value={timeEst / 60}
-              onIonChange={(e) => {
-                const val = Number(e.detail.value)
-                setTimeEst(isNaN(val) ? 0 : val * 60)
-              }}
-            />
-          </IonItem>
+        <IonItem>
+          <IonInput
+            label="Starting date"
+            labelPlacement="stacked"
+            type="date"
+            required
+            value={formatDateTimeLocal(startDate).slice(0,10)}
+            onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
+          />
+        </IonItem>
+
+        <IonItem>
+          <IonInput
+            label="Time estimate (hours)"
+            labelPlacement="stacked"
+            type="number"
+            placeholder="Time estimate (hours)"
+            value={timeEst / 60} // convert back to hours for display
+            onIonInput={(e) => setTimeEst(Number(e.detail.value) * 60)}
+          />
+        </IonItem>
 
           {/* Type */}
           <IonItem>

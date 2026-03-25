@@ -1,23 +1,9 @@
 import { useRef, useState } from "react"
 import { db } from "../db/db"
-import {
-  IonButton,
-  IonItem,
-  IonInput,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonTitle,
-  IonContent,
-  IonText
-} from "@ionic/react"
+import { IonButton, IonItem, IonInput, IonSegment, IonSegmentButton, IonLabel, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonContent, IonText  } from "@ionic/react"
 
 function formatDateTimeLocal(date: Date) {
-  const d = new Date(date) // copy
+  const d = new Date(date)
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
   return d.toISOString().slice(0, 16)
 }
@@ -28,7 +14,8 @@ interface AddAssignmentModal {
 
 const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   const [title, setTitle] = useState("")
-  const [date, setDate] = useState<Date>(new Date())
+  const [dueDate, setDueDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
@@ -42,26 +29,26 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   function clearValues() {
     setStatus("")
     setTitle("")
-    setDate(new Date())
+    setDueDate(new Date())
+    setStartDate(new Date())
     setTimeEst(0)
     setTestType(0)
   }
 
   async function addAssignment() {
-    if (!title || timeEst <= 0 || !date) {
+    if (!title || timeEst <= 0 || !dueDate) {
       setStatus("Please fill all required fields")
       return false;
     }
 
     try {
+      // Add the new assignment!
       await db.assignments.add({
         title: title,
-        date: date,
+        date: dueDate,
+        start_date: startDate,
         est_hours: timeEst * 60,
-        assignment_type: testType,
-        fk_user: 1, // TODO: replace with actual user id when auth is implemented
-        sessions: [],
-        tasks: []
+        assignment_type: testType
       })
 
       modal.current?.dismiss();
@@ -113,8 +100,19 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
             labelPlacement="stacked"
             type="date"
             required
-            value={formatDateTimeLocal(date).slice(0, 10)}
-            onIonChange={(e) => setDate(new Date(e.detail.value!))}
+            value={formatDateTimeLocal(dueDate).slice(0,10)}
+            onIonChange={(e) => setDueDate(new Date(e.detail.value!))}
+          />
+        </IonItem>
+
+        <IonItem>
+          <IonInput
+            label="From which date would you like to study?"
+            labelPlacement="stacked"
+            type="date"
+            required
+            value={formatDateTimeLocal(startDate).slice(0,10)}
+            onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
           />
         </IonItem>
 

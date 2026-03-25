@@ -1,4 +1,4 @@
-import { IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonItem, IonLabel, IonMenu, IonMenuButton, IonPage, IonProgressBar, IonSpinner, IonText, IonTitle, IonToggle, IonToolbar, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput } from '@fullcalendar/react'
@@ -6,10 +6,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import type { LingisEvent, Session} from '../db/db';
-import ScheduleSessions from '../utils/ScheduleSessions';
+import type { Assignment, LingisEvent, Session} from '../db/db';
+import ScheduleSessions, { RecommendedSession } from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
 import { useAuth } from '../hooks/useAuth';
+import { FeaturesInput, Recommendation } from '../utils/Recommendation';
+import AssignmentCard from '../components/AssignmentCard';
+import TaskList from '../components/TaskList';
+import ScheduleAllAssignments from '../utils/ScheduleSessions';
 
 const Tab1: React.FC = () => {
   const {logout} = useAuth()
@@ -17,71 +21,121 @@ const Tab1: React.FC = () => {
   const [now, setNow] = useState(new Date())
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(true);
-  const lingisEvents = useLiveQuery( async () => await db.events.toArray(), [])
-  const timeForAssignments = useLiveQuery( async () => {
-    const assignments = await db.assignments.toArray()
-    return assignments.reduce((total, a) => total + a.est_hours, 0)
-  }, [])
-  const user = useLiveQuery( async () => { 
-    return (await db.users.toArray())[0]
-  }, [])
 
-  const sessionTime = user?.preffered_session_time ?? 60
-  const work_hours_start = user?.work_hours_start ?? 0
-  const work_hours_end = user?.work_hours_end ?? 24
+  const [currentAssignment, setCurrentAssignment] = useState<Assignment>();
+  const [currentSession, setCurrentSession] = useState<RecommendedSession>();
+  
+  const lingisEvents = useLiveQuery( async () => await db.events.toArray())
+  const assignments = useLiveQuery( async () => await db.assignments.toArray())
+  const user = useLiveQuery( async () => (await db.users.toArray())[0])
 
-  const breakTime = (sessionTime: number) => {
-    if (sessionTime == 5) return 2
-    else if (sessionTime == 10) return 3
-    else if (sessionTime == 20) return 5
-    else if (sessionTime == 30) return 10
-    else if (sessionTime == 60) return 10
-    else if (sessionTime == 90) return 15
-    else if (sessionTime == 120) return 30
-    else return 10
-  }
+  const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
 
   useEffect(() => {
+    if (!user) return
+
     const timerID = setInterval(() => {
       const now = new Date()
       const hours = now.getHours()
-      if (hours >= work_hours_start && hours < work_hours_end) {
+      if (hours >= user.work_hours_start && hours < user.work_hours_end) {
         setNow(now)
       }
     }, 60000)
     
     return () => clearInterval(timerID)
-  }, [work_hours_start, work_hours_end])
+  }, [user])
 
-  const sessions = useMemo(() => {
-    if (!lingisEvents) return []
+  const recomendedSessions = useMemo(() => {
+    if (!lingisEvents || !user || !assignments) return []
 
     const freeTimes = lingisEvents.filter(e => e.is_free)
     
-    return ScheduleSessions(
+    return ScheduleAllAssignments(
+      assignments,
       freeTimes,
-      timeForAssignments ?? 0,
-      sessionTime,
-      breakTime(sessionTime),
-      work_hours_start,
-      work_hours_end
+      user
     )
 
-  }, [lingisEvents, timeForAssignments, sessionTime, now, work_hours_start, work_hours_end])
+  }, [lingisEvents, timeForAssignments, now, user])
 
   const calendarEvents = useMemo(() => {
 
-    if (!lingisEvents) return []
-
-    const freeEvents = freeTimesToCalendarEvents(lingisEvents)
-    const sessionEvents = isEditing ? [] : sessionsToCalendarEvents(sessions)
+    const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
+    const sessionEvents = isEditing ? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
+    const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
 
     return [
       ...freeEvents,
-      ...sessionEvents
+      ...sessionEvents,
+      ...assignmentEvents
     ]
 
-  }, [lingisEvents, sessions, isEditing])
+  }, [lingisEvents, recomendedSessions, assignments, isEditing])
+
+  const ModalAssignment = () => {
+    return (
+      <>
+          {currentAssignment != undefined ? 
+            <IonContent className="ion-padding">
+              <AssignmentCard assignment={currentAssignment}/>
+              <TaskList assignmentId={currentAssignment.id}/>
+            </IonContent>
+            :
+            <IonContent className='ion-padding ion-text-center'>
+              <IonSpinner name="dots" style={{width: "5em", height: "5em", margin: "auto"}}></IonSpinner>
+            </IonContent>
+          }
+      </>
+    );
+  };
+
+  const ModalSession = () => {
+    if(!currentSession || !currentAssignment){
+      return  (
+        <IonContent className='ion-padding ion-text-center'>
+          <IonSpinner name="dots" style={{width: "5em", height: "5em", margin: "auto"}}></IonSpinner>
+        </IonContent>
+      )
+    }
+
+    const startDay = currentSession.start.toLocaleDateString()
+    const endDay = currentSession.end.toLocaleDateString()
+    const startTime = currentSession.start.toLocaleTimeString().substring(0, 5)
+    const endtime = currentSession.end.toLocaleTimeString().substring(0, 5)
+    return (
+      <IonContent className="ion-padding">
+        <IonLabel>
+          {startDay == endDay ?
+            `${startDay} ${startTime} - ${endtime}`
+            :
+            `${startDay} ${startTime} - ${endDay} ${endtime}` 
+          }
+        </IonLabel>
+        <AssignmentCard assignment={currentAssignment}/>
+        <TaskList assignmentId={currentAssignment.id}/>
+      </IonContent>
+    );
+  };
+
+  const [presentAssignment] = useIonModal(ModalAssignment);
+  const [presentSession] = useIonModal(ModalSession);
+
+  const handleAssignmentSelect = (id: number) => {
+    if (assignments == undefined) return
+    setCurrentAssignment(assignments.filter(a => a.id == id)[0])
+    presentAssignment({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75, 1]});
+  }
+  
+  const handleSessionSelect = (start: Date, end: Date, assignment_id: number) => {
+    if (assignments == undefined) return
+    setCurrentAssignment(assignments.filter(a => a.id == assignment_id)[0])
+    setCurrentSession(recomendedSessions.filter(s => s.start.getTime() == start.getTime() && s.end.getTime() == end.getTime())[0])
+    presentSession({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75, 1]});
+  }
+
+  const handleWeekendsToggle = () => {
+    setWeekendsVisible(!weekendsVisible)
+  }
 
   const handleEditing = (adding: boolean)=> {
     if(isEditing){
@@ -102,9 +156,50 @@ const Tab1: React.FC = () => {
     }
   }
 
+  const runModel = async () => {
+    const input: FeaturesInput = {
+      motivation: 4,
+      mentalTiredness: 2,
+      physicalTiredness: 3,
+      mentalEnergy: 4,
+      emotional: 3,
+      physical: 3,
+      sleepHours: 6,
+      avgSleep: 7,
+      avgTheory_code: 3,
+      avgPractice_code: 4,
+      avgPassive_code: 2,
+      avgActive_code: 3,
+      effectiveness: 4
+    }
+    console.log(await Recommendation(input, 'practice'))
+  }
+
   return (
     <>
-      <IonPage>
+      <IonMenu contentId="main-content">
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Instructions</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding">
+          <IonItem>
+            <IonToggle
+              checked={weekendsVisible}
+              onIonChange={handleWeekendsToggle}
+            >Toggle weekends</IonToggle>
+          </IonItem>
+          <IonButton onClick={logout} color={'primary'} expand='block'>
+            Logout
+          </IonButton>
+          <IonButton onClick={runModel} color={'primary'} expand='block'>
+            Run Model
+          </IonButton>
+           
+        </IonContent>
+      </IonMenu>
+      <IonPage id="main-content">
         <IonHeader>
           <IonToolbar>
             <IonTitle>Calendar</IonTitle>
@@ -122,8 +217,10 @@ const Tab1: React.FC = () => {
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
-            work_hours_start={work_hours_start}
-            work_hours_end={work_hours_end}
+            work_hours_start={user?.work_hours_start ?? 0}
+            work_hours_end={user?.work_hours_end ?? 24}
+            onSelectAssignment={handleAssignmentSelect}
+            onSelectSession={handleSessionSelect}
           />
           <IonFab ref={fabRef} slot="fixed" vertical="bottom" horizontal="end">
             <IonFabButton onClick={handleFab}>
@@ -150,18 +247,18 @@ const Tab1: React.FC = () => {
 };
 
 
-function sessionsToCalendarEvents(
-  sessions: Session[]
+function recomendedSessionsToCalendarEvents(
+  sessions: RecommendedSession[],
+  assignments: Assignment[]
 ): EventInput[] {
 
   return sessions.map((s, i) => ({
-    id: `session-${i}`,
+    id: `recommendedSession-${i}`,
     start: s.start,
     end: s.end,
-    title: "Session",
-    display: "auto",
-    backgroundColor: s.is_done ? "#8bc34a" : "#2196f3",
-    borderColor: s.is_done ? "#8bc34a" : "#2196f3"
+    title: assignments.filter(a => a.id == s.fk_assignment)[0].title,
+    color:  "#2196f3",
+    extendedProps: {type: "recommendedSession", fk_assignment: s.fk_assignment}
   }))
 
 }
@@ -178,8 +275,24 @@ function freeTimesToCalendarEvents(
       start: e.start,
       end: e.end,
       display: "background",
-      color: "#aaaaaa"
+      color: "#aaaaaa",
+      extendedProps: {type: "freetime"}
     }))
+
+}
+
+function assignmentsToCalendarEvents(
+  assignemnt: Assignment[]
+): EventInput[] {
+
+  return assignemnt.map((s, i) => ({
+    id: `assignment-${s.id}`,
+    start: s.date,
+    allDay: true,
+    title: s.title,
+    color: "#7104ff",
+    extendedProps: {type: "assignment", dbid: s.id}
+  }))
 
 }
 
