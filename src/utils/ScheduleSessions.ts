@@ -33,9 +33,9 @@ function ScheduleAllAssignments(
   )
 
   for (const assignment of sortedAssignments) {
-
+    const availableAssignmentSlots = availableSlots.filter(slot => slot.end.getTime() > assignment.start_date.getTime())
     const sessions = ScheduleSessions(
-      availableSlots,
+      availableAssignmentSlots,
       assignment.est_hours,
       user.preffered_session_time,
       breakTime(user.preffered_session_time),

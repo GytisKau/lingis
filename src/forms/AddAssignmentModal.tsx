@@ -14,7 +14,7 @@ interface AddAssignmentModal{
 
 const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   const [title, setTitle] = useState("")
-  const [date, setDate] = useState<Date>(new Date())
+  const [dueDate, setDueDate] = useState<Date>(new Date())
   const [startDate, setStartDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
@@ -29,14 +29,14 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   function clearValues(){
     setStatus("")
     setTitle("")
-    setDate(new Date())
+    setDueDate(new Date())
     setStartDate(new Date())
     setTimeEst(0)
     setTestType(0)
   }
 
   async function addAssignment() {
-    if (!title || timeEst <= 0 || !date) {
+    if (!title || timeEst <= 0 || !dueDate) {
       setStatus("Please fill all required fields")
       return false;
     }
@@ -44,7 +44,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
       // Add the new assignment!
       await db.assignments.add({
         title: title,
-        date: date,
+        date: dueDate,
         start_date: startDate,
         est_hours: timeEst * 60,
         assignment_type: testType
@@ -93,8 +93,8 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
             labelPlacement="stacked"
             type="date"
             required
-            value={formatDateTimeLocal(date).slice(0,10)}
-            onIonChange={(e) => setDate(new Date(e.detail.value!))}
+            value={formatDateTimeLocal(dueDate).slice(0,10)}
+            onIonChange={(e) => setDueDate(new Date(e.detail.value!))}
           />
         </IonItem>
 
@@ -104,7 +104,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
             labelPlacement="stacked"
             type="date"
             required
-            value={formatDateTimeLocal(date).slice(0,10)}
+            value={formatDateTimeLocal(startDate).slice(0,10)}
             onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
           />
         </IonItem>

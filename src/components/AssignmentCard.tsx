@@ -19,7 +19,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({assignment}) => {
           {assignment?.title}
         </IonCardTitle>
         <IonCardSubtitle className="ion-justify-content-between">
-          {new Date(assignment.date).toLocaleDateString()}{" "}
+          From: {new Date(assignment.start_date).toLocaleDateString()} Due: {new Date(assignment.date).toLocaleDateString()}
           <IonChip color="primary" className='ion-text-end'>{assignment.est_hours / 60}h</IonChip>
         </IonCardSubtitle>
       </IonCardHeader>
