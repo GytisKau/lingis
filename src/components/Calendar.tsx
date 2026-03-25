@@ -44,7 +44,7 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
 
     if (event.extendedProps.type == "assignment"){
       onSelectAssignment(event.extendedProps.dbid)
-    } else if(event.extendedProps.type == "session"){
+    } else if(event.extendedProps.type == "recommendedSession"){
       onSelectSession(event.start!, event.end!, event.extendedProps.fk_assignment)
     }
   }
