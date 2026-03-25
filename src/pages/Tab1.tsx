@@ -133,10 +133,6 @@ const Tab1: React.FC = () => {
     presentSession({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75, 1]});
   }
 
-  const handleWeekendsToggle = () => {
-    setWeekendsVisible(!weekendsVisible)
-  }
-
   const handleEditing = (adding: boolean)=> {
     if(isEditing){
       if(isAdding == adding)
@@ -177,28 +173,6 @@ const Tab1: React.FC = () => {
 
   return (
     <>
-      <IonMenu contentId="main-content">
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Instructions</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent className="ion-padding">
-          <IonItem>
-            <IonToggle
-              checked={weekendsVisible}
-              onIonChange={handleWeekendsToggle}
-            >Toggle weekends</IonToggle>
-          </IonItem>
-          <IonButton onClick={logout} color={'primary'} expand='block'>
-            Logout
-          </IonButton>
-          <IonButton onClick={runModel} color={'primary'} expand='block'>
-            Run Model
-          </IonButton>
-           
-        </IonContent>
-      </IonMenu>
       <IonPage id="main-content">
         <IonHeader>
           <IonToolbar>
