@@ -1,4 +1,4 @@
-import FullCalendar, { DateSelectData, EventInput } from '@fullcalendar/react'
+import FullCalendar, { DateSelectData, EventClickData, EventDisplayData, EventInput } from '@fullcalendar/react'
 import themePlugin from '@fullcalendar/react/themes/breezy' // YOUR THEME
 import interactionPlugin from '@fullcalendar/react/interaction'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
@@ -8,7 +8,11 @@ import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
 import "../theme/emerald.css"
 
-import { db, LingisEvent } from "../db/db";
+import { Assignment, db, LingisEvent } from "../db/db";
+import { IonContent, IonHeader, IonLabel, IonTitle, IonToolbar, useIonModal } from '@ionic/react'
+import { useState } from 'react'
+import AssignmentCard from './AssignmentCard'
+import TaskList from './TaskList'
 
 interface Props {
   events: EventInput[]
@@ -16,10 +20,12 @@ interface Props {
   editing: boolean
   adding: boolean,
   work_hours_start: number,
-  work_hours_end: number
+  work_hours_end: number,
+  onSelectAssignment: (id: number) => void,
+  onSelectSession: (start: Date, end: Date, assignment_id: number) => void
 }
 
-const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end }) => {
+const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
 
   const handleSelect = async (selectInfo: DateSelectData) => {
 
@@ -33,11 +39,21 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
     selectInfo.view.calendar.unselect()
   }
 
+  const handleEventClick = async (info: EventClickData) => {
+    const event = info.event
+
+    if (event.extendedProps.type == "assignment"){
+      onSelectAssignment(event.extendedProps.dbid)
+    } else if(event.extendedProps.type == "session"){
+      onSelectSession(event.start!, event.end!, event.extendedProps.fk_assignment)
+    }
+  }
+
   return (
     <FullCalendar
       plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin]}
       headerToolbar={{
-        left: 'prev,next today',
+        left: 'prev,today,next',
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       }}
       initialView='timeGridWeek'
@@ -54,8 +70,15 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
       selectLongPressDelay={300}
       selectMinDistance={5}
       firstDay={1}
-      weekNumbers={true}
-      allDaySlot={false}
+      eventClass={(arg: EventDisplayData) => {
+        if (arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session') {
+          return 'ion-display-none';
+        }
+        return "";
+      }}
+      eventClick={handleEventClick}
+      borderless={true}
+      allDaySlot={true}
       eventTimeFormat={{
         hour: "numeric",
         minute: "2-digit",
@@ -73,7 +96,6 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
         startTime: `${work_hours_start}:00`,
         endTime: `${work_hours_end}:00`
       }}
-      expandRows={false}
       weekends={weekendsVisible}
       events={events}
       select={handleSelect}
