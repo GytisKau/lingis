@@ -1,7 +1,20 @@
 import { useRef, useState } from "react"
 import { db } from "../db/db"
-import { IonButton, IonItem, IonInput, IonSegment, IonSegmentButton, IonLabel, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonContent, IonText  } from "@ionic/react"
-import { IonModalCustomEvent, OverlayEventDetail } from '@ionic/core/components';
+import {
+  IonButton,
+  IonItem,
+  IonInput,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonTitle,
+  IonContent,
+  IonText
+} from "@ionic/react"
 
 function formatDateTimeLocal(date: Date) {
   const d = new Date(date) // copy
@@ -9,11 +22,11 @@ function formatDateTimeLocal(date: Date) {
   return d.toISOString().slice(0, 16)
 }
 
-interface AddAssignmentModal{
+interface AddAssignmentModal {
   trigger: string;
 }
 
-const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
+const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   const [title, setTitle] = useState("")
   const [date, setDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
@@ -21,12 +34,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   const [status, setStatus] = useState("")
 
   const modal = useRef<HTMLIonModalElement>(null);
-  
+
   function confirm() {
     addAssignment()
   }
 
-  function clearValues(){
+  function clearValues() {
     setStatus("")
     setTitle("")
     setDate(new Date())
@@ -39,9 +52,9 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
       setStatus("Please fill all required fields")
       return false;
     }
+
     try {
-      // Add the new assignment!
-      const id = await db.assignments.add({
+      await db.assignments.add({
         title: title,
         date: date,
         est_hours: timeEst * 60,
@@ -58,24 +71,30 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   }
 
   return (
-    <IonModal ref={modal} trigger="open-modal" onDidDismiss={clearValues}>
+    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues}>
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={() => modal.current?.dismiss()}>Cancel</IonButton>
+            <IonButton onClick={() => modal.current?.dismiss()}>
+              Cancel
+            </IonButton>
           </IonButtons>
+
           <IonTitle>Add assignment</IonTitle>
+
           <IonButtons slot="end">
-            <IonButton strong={true} routerLink='/tabs/tab4' onClick={confirm}>
+            <IonButton strong={true} routerLink="/tabs/tab4" onClick={confirm}>
               Add
             </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
-        {status != undefined || status != "" ? (
+        {status && (
           <IonText color="danger">{status}</IonText>
-        ) : (<></>)}
+        )}
+
         <IonItem>
           <IonInput
             label="Title"
@@ -94,7 +113,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
             labelPlacement="stacked"
             type="date"
             required
-            value={formatDateTimeLocal(date).slice(0,10)}
+            value={formatDateTimeLocal(date).slice(0, 10)}
             onIonChange={(e) => setDate(new Date(e.detail.value!))}
           />
         </IonItem>
@@ -112,8 +131,9 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
 
         <IonItem>
           <IonLabel>Test type</IonLabel>
+
           <IonSegment
-            value={testType}
+            value={String(testType)}
             onIonChange={(e) => setTestType(Number(e.detail.value))}
           >
             <IonSegmentButton value="0">

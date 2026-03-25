@@ -1,18 +1,130 @@
-.add-assignments-button {
-  position: absolute;
-  bottom: 50px;
-  right: 30px;
-  height: 30px;
-  width: 30px;
-  transform: translate(-50%, -50%);
+/* -------------------------- */
+/* Tab4 Page Scoped CSS        */
+/* -------------------------- */
+
+.tab4-page {
+  background: white;
+  --background: white;
+  position: relative; /* ensure stacking context */
 }
 
-.centered-text{
+/* -------------------------- */
+/* Add Assignment FAB Button   */
+/* -------------------------- */
+ion-fab-button {
+  /* position: absolute; */
+  /* bottom: 50px; */
+  /* right: 30px; */
+  /* height: 30px;
+  width: 30px; */
+  /* transform: translate(-50%, -50%); */
+}
+
+/* -------------------------- */
+/* Centered Placeholder Text   */
+/* -------------------------- */
+.tab4-page .centered-text {
   position: absolute;
   font-style: italic;
   font-size: 30px;
   left: 50%;
   top: 30%;
-  transform: translate(-50%, -50%); 
+  transform: translate(-50%, -50%);
   padding: 2em;
+}
+
+/* -------------------------- */
+/* Assignment Item Cards       */
+/* -------------------------- */
+.tab4-page .assignment-item {
+  margin: 8px;
+  border-radius: 12px;
+  background: #cee1f7 !important; /* base color */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Assignment Variants */
+.tab4-page .assignment-item.exam {
+  background: #ffcdd2 !important;
+  color: #7f0000;
+  border-left: 6px solid #e53935;
+}
+
+.tab4-page .assignment-item.lab {
+  background: #bbdefb !important;
+  color: #0d47a1;
+  border-left: 6px solid #1e88e5;
+}
+
+.tab4-page .assignment-item.other {
+  background: #c8e6c9 !important;
+  color: #1b5e20;
+  border-left: 6px solid #43a047;
+}
+
+/* -------------------------- */
+/* Ionic inner background fix */
+/* -------------------------- */
+.tab4-page ion-item.assignment-item {
+  --inner-background: #cee1f7; /* match card background */
+}
+
+.tab4-page ion-item.assignment-item.exam {
+  --inner-background: #ffcdd2;
+}
+
+.tab4-page ion-item.assignment-item.lab {
+  --inner-background: #bbdefb;
+}
+
+.tab4-page ion-item.assignment-item.other {
+  --inner-background: #c8e6c9;
+}
+
+/* -------------------------- */
+/* Assignment Card Layout      */
+/* -------------------------- */
+.tab4-page .assignment-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tab4-page .assignment-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.tab4-page .assignment-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* -------------------------- */
+/* Trash Button Styling        */
+/* -------------------------- */
+.tab4-page .trash-outline {
+  background: transparent !important;
+  border: 2px solid #e53935 !important;
+  border-radius: 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab4-page .trash-outline ion-icon {
+  color: #e53935 !important;
+  font-size: 20px;
+}
+
+/* -------------------------- */
+/* Ionic Modal Fix             */
+/* -------------------------- */
+.tab4-page ion-modal {
+  z-index: 10000;
+  --background: white;       /* fully opaque */
+  --backdrop-opacity: 1;     /* no transparency */
 }

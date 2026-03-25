@@ -12,10 +12,18 @@
   gap: 20px;
 }
 
-.timer-button{
-    display: inline-block;
-    text-align: center;
-    justify-content: center;
-    gap: 20px;
-    margin: 20px 10px;
+.timer-button {
+  display: inline-block;
+  text-align: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 10px;
+  /* Remove any focus outline */
+  outline: none !important;
+}
+
+/* Remove outline on click/tap */
+.timer-button:focus,
+.timer-button:active {
+  outline: none !important;
 }

@@ -1,21 +1,38 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/react';
+import { useAuth } from '../hooks/useAuth';
 import './Tab5.css';
 
 const Tab5: React.FC = () => {
+  const { logout } = useAuth();
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Tab 5</IonTitle>
+          <IonTitle>Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className='ion-padding'>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Tab 5</IonTitle>
+            <IonTitle size="large">Profile Preferences</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonButton routerLink='/loginwizard' expand='block'>Wizard preferences</IonButton>
+        
+        <IonButton 
+          routerLink='/loginwizard' 
+          expand='block'
+        >
+          Wizard Preferences
+        </IonButton>
+        
+        <IonButton 
+          onClick={logout} 
+          expand='block'
+          className="logout-button"
+        >
+          Logout
+        </IonButton>
       </IonContent>
     </IonPage>
   );

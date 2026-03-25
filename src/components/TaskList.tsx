@@ -17,36 +17,60 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [isDisabled, setIsDisabled] = useState(true);
-  const dbTasks = useLiveQuery(() => db.tasks.where("fk_assignment").equals(assignmentId).toArray(), [assignmentId]) ?? [];
 
-  
+  const dbTasks =
+    useLiveQuery(
+      () => db.tasks.where("fk_assignment").equals(assignmentId).toArray(),
+      [assignmentId]
+    ) ?? [];
+
+  // ✅ helper to prevent focus sticking
+  const blurActiveElement = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
   useEffect(() => {
-  setTasks(
-    dbTasks // Fixed from db_tasks
-      .sort((a: Task, b: Task) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)) // Added Task types
-      .map((t: Task) => ({ 
-        ...t, 
-        editing: false 
-      })) // Added Task type
-  );
-}, [dbTasks]);
+    setTasks(
+      dbTasks
+        .sort((a: Task, b: Task) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0))
+        .map((t: Task) => ({
+          ...t,
+          editing: false
+        }))
+    );
+  }, [dbTasks]);
 
   const addTask = () => {
-    setTasks([...tasks, {
-      id: null, title: "", difficulty_rating: -1, is_done: false,
-      task_type: -1, fk_assignment: assignmentId,
-      toggle_order: tasks.length, editing: true
-    }]);
+    blurActiveElement();
+    setTasks([
+      ...tasks,
+      {
+        id: null,
+        title: "",
+        difficulty_rating: -1,
+        is_done: false,
+        task_type: -1,
+        fk_assignment: assignmentId,
+        toggle_order: tasks.length,
+        editing: true
+      }
+    ]);
   };
 
   const updateTask = (index: number, field: string, value: any) => {
-    setTasks(tasks.map((t, i) => i === index ? { ...t, [field]: value } : t));
+    setTasks(tasks.map((t, i) => (i === index ? { ...t, [field]: value } : t)));
   };
 
-  const isTaskValid = (task: any) => 
-    task.title?.trim() !== "" && task.difficulty_rating !== -1 && task.task_type !== -1;
+  const isTaskValid = (task: any) =>
+    task.title?.trim() !== "" &&
+    task.difficulty_rating !== -1 &&
+    task.task_type !== -1;
 
   const finishEditing = async (index: number) => {
+    blurActiveElement();
+
     const task = tasks[index];
     const taskData = {
       title: task.title,
@@ -70,17 +94,27 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
   };
 
   const deleteTask = async (index: number) => {
+    blurActiveElement();
+
     const task = tasks[index];
     if (task.id != null) await db.tasks.delete(task.id);
-    const newTasks = tasks.filter((_, i) => i !== index).map((t, i) => {
-      const updated = { ...t, toggle_order: i };
-      if (updated.id != null) db.tasks.update(updated.id, { toggle_order: i });
-      return updated;
-    });
+
+    const newTasks = tasks
+      .filter((_, i) => i !== index)
+      .map((t, i) => {
+        const updated = { ...t, toggle_order: i };
+        if (updated.id != null) {
+          db.tasks.update(updated.id, { toggle_order: i });
+        }
+        return updated;
+      });
+
     setTasks(newTasks);
   };
 
   const handleReorderEnd = (event: ReorderEndCustomEvent) => {
+    blurActiveElement();
+
     const newTasks = [...tasks];
     const [movedItem] = newTasks.splice(event.detail.from, 1);
     newTasks.splice(event.detail.to, 0, movedItem);
@@ -89,87 +123,139 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
   };
 
   const toggleReorder = () => {
+    blurActiveElement();
+
     if (!isDisabled) {
       tasks.forEach((task, i) => {
-        if (task.id != null) db.tasks.update(task.id, { toggle_order: i });
+        if (task.id != null) {
+          db.tasks.update(task.id, { toggle_order: i });
+        }
       });
     }
+
     setIsDisabled(!isDisabled);
   };
 
   return (
     <>
       <IonList>
-        <IonReorderGroup disabled={isDisabled} onIonReorderEnd={handleReorderEnd}>
+        <IonReorderGroup
+          disabled={isDisabled}
+          onIonReorderEnd={handleReorderEnd}
+        >
           {tasks.map((task, index) => (
             <IonItem key={task.id ?? `new-${index}`}>
               <IonGrid>
                 <IonRow className="ion-align-items-center">
+                  
                   <IonCol size="1">
                     <IonCheckbox
                       checked={task.is_done}
                       onIonChange={async (e) => {
+                        blurActiveElement();
                         const newVal = e.detail.checked;
                         updateTask(index, "is_done", newVal);
-                        if (task.id != null) await db.tasks.update(task.id, { is_done: newVal });
+                        if (task.id != null) {
+                          await db.tasks.update(task.id, { is_done: newVal });
+                        }
                       }}
                     />
                   </IonCol>
+
                   <IonCol size="6">
                     {task.editing ? (
                       <IonInput
                         value={task.title}
-                        onIonInput={(e) => updateTask(index, "title", e.detail.value)}
+                        onIonInput={(e) =>
+                          updateTask(index, "title", e.detail.value)
+                        }
+                        onIonBlur={blurActiveElement}
                       />
                     ) : (
                       <IonText>{task.title}</IonText>
                     )}
                   </IonCol>
+
                   <IonCol size="1">
                     <IonSelect
                       value={task.difficulty_rating}
-                      onIonChange={(e) => updateTask(index, "difficulty_rating", e.detail.value)}
+                      onIonChange={(e) => {
+                        blurActiveElement();
+                        updateTask(
+                          index,
+                          "difficulty_rating",
+                          e.detail.value
+                        );
+                      }}
                     >
                       <IonSelectOption value={0}>1</IonSelectOption>
                       <IonSelectOption value={1}>2</IonSelectOption>
                       <IonSelectOption value={2}>3</IonSelectOption>
                     </IonSelect>
                   </IonCol>
+
                   <IonCol size="1">
                     <IonSelect
                       value={task.task_type}
-                      onIonChange={(e) => updateTask(index, "task_type", e.detail.value)}
+                      onIonChange={(e) => {
+                        blurActiveElement();
+                        updateTask(index, "task_type", e.detail.value);
+                      }}
                     >
                       <IonSelectOption value="0">Passive</IonSelectOption>
                       <IonSelectOption value="1">Active</IonSelectOption>
                       <IonSelectOption value="2">Testing</IonSelectOption>
                     </IonSelect>
                   </IonCol>
+
                   <IonCol size="3">
                     {task.editing ? (
-                      <IonButton size="small" disabled={!isTaskValid(task)} onClick={() => finishEditing(index)}>Save</IonButton>
+                      <IonButton
+                        size="small"
+                        disabled={!isTaskValid(task)}
+                        onClick={() => finishEditing(index)}
+                      >
+                        Save
+                      </IonButton>
                     ) : (
                       <>
-                        <IonButton size="small" onClick={() => updateTask(index, 'editing', true)}>
+                        <IonButton
+                          size="small"
+                          onClick={() => {
+                            blurActiveElement();
+                            updateTask(index, 'editing', true);
+                          }}
+                        >
                           <IonIcon icon={pencil} />
                         </IonButton>
-                        <IonButton size="small" color="danger" onClick={() => deleteTask(index)}>
+
+                        <IonButton
+                          size="small"
+                          color="danger"
+                          onClick={() => deleteTask(index)}
+                        >
                           <IonIcon icon={trash} />
                         </IonButton>
                       </>
                     )}
                   </IonCol>
+
                 </IonRow>
               </IonGrid>
+
               <IonReorder slot="end" />
             </IonItem>
           ))}
         </IonReorderGroup>
       </IonList>
+
       <IonButton onClick={toggleReorder}>
         {isDisabled ? "Toggle Reorder" : "Finish Toggle Reorder"}
       </IonButton>
-      <IonButton fill="outline" shape="round" onClick={addTask}> + </IonButton>
+
+      <IonButton fill="outline" shape="round" onClick={addTask}>
+        +
+      </IonButton>
     </>
   );
 };
