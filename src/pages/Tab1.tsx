@@ -7,9 +7,10 @@ import { add, remove, pencil, trash, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import type { Assignment, LingisEvent, Session} from '../db/db';
-import ScheduleSessions from '../utils/ScheduleSessions';
+import ScheduleSessions, { RecommendedSession } from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
 import { useAuth } from '../hooks/useAuth';
+import { FeaturesInput, Recommendation } from '../utils/Recommendation';
 import AssignmentCard from '../components/AssignmentCard';
 import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';
@@ -23,7 +24,7 @@ const Tab1: React.FC = () => {
   const [isAdding, setIsAdding] = useState(true);
 
   const [currentAssignment, setCurrentAssignment] = useState<Assignment>();
-  const [currentSession, setCurrentSession] = useState<Session>();
+  const [currentSession, setCurrentSession] = useState<RecommendedSession>();
   
   const lingisEvents = useLiveQuery( async () => await db.events.toArray())
   const assignments = useLiveQuery( async () => await db.assignments.toArray())
@@ -45,7 +46,7 @@ const Tab1: React.FC = () => {
     return () => clearInterval(timerID)
   }, [user])
 
-  const sessions = useMemo(() => {
+  const recomendedSessions = useMemo(() => {
     if (!lingisEvents || !user || !assignments) return []
 
     const freeTimes = lingisEvents.filter(e => e.is_free)
@@ -61,7 +62,7 @@ const Tab1: React.FC = () => {
   const calendarEvents = useMemo(() => {
 
     const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
-    const sessionEvents = isEditing ? [] : sessionsToCalendarEvents(sessions, assignments ?? [])
+    const sessionEvents = isEditing ? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
     const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
 
     return [
@@ -70,7 +71,7 @@ const Tab1: React.FC = () => {
       ...assignmentEvents
     ]
 
-  }, [lingisEvents, sessions, assignments, isEditing])
+  }, [lingisEvents, recomendedSessions, assignments, isEditing])
 
   const ModalAssignment = () => {
     return (
@@ -129,7 +130,7 @@ const Tab1: React.FC = () => {
   const handleSessionSelect = (start: Date, end: Date, assignment_id: number) => {
     if (assignments == undefined) return
     setCurrentAssignment(assignments.filter(a => a.id == assignment_id)[0])
-    setCurrentSession(sessions.filter(s => s.start.getTime() == start.getTime() && s.end.getTime() == end.getTime())[0])
+    setCurrentSession(recomendedSessions.filter(s => s.start.getTime() == start.getTime() && s.end.getTime() == end.getTime())[0])
     presentSession({initialBreakpoint: 0.5, breakpoints: [0, 0.25, 0.5, 0.75, 1]});
   }
 
@@ -155,7 +156,25 @@ const Tab1: React.FC = () => {
       fabRef.current?.close()
     }
   }
-  
+
+  const runModel = async () => {
+    const input: FeaturesInput = {
+      motivation: 4,
+      mentalTiredness: 2,
+      physicalTiredness: 3,
+      mentalEnergy: 4,
+      emotional: 3,
+      physical: 3,
+      sleepHours: 6,
+      avgSleep: 7,
+      avgTheory_code: 3,
+      avgPractice_code: 4,
+      avgPassive_code: 2,
+      avgActive_code: 3,
+      effectiveness: 4
+    }
+    console.log(await Recommendation(input, 'practice'))
+  }
 
   return (
     <>
@@ -174,6 +193,9 @@ const Tab1: React.FC = () => {
           </IonItem>
           <IonButton onClick={logout} color={'primary'} expand='block'>
             Logout
+          </IonButton>
+          <IonButton onClick={runModel} color={'primary'} expand='block'>
+            Run Model
           </IonButton>
            
         </IonContent>
@@ -229,18 +251,18 @@ const Tab1: React.FC = () => {
 };
 
 
-function sessionsToCalendarEvents(
-  sessions: Session[],
+function recomendedSessionsToCalendarEvents(
+  sessions: RecommendedSession[],
   assignments: Assignment[]
 ): EventInput[] {
 
   return sessions.map((s, i) => ({
-    id: `session-${i}`,
+    id: `recommendedSession-${i}`,
     start: s.start,
     end: s.end,
     title: assignments.filter(a => a.id == s.fk_assignment)[0].title,
-    color: s.is_done ? "#8bc34a" : "#2196f3",
-    extendedProps: {type: "session", fk_assignment: s.fk_assignment}
+    color:  "#2196f3",
+    extendedProps: {type: "recommendedSession", fk_assignment: s.fk_assignment}
   }))
 
 }

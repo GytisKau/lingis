@@ -16,6 +16,7 @@ interface EditAssignmentFormProps {
 export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssignmentFormProps) {
   const [title, setTitle] = useState("")
   const [date, setDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
@@ -27,6 +28,7 @@ export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssign
       if (assignment) {
         setTitle(assignment.title)
         setDate(new Date(assignment.date))
+        setStartDate(new Date(assignment.start_date))
         setTimeEst(assignment.est_hours)
         setTestType(assignment.assignment_type)
       }
@@ -45,6 +47,7 @@ export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssign
       const success = await db.assignments.update(assignmentId, {
         title: title,
         date: date,
+        start_date: startDate,
         est_hours: timeEst,
         assignment_type: testType
       })
@@ -90,6 +93,17 @@ export default function EditAssignmentForm({ assignmentId, onSaved }: EditAssign
             required
             value={formatDateTimeLocal(date).slice(0,10)}
             onIonChange={(e) => setDate(new Date(e.detail.value!))}
+          />
+        </IonItem>
+
+        <IonItem>
+          <IonInput
+            label="Starting date"
+            labelPlacement="stacked"
+            type="date"
+            required
+            value={formatDateTimeLocal(startDate).slice(0,10)}
+            onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
           />
         </IonItem>
 

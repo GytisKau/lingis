@@ -1,5 +1,11 @@
 import { filterWorkHours } from "../components/Calendar"
-import { Assignment, LingisEvent, Session, User } from "../db/db"
+import { Assignment, LingisEvent, User } from "../db/db"
+
+export interface RecommendedSession{
+  start: Date,
+  end: Date,
+  fk_assignment: number;
+}
 
 function breakTime(sessionTime: number){
   if (sessionTime == 5) return 2
@@ -16,10 +22,10 @@ function ScheduleAllAssignments(
   assignments: Assignment[],
   freeTimeEvents: LingisEvent[],
   user: User
-): Session[] {
+): RecommendedSession[] {
 
   let availableSlots = [...freeTimeEvents]
-  const allSessions: Session[] = []
+  const allSessions: RecommendedSession[] = []
 
   // 1. sort pagal deadline
   const sortedAssignments = [...assignments].sort(
@@ -37,7 +43,7 @@ function ScheduleAllAssignments(
       user.work_hours_end
     )
 
-    // 👇 PRISKIRIAM assignment
+    // PRISKIRIAM assignment
     const sessionsWithAssignment = sessions.map(s => ({
       ...s,
       is_done: false,
@@ -46,7 +52,7 @@ function ScheduleAllAssignments(
 
     allSessions.push(...sessionsWithAssignment)
 
-    // 👇 pašalinam panaudotą laiką
+    // pašalinam panaudotą laiką
     availableSlots = consumeSlots(availableSlots, sessions, user)
   }
 
@@ -62,13 +68,13 @@ function ScheduleSessions(
   timeforBreak: number,
   work_hours_start: number,
   work_hours_end: number
-) {
+): {start: Date, end: Date}[] {
 
   const fullSessionTime = timeForSession + timeforBreak
   const sessionsNeeded = Math.ceil(timeForAssignment / timeForSession)
 
   let sessionsLeft = sessionsNeeded
-  const sessions: {start: Date, end: Date}[] = []
+  const sessions: RecommendedSession[] = []
 
   const now = new Date()
   now.setSeconds(0, 0)
@@ -98,7 +104,8 @@ function ScheduleSessions(
 
       sessions.push({
         start: new Date(cursor),
-        end: sessionEnd
+        end: sessionEnd,
+        fk_assignment: 1,
       })
 
       sessionsLeft--

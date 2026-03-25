@@ -15,6 +15,7 @@ interface AddAssignmentModal{
 const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
   const [title, setTitle] = useState("")
   const [date, setDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date>(new Date())
   const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
@@ -29,6 +30,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
     setStatus("")
     setTitle("")
     setDate(new Date())
+    setStartDate(new Date())
     setTimeEst(0)
     setTestType(0)
   }
@@ -43,6 +45,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
       await db.assignments.add({
         title: title,
         date: date,
+        start_date: startDate,
         est_hours: timeEst * 60,
         assignment_type: testType
       })
@@ -92,6 +95,17 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({trigger}) => {
             required
             value={formatDateTimeLocal(date).slice(0,10)}
             onIonChange={(e) => setDate(new Date(e.detail.value!))}
+          />
+        </IonItem>
+
+        <IonItem>
+          <IonInput
+            label="From which date would you like to study?"
+            labelPlacement="stacked"
+            type="date"
+            required
+            value={formatDateTimeLocal(date).slice(0,10)}
+            onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
           />
         </IonItem>
 

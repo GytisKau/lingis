@@ -39,15 +39,17 @@ interface Assignment {
   id: number;
   title: string;
   date: Date;
+  start_date: Date;
   est_hours: number;
   assignment_type: number;
 }
 
 interface Session {
+  id: number;
   start: Date;
   end: Date;
   is_done: boolean;
-  fk_assignment: number
+  fk_assignment: number;
 }
 
 interface Task {
@@ -65,17 +67,17 @@ const db = new Dexie("LingisDatabase") as Dexie & {
   questionnaires: EntityTable<Questionnaire, "id">,
   events: EntityTable<LingisEvent, "id">,
   assignments: EntityTable<Assignment, "id">,
-  // sessions: EntityTable<Session, "id">,
+  sessions: EntityTable<Session, "id">,
   tasks: EntityTable<Task, "id">,
 }
 
 // Schema declaration:
 db.version(1).stores({
   users: "++id, email, username, avg_theory_time, avg_practice_time, avg_sleep_hours, preffered_session_time, work_hours_start, work_hours_end, effectiveness_rating, study_field, chronotype",
-  // questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
+  questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
   events: "++id, start, end, is_free",
-  assignments: "++id, title, date, est_hours, assignment_type",
-  // sessions: "++id, start, end, is_done, fk_assignment",
+  assignments: "++id, title, date, start_date, est_hours, assignment_type",
+  sessions: "++id, start, end, is_done, fk_assignment",
   tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order"
 })
 
