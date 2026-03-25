@@ -7,13 +7,7 @@ import {
   IonFab,
   IonFabButton,
   IonIcon,
-  IonProgressBar,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonChip,
-  useIonViewWillLeave
+  IonProgressBar
 } from '@ionic/react';
 
 import { db } from '../db/db';
@@ -21,23 +15,15 @@ import { RouteComponentProps } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import TaskList from '../components/TaskList';
 import './AssignmentView.css';
-import { closeOutline, pencil } from 'ionicons/icons';
+import { close, pencil} from 'ionicons/icons';
 import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
 import AssignmentCard from '../components/AssignmentCard';
-import { add } from 'ionicons/icons';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
 const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const [isEditing, setIsEditing] = useState(false);
-
-  // ✅ FIX: blur focus when leaving page
-  useIonViewWillLeave(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  });
 
   const id = Number(match.params.id);
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
@@ -87,8 +73,8 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
         <TaskList assignmentId={id} />
 
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton id="open-modal" className="outline-purple">
-            <IonIcon icon={add}></IonIcon>
+          <IonFabButton id="open-modal" onClick={() => setIsEditing(prev => !prev)}>
+            <IonIcon icon={isEditing ? close : pencil}></IonIcon>
           </IonFabButton>
         </IonFab>
       </IonContent>
