@@ -1,12 +1,8 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton,
-   IonModal, IonButtons, IonItem, IonInput, IonLabel, IonSegment, IonSegmentButton, IonRippleEffect, 
-   IonFab,
-   IonFabButton,
-   IonIcon} from '@ionic/react';
-import { OverlayEventDetail } from '@ionic/core/components';
-import ExploreContainer from '../components/ExploreContainer';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar,
+  IonFab,
+  IonFabButton,
+  IonIcon} from '@ionic/react';
 import './Tab4.css';
-import { useRef, useState } from 'react';
 import AddAssignmentModal from '../forms/AddAssignmentModal';
 import AssignmentList from '../components/AssignmentList';
 import { add } from 'ionicons/icons';
