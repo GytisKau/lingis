@@ -15,27 +15,7 @@
    ============================ */
 /* Extra bottom padding so last task isn't hidden behind tab bar */
 .assignment-view-page {
-  --padding-bottom: 100px;
-}
-
-/* ============================
-   EDIT ASSIGNMENT FORM
-   ============================ */
-/* Container inside card */
-.assignment-edit-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;          /* spacing between input fields */
-  padding: 12px 0;    /* top/bottom padding inside card */
-}
-
-/* Style the status note */
-.assignment-edit-status {
-  margin-bottom: 8px;
-  color: var(--ion-color-danger);
-}
-
-/* Give save button spacing */
-.assignment-edit-save {
-  margin-top: 8px;
+  /* background: white;
+  /* --background: white;  /* Ionic content background */
+  /* min-height: 100vh; */
 }
