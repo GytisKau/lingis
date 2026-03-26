@@ -1,6 +1,3 @@
-/* ============================
-   EXTRA BUTTONS
-   ============================ */
 .add-tasks-button {
   position: absolute;
   bottom: 50px;
@@ -10,10 +7,6 @@
   transform: translate(-50%, -50%);
 }
 
-/* ============================
-   ASSIGNMENT VIEW PAGE
-   ============================ */
-/* Extra bottom padding so last task isn't hidden behind tab bar */
 .assignment-view-page {
   /* background: white;
   /* --background: white;  /* Ionic content background */
