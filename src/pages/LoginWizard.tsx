@@ -14,6 +14,8 @@ interface FormData {
   username?: string,
   avg_theory_time?: number,
   avg_practice_time?: number,
+  avg_passive_time?: number,
+  avg_active_time?: number,
   avg_sleep_hours?: number,
   preffered_session_time?: number,
   work_hours_start?: number,
@@ -32,6 +34,8 @@ const LoginWizard: React.FC = () => {
   const questions = [
     "Average theory studying time",
     "Average practical studying time",
+    "Average passive studying time",
+    "Average active studying time",
     "Prefered study session time"
   ];
 
@@ -45,7 +49,7 @@ const LoginWizard: React.FC = () => {
     { label: ">90 min", value: 120 }
   ];
 
-  const users = useLiveQuery(async () => await db.users.toArray(), []);
+  const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
 
   useEffect(() => {
     if (users && users.length > 0) {
@@ -53,22 +57,14 @@ const LoginWizard: React.FC = () => {
     }
   }, [users]);
 
-  if (users == undefined) {
-    return (
-      <IonPage>
-        <IonContent fullscreen className="login-content">
-          <IonProgressBar type="indeterminate"></IonProgressBar>
-        </IonContent>
-      </IonPage>
-    )
-  }
-
   const handleConfirm = async () => {
     if (
       form == undefined ||
-      form.avg_practice_time == undefined ||
       form.avg_sleep_hours == undefined ||
       form.avg_theory_time == undefined ||
+      form.avg_practice_time == undefined ||
+      form.avg_passive_time == undefined ||
+      form.avg_active_time == undefined ||
       form.chronotype == undefined ||
       form.effectiveness_rating == undefined ||
       form.email == undefined ||
@@ -90,6 +86,8 @@ const LoginWizard: React.FC = () => {
         username: form.username,
         avg_theory_time: form.avg_theory_time,
         avg_practice_time: form.avg_practice_time,
+        avg_passive_time: form.avg_passive_time,
+        avg_active_time: form.avg_active_time,
         avg_sleep_hours: form.avg_sleep_hours,
         preffered_session_time: form.preffered_session_time,
         work_hours_start: form.work_hours_start,
@@ -107,6 +105,8 @@ const LoginWizard: React.FC = () => {
         username: form.username,
         avg_theory_time: form.avg_theory_time,
         avg_practice_time: form.avg_practice_time,
+        avg_passive_time: form.avg_passive_time,
+        avg_active_time: form.avg_active_time,
         avg_sleep_hours: form.avg_sleep_hours,
         preffered_session_time: form.preffered_session_time,
         work_hours_start: form.work_hours_start,
@@ -229,13 +229,17 @@ const LoginWizard: React.FC = () => {
                     value={
                       i === 0 ? form.avg_theory_time :
                         i === 1 ? form.avg_practice_time :
+                        i === 2 ? form.avg_passive_time :
+                        i === 3 ? form.avg_active_time :
                           form.preffered_session_time
                     }
                     onIonChange={e => {
                       const val = e.detail.value;
                       if (i === 0) setForm({ ...form, avg_theory_time: val });
                       if (i === 1) setForm({ ...form, avg_practice_time: val });
-                      if (i === 2) setForm({ ...form, preffered_session_time: val });
+                      if (i === 2) setForm({ ...form, avg_passive_time: val });
+                      if (i === 3) setForm({ ...form, avg_active_time: val });
+                      if (i === 4) setForm({ ...form, preffered_session_time: val });
                     }}
                   >
                     {timeOptions.map(opt => (

@@ -7,6 +7,8 @@ interface User {
   username: string;
   avg_theory_time: number;
   avg_practice_time: number;
+  avg_passive_time: number;
+  avg_active_time: number;
   avg_sleep_hours: number;
   preffered_session_time: number;
   work_hours_start: number;
@@ -73,7 +75,7 @@ const db = new Dexie("LingisDatabase") as Dexie & {
 
 // Schema declaration:
 db.version(1).stores({
-  users: "++id, email, username, avg_theory_time, avg_practice_time, avg_sleep_hours, preffered_session_time, work_hours_start, work_hours_end, effectiveness_rating, study_field, chronotype",
+  users: "++id",
   questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
   events: "++id, start, end, is_free",
   assignments: "++id, title, date, start_date, est_hours, assignment_type",

@@ -8,9 +8,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: "lingis",
+  // build: {
+    // target: ['chrome79', 'edge79', 'firefox70', 'safari14']
+  // },
   plugins: [
     react(),
-    legacy(),
+    // legacy(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: { enabled: false },
@@ -34,6 +37,22 @@ export default defineConfig({
             "purpose": "maskable"
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // exclude .wasm
+        // runtimeCaching: [
+        //   {
+        //     urlPattern: /.*\.wasm$/,
+        //     handler: 'CacheFirst',
+        //     options: {
+        //       cacheName: 'wasm-cache',
+        //       expiration: {
+        //         maxEntries: 3,
+        //         maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+        //       }
+        //     }
+        //   }
+        // ]
       }
     })
   ],

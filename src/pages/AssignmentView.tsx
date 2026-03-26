@@ -4,22 +4,21 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonProgressBar,
-  IonButtons,
-  IonBackButton,
-  IonButton,
+  IonFab,
+  IonFabButton,
   IonIcon,
+  IonProgressBar
 } from '@ionic/react';
 
 import { db } from '../db/db';
 import { RouteComponentProps } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import TaskList from '../components/TaskList';
+import './AssignmentView.css';
+import { close, pencil} from 'ionicons/icons';
+import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
 import AssignmentCard from '../components/AssignmentCard';
-import { pencil, close } from 'ionicons/icons';
-import { useState } from 'react';
-import './AssignmentView.css';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
@@ -80,6 +79,12 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
 
         {/* Task list for this assignment */}
         <TaskList assignmentId={id} />
+
+        <IonFab slot="fixed" vertical="bottom" horizontal="end">
+          <IonFabButton id="open-modal" onClick={() => setIsEditing(prev => !prev)}>
+            <IonIcon icon={isEditing ? close : pencil}></IonIcon>
+          </IonFabButton>
+        </IonFab>
       </IonContent>
     </IonPage>
   );
