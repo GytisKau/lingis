@@ -173,9 +173,36 @@ ion-alert .alert-button {
    BUTTONS - SOLID
    ============================ */
 ion-button:not(.auth-button) {
-  --background: #491B6D !important;
-  background: #491B6D !important;
+  --border-radius: 30px !important;
+  --box-shadow: none !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  font-size: 15px !important;
+}
+
+ion-button:not(.auth-button)[fill="solid"],
+ion-button:not(.auth-button):not([fill]) {
+  --background: #3a0f55 !important;
   --color: white !important;
+}
+
+ion-button:not(.auth-button)[fill="outline"] {
+  --background: transparent !important;
+  --color: #3a0f55 !important;
+  --border-color: #3a0f55 !important;
+  --border-width: 1.5px !important;
+}
+
+ion-button:not(.auth-button)[fill="clear"] {
+  --background: transparent !important;
+  --color: #3a0f55 !important;
+}
+
+ion-button:not(.auth-button)[color="danger"] {
+  --background: transparent !important;
+  --color: #A32D2D !important;
+  --border-color: #A32D2D !important;
+  --border-width: 1.5px !important;
 }
 
 /* ============================

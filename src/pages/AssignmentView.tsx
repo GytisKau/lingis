@@ -4,93 +4,82 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonFab,
-  IonFabButton,
-  IonIcon,
   IonProgressBar,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonChip,
-  useIonViewWillLeave
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
 } from '@ionic/react';
 
 import { db } from '../db/db';
 import { RouteComponentProps } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import TaskList from '../components/TaskList';
-import './AssignmentView.css';
-import { closeOutline, pencil } from 'ionicons/icons';
-import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
 import AssignmentCard from '../components/AssignmentCard';
-import { add } from 'ionicons/icons';
+import { pencil, close } from 'ionicons/icons';
+import { useState } from 'react';
+import './AssignmentView.css';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
 const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const [isEditing, setIsEditing] = useState(false);
 
-  // ✅ FIX: blur focus when leaving page
-  useIonViewWillLeave(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  });
-
   const id = Number(match.params.id);
+
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
 
-  // Loading state
   if (assignment === undefined) {
     return (
       <IonPage>
         <IonHeader>
           <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/assignments" />
+            </IonButtons>
             <IonTitle>Loading...</IonTitle>
-            <IonProgressBar type="indeterminate"></IonProgressBar>
           </IonToolbar>
           <IonProgressBar type="indeterminate" />
         </IonHeader>
-        <IonContent fullscreen>
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">Loading...</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent className="ion-padding">
-          </IonContent>                
-      </IonContent>
-    </IonPage>
-    )
+        <IonContent fullscreen />
+      </IonPage>
+    );
   }
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Assignment View</IonTitle>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/assignments" />
+          </IonButtons>
+          <IonTitle>{assignment.title}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="assignment-view-page ion-padding">
-        {isEditing ? (
+      <IonContent fullscreen className="ion-padding">
+        {/* Assignment Card with edit button inside */}
+        <AssignmentCard assignment={assignment}>
+          <IonButton
+            fill="clear"
+            size="small"
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            <IonIcon icon={isEditing ? close : pencil} />
+          </IonButton>
+        </AssignmentCard>
+
+        {/* Show edit form below the card header when editing */}
+        {isEditing && (
           <EditAssignmentForm
             assignmentId={id}
             onSaved={() => setIsEditing(false)}
           />
-        ) : (
-          <AssignmentCard assignment={assignment} />
         )}
 
+        {/* Task list for this assignment */}
         <TaskList assignmentId={id} />
-
-        <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton id="open-modal" className="outline-purple">
-            <IonIcon icon={add}></IonIcon>
-          </IonFabButton>
-        </IonFab>
       </IonContent>
     </IonPage>
   );
