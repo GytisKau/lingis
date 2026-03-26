@@ -9,7 +9,6 @@ import { db } from '../db/db';
 import type { Assignment, LingisEvent } from '../db/db';
 import { RecommendedSession } from '../utils/ScheduleSessions';
 import FreeTimeModal from '../components/FreeTimeModal';
-import { FeaturesInput, Recommendation } from '../utils/Recommendation';
 import AssignmentCard from '../components/AssignmentCard';
 import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';

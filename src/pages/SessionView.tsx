@@ -4,7 +4,6 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonText,
   IonButton,
   IonSegment,
   IonSegmentButton,
@@ -13,7 +12,7 @@ import {
 import './SessionView.css'
 import { useHistory, RouteComponentProps } from 'react-router'
 import { db } from '../db/db'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import QuestionnaireModal from '../forms/QuestionnaireModal'
 import TimerDisplay from '../components/TimerDisplay'
@@ -21,15 +20,15 @@ import TimerDisplay from '../components/TimerDisplay'
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
 const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
+  const modal = useRef<HTMLIonModalElement>(null);
   const history = useHistory()
   const id = Number(match.params.id)
 
   const assignment = useLiveQuery(() => db.assignments.get(id), [id])
 
-  const preferredMinutes = useLiveQuery(
-    () => db.users.get(1).then(user => user?.preffered_session_time),
-    []
-  )
+  const users = useLiveQuery(() => db.users.toArray())
+  const user = users != undefined ? users[0] : undefined
+  const preferredMinutes = user?.preffered_session_time
 
   const [selectedMinutes, setSelectedMinutes] = useState<number>(25)
   
@@ -45,11 +44,16 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
     })
   }
 
+  const handleClose = (result: number) => {
+    console.log(result)
+    setSelectedMinutes(result)
+  }
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>View Session: {assignment?.title}</IonTitle>
+          <IonTitle>{assignment?.title}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -60,14 +64,14 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
           value={String(selectedMinutes)}
           onIonChange={(e) => setSelectedMinutes(Number(e.detail.value))}
         >
-          <IonSegmentButton value="5">
-            <IonLabel>5</IonLabel>
+          <IonSegmentButton value="10">
+            <IonLabel>10</IonLabel>
           </IonSegmentButton>
-          <IonSegmentButton value="25">
-            <IonLabel>25</IonLabel>
+          <IonSegmentButton value="20">
+            <IonLabel>20</IonLabel>
           </IonSegmentButton>
-          <IonSegmentButton value="45">
-            <IonLabel>45</IonLabel>
+          <IonSegmentButton value="30">
+            <IonLabel>30</IonLabel>
           </IonSegmentButton>
           <IonSegmentButton value="60">
             <IonLabel>60</IonLabel>
@@ -91,7 +95,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
             Start session
           </IonButton>
 
-          <QuestionnaireModal trigger="mental-test" />
+          <QuestionnaireModal modal={modal} trigger="mental-test" user={user} onClosed={handleClose}/>
         </div>
       </IonContent>
     </IonPage>

@@ -50,12 +50,12 @@ export function featuresToArray(input: FeaturesInput): number[] {
 
 type RecommendationType = "theory" | "practice";
 
-const LABELS: Record<number, string> = {
-  1: "~10 min",
-  2: "~20 min",
-  3: "~0.5 h",
-  4: "~1 h",
-  5: "~1.5 h",
+const LABELS: Record<number, number> = {
+  1: 10,
+  2: 20,
+  3: 30,
+  4: 60,
+  5: 90,
 };
 
 let theorySessionPromise: Promise<ort.InferenceSession> | null = null;
@@ -73,18 +73,8 @@ function getSession(type: RecommendationType) {
 export async function Recommendation(
   features: FeaturesInput,
   type: RecommendationType
-): Promise<{ code: number; label?: string }> {
+): Promise<{ code: number; minutes?: number }> {
   const session = await getSession(type);
-
-  const featureArray = featuresToArray(features);
-  const inputTensor = new ort.Tensor(
-    "float32",
-    Float32Array.from(featureArray),
-    [1, featureArray.length]
-  );
-
-  const inputName = session.inputNames[0];
-  const outputName = session.outputNames[0];
 
   const feeds: Record<string, ort.Tensor> = {
     motivation: new ort.Tensor("float32", Float32Array.from([features.motivation]), [1, 1]),
@@ -103,12 +93,9 @@ export async function Recommendation(
     effectiveness: new ort.Tensor("float32", Float32Array.from([features.effectiveness]), [1, 1]),
   };
 
-
-  // const results = await session.run({[inputName]: inputTensor});
   const results = await session.run(feeds, ["output_label"]);
-  console.log(results)
-  const output = results[outputName].data;
+  const output = results[session.outputNames[0]].data;
   const code = Number(output[0]);
 
-  return { code, label: LABELS[code] };
+  return { code, minutes: LABELS[code] };
 }
