@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["es2020", "DOM.Iterable", "ES2020.BigInt"],
+    "lib": ["es2020", "DOM", "DOM.Iterable", "ES2020.BigInt"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
