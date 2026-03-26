@@ -26,58 +26,50 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const id = Number(match.params.id);
-
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
 
+  // Loading state
   if (assignment === undefined) {
     return (
       <IonPage>
         <IonHeader>
           <IonToolbar>
-            <IonButtons slot="start">
-              <IonBackButton defaultHref="/assignments" />
-            </IonButtons>
             <IonTitle>Loading...</IonTitle>
+            <IonProgressBar type="indeterminate"></IonProgressBar>
           </IonToolbar>
           <IonProgressBar type="indeterminate" />
         </IonHeader>
-        <IonContent fullscreen />
-      </IonPage>
-    );
+        <IonContent fullscreen>
+          <IonHeader collapse="condense">
+            <IonToolbar>
+              <IonTitle size="large">Loading...</IonTitle>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+          </IonContent>                
+      </IonContent>
+    </IonPage>
+    )
   }
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/assignments" />
-          </IonButtons>
-          <IonTitle>{assignment.title}</IonTitle>
+          <IonTitle>Assignment View</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="ion-padding">
-        {/* Assignment Card with edit button inside */}
-        <AssignmentCard assignment={assignment}>
-          <IonButton
-            fill="clear"
-            size="small"
-            onClick={() => setIsEditing((prev) => !prev)}
-          >
-            <IonIcon icon={isEditing ? close : pencil} />
-          </IonButton>
-        </AssignmentCard>
-
-        {/* Show edit form below the card header when editing */}
-        {isEditing && (
+      <IonContent fullscreen className="assignment-view-page ion-padding">
+        {isEditing ? (
           <EditAssignmentForm
             assignmentId={id}
             onSaved={() => setIsEditing(false)}
           />
+        ) : (
+          <AssignmentCard assignment={assignment} />
         )}
 
-        {/* Task list for this assignment */}
         <TaskList assignmentId={id} />
 
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
