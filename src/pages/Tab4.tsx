@@ -1,15 +1,19 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar,
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
   IonFab,
   IonFabButton,
-  IonIcon} from '@ionic/react';
+  IonIcon
+} from '@ionic/react';
 import './Tab4.css';
 import AddAssignmentModal from '../forms/AddAssignmentModal';
 import AssignmentList from '../components/AssignmentList';
 import { add } from 'ionicons/icons';
 
-
 const Tab4: React.FC = () => {
-
   return (
     <IonPage>
       <IonHeader>
@@ -17,7 +21,7 @@ const Tab4: React.FC = () => {
           <IonTitle>Assignments</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent  fullscreen className="tab4-page">
+      <IonContent fullscreen className="tab4-page">
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">Assignments</IonTitle>
@@ -33,7 +37,6 @@ const Tab4: React.FC = () => {
         </IonFab>
 
         <AddAssignmentModal trigger="open-modal" />
-
       </IonContent>
     </IonPage>
   );

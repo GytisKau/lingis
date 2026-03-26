@@ -11,14 +11,8 @@
 /* -------------------------- */
 /* Add Assignment FAB Button   */
 /* -------------------------- */
-ion-fab-button {
-  /* position: absolute; */
-  /* bottom: 50px; */
-  /* right: 30px; */
-  /* height: 30px;
-  width: 30px; */
-  /* transform: translate(-50%, -50%); */
-}
+
+/* FAB button styles removed - use Ionic defaults or add when needed */
 
 /* -------------------------- */
 /* Centered Placeholder Text   */
@@ -181,4 +175,18 @@ ion-fab-button {
   --background: transparent;
   color: #B4A8B0;
   font-size: 14px;
+}
+
+.task-row-editing-item {
+  background: var(--ion-background-color, #fff);
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 4px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.task-row-editing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

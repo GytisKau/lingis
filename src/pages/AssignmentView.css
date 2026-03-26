@@ -14,8 +14,42 @@
    ASSIGNMENT VIEW PAGE
    ============================ */
 /* Extra bottom padding so last task isn't hidden behind tab bar */
-.assignment-view-page {
+/* .assignment-view-page {
   /* background: white;
   /* --background: white;  /* Ionic content background */
   /* min-height: 100vh; */
+
+  /* ============================
+   TASK ROW EDITING
+   ============================ */
+.task-row-editing-item {
+  background: var(--ion-background-color, #fff); /* solid background */
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 4px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.task-row-editing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-row-editing ion-input {
+  --background: transparent; /* or set to white if preferred */
+}
+
+/* Keep checkbox at far left */
+.task-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Task badges spacing */
+.task-badges {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
 }
