@@ -58,6 +58,7 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
       }}
       initialView='timeGridWeek'
       height="100%"
+      displayEventTime={false}
       selectAllow={() => {
         disableScroll();
         return true;
