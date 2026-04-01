@@ -1,192 +1,78 @@
-/* -------------------------- */
-/* Tab4 Page Scoped CSS        */
-/* -------------------------- */
-
+/* Container setup */
 .tab4-page {
-  background: white;
-  --background: white;
-  position: relative; /* ensure stacking context */
+  --background: #f6f7fb; 
 }
 
-/* -------------------------- */
-/* Add Assignment FAB Button   */
-/* -------------------------- */
-
-/* FAB button styles removed - use Ionic defaults or add when needed */
-
-/* -------------------------- */
-/* Centered Placeholder Text   */
-/* -------------------------- */
-.tab4-page .centered-text {
-  position: absolute;
-  font-style: italic;
-  font-size: 30px;
-  left: 50%;
-  top: 30%;
-  transform: translate(-50%, -50%);
-  padding: 2em;
+.assignment-list-container {
+  background: transparent !important;
+  padding: 12px;
 }
 
-/* -------------------------- */
-/* Assignment Item Cards       */
-/* -------------------------- */
-.tab4-page .assignment-item {
-  margin: 8px;
-  border-radius: 12px;
-  background: #cee1f7 !important; /* base color */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+/* Base Card Style - REMOVES THE WHITE BLOCK */
+.assignment-card-item {
+  margin-bottom: 12px;
+  border-radius: 14px;
+  display: block;
+  --background: transparent !important;
+  --inner-background: transparent !important;
+  --border-style: none !important;
+  box-shadow: none !important;
 }
 
-/* Assignment Variants */
-.tab4-page .assignment-item.exam {
-  background: #ffcdd2 !important;
-  color: #7f0000;
-  border-left: 6px solid #e53935;
-}
+/* Pastel Colors */
+.assignment-card-item.exam { background: #ffecec !important; }
+.assignment-card-item.lab { background: #eef4ff !important; }
+.assignment-card-item.other { background: #eafaf1 !important; }
 
-.tab4-page .assignment-item.lab {
-  background: #bbdefb !important;
-  color: #0d47a1;
-  border-left: 6px solid #1e88e5;
-}
-
-.tab4-page .assignment-item.other {
-  background: #c8e6c9 !important;
-  color: #1b5e20;
-  border-left: 6px solid #43a047;
-}
-
-/* -------------------------- */
-/* Ionic inner background fix */
-/* -------------------------- */
-.tab4-page ion-item.assignment-item {
-  --inner-background: #cee1f7; /* match card background */
-}
-
-.tab4-page ion-item.assignment-item.exam {
-  --inner-background: #ffcdd2;
-}
-
-.tab4-page ion-item.assignment-item.lab {
-  --inner-background: #bbdefb;
-}
-
-.tab4-page ion-item.assignment-item.other {
-  --inner-background: #c8e6c9;
-}
-
-/* -------------------------- */
-/* Assignment Card Layout      */
-/* -------------------------- */
-.tab4-page .assignment-content {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tab4-page .assignment-title {
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.tab4-page .assignment-meta {
+/* Text & Layout Styling */
+.assignment-header {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
-  opacity: 0.8;
-}
-
-/* -------------------------- */
-/* Trash Button Styling        */
-/* -------------------------- */
-.tab4-page .trash-outline {
-  background: transparent !important;
-  border: 2px solid #e53935 !important;
-  border-radius: 8px !important;
-  display: flex;
   align-items: center;
-  justify-content: center;
+  margin-bottom: 6px;
+  padding: 14px 14px 4px 14px; 
 }
 
-.tab4-page .trash-outline ion-icon {
-  color: #e53935 !important;
-  font-size: 20px;
+.assignment-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #222;
 }
 
-/* -------------------------- */
-/* Ionic Modal Fix             */
-/* -------------------------- */
-.tab4-page ion-modal {
-  z-index: 10000;
-  --background: white;       /* fully opaque */
-  --backdrop-opacity: 1;     /* no transparency */
-}
-
-/* -------------------------- */
-/* Task Row Styling           */
-/* -------------------------- */
-.tab4-page .task-row {
-  margin: 6px 8px;
-  border-radius: 10px;
-  background: rgba(50, 130, 255, 0.15); /* bluish transparent */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  --inner-padding-start: 12px;
-  --inner-padding-end: 12px;
-}
-
-.tab4-page .task-row.task-row-editing {
-  background: rgba(50, 130, 255, 0.25); /* editing row slightly more opaque */
-}
-
-/* Badges */
-.tab4-page .task-badges {
+.assignment-footer {
   display: flex;
-  gap: 4px;
-  margin-top: 4px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 14px 14px 14px;
 }
 
-/* Difficulty chip */
-.tab4-page .task-difficulty-chip {
-  --padding-start: 6px;
-  --padding-end: 6px;
-  height: 20px;
-  font-size: 11px;
-  margin: 0;
+.due-date-text {
+  font-size: 12px;
+  color: #777;
 }
 
-/* Type chip */
-.tab4-page .task-type-chip {
-  --padding-start: 6px;
-  --padding-end: 6px;
-  height: 20px;
-  font-size: 11px;
-  margin: 0;
-  --background: rgba(73,27,109,0.1);
-  --color: #491B6D;
+.time-note {
+  font-size: 12px;
+  color: #777;
+  font-weight: 500;
 }
 
-/* Add Task Placeholder */
-.tab4-page .add-task-placeholder {
-  border: 1px dashed #C9BFCA;
-  border-radius: 10px;
-  margin-top: 8px;
-  --background: transparent;
-  color: #B4A8B0;
-  font-size: 14px;
+/* PRETTIER TRASH ACTION */
+.assignment-sliding-item {
+  margin-bottom: 12px;
 }
 
-.task-row-editing-item {
-  background: var(--ion-background-color, #fff);
-  padding: 8px 16px;
-  border-radius: 8px;
-  margin: 4px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+.cute-trash-option {
+  --background: #ff4d6d;
+  color: white;
+  border-radius: 14px; /* Rounded corners */
+  margin: 8px 4px;    /* Makes it look like it's floating */
+  height: calc(100% - 16px);
+  width: 60px;
+  box-shadow: 0 4px 8px rgba(255, 77, 109, 0.3);
 }
 
-.task-row-editing {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Removes default Ionic background on the swipe container */
+ion-item-options {
+  background: transparent !important;
 }

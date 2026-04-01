@@ -1,5 +1,5 @@
 /* ============================
-   BACKGROUND IMAGE (VISIBLE)
+   BACKGROUND IMAGE
    ============================ */
 ion-app {
   background: url('/background_pc.png') center / cover no-repeat fixed;
@@ -11,305 +11,220 @@ ion-app {
   }
 }
 
+/* ============================
+   HTML BODY BACKGROUND
+   ============================ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background: black url('/background_pc.png') center / cover no-repeat fixed;
+}
+
+@media (max-width: 600px) {
+  html,
+  body {
+    background: black url('/background_phone.png') center / cover no-repeat fixed;
+  }
+}
 
 /* ============================
-   CARDS & ITEMS
+   ROOT TRANSPARENCY
+   ============================ */
+ion-app,
+ion-router-outlet,
+ion-page,
+ion-content,
+ion-content::part(background) {
+  background: transparent !important;
+  --background: transparent !important;
+}
+
+/* ============================
+   HEADER (TRANSPARENT)
+   ============================ */
+ion-header,
+ion-toolbar {
+  --background: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+ion-header::after {
+  display: none !important;
+}
+
+/* ============================
+   TITLE
+   ============================ */
+ion-title {
+  color: #491B6D !important;
+  font-weight: 600 !important;
+  padding-left: 20px !important;
+
+  font-family: 'Poppins', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+
+  text-align: left !important;
+}
+
+/* ============================
+   CARDS & LISTS
    ============================ */
 ion-card {
   --background: white !important;
   background: white !important;
   margin: 16px !important;
   border-radius: 12px !important;
-  box-shadow: none !important;
   border: 0.5px solid #C9BFCA !important;
-}
-
-.assignment-card-header {
-  display: flex !important;
-  justify-content: space-between !important; /* title left, button right */
-  align-items: flex-start !important;        /* align button to top */
-  width: 100%;
-  position: relative;
-}
-
-.assignment-card-header ion-button {
-  margin: 0 !important;      /* remove default spacing */
-  padding: 4px !important;   /* optional: tighten the button */
-  height: 28px !important;   /* optional: smaller button */
+  box-shadow: none !important;
 }
 
 ion-card-header,
-ion-card-content {
+ion-card-content,
+ion-item,
+ion-list,
+ion-list-header {
   --background: white !important;
   background: white !important;
 }
-
-ion-list {
-  background: transparent !important;
-  --background: transparent !important;
-}
-
-
-/* ============================
-   HEADERS & TOOLBARS
-   ============================ */
-ion-header,
-ion-toolbar {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
-}
-
-ion-title {
-  --color: #491B6D !important;
-  color: #491B6D !important;
-  font-weight: 600 !important;
-}
-
 
 /* ============================
    TAB BAR
    ============================ */
 ion-tab-bar {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
+  --background: #E3D4D2 !important;
+  background: #E3D4D2 !important;
   height: 70px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
 }
 
+/* TAB BUTTONS */
 ion-tab-button {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
+  --background: #E3D4D2 !important;
+  background: #E3D4D2 !important;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
   --color: #8A8A8A !important;
   --color-selected: #491B6D !important;
 }
 
-ion-tab-button::part(native) {
-  background: #DBD1D6 !important;
+/* ICONS */
+ion-tab-button ion-icon {
+  color: #8A8A8A !important;
 }
 
+/* LABELS */
+ion-tab-button ion-label {
+  margin-top: 4px !important;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* ACTIVE TAB */
+ion-tab-button.tab-selected ion-label,
+ion-tab-button.tab-selected ion-icon {
+  color: #491B6D !important;
+}
 
 /* ============================
-   BUTTONS (GLOBAL STYLE ONLY)
+   CENTER TAB (HOME FIXED)
    ============================ */
-ion-button {
-  --border-radius: 30px !important;
-  --box-shadow: none !important;
-  font-weight: 500 !important;
-  text-transform: none !important;
-  font-size: 15px !important;
-  letter-spacing: 0.3px !important;
-  --ripple-color: rgba(255, 255, 255, 0.3) !important;
+ion-tab-button[tab="tab3"] {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
 }
 
-/* solid — primary action */
-ion-button[fill="solid"],
-ion-button:not([fill]) {
-  --background: #3a0f55 !important;
-  --color: white !important;
+/* SHOW ICON AGAIN */
+ion-tab-button[tab="tab3"] img,
+ion-tab-button[tab="tab3"] ion-icon {
+  width: 26px !important;
+  height: 26px !important;
+  margin-bottom: 4px !important;
 }
 
-ion-button[fill="solid"]:hover,
-ion-button:not([fill]):hover {
-  --background: #5a2b7a !important;
+/* FIX TEXT POSITION */
+ion-tab-button[tab="tab3"] ion-label {
+  margin-top: 0,5px !important;
+  font-size: 12px !important;
 }
-
-ion-button[fill="solid"]:active,
-ion-button:not([fill]):active {
-  --background: #2a0a3f !important;
-}
-
-/* outline — secondary action */
-ion-button[fill="outline"] {
-  --background: transparent !important;
-  --color: #3a0f55 !important;
-  --border-color: #3a0f55 !important;
-  --border-width: 1.5px !important;
-  --border-style: solid !important;
-}
-
-ion-button[fill="outline"]:hover {
-  --background: rgba(58, 15, 85, 0.06) !important;
-}
-
-/* clear — ghost / tertiary action */
-ion-button[fill="clear"] {
-  --background: transparent !important;
-  --color: #3a0f55 !important;
-}
-
-ion-button[fill="clear"]:hover {
-  --background: rgba(58, 15, 85, 0.06) !important;
-}
-
-/* danger — destructive actions */
-ion-button[color="danger"] {
-  --background: transparent !important;
-  --color: #A32D2D !important;
-  --border-color: #A32D2D !important;
-  --border-width: 1.5px !important;
-  --border-style: solid !important;
-}
-
-ion-button[color="danger"]:hover {
-  --background: rgba(163, 45, 45, 0.06) !important;
-}
-
-ion-button[color="danger"][fill="solid"] {
-  --background: #A32D2D !important;
-  --color: white !important;
-}
-
-
-/* ============================
-   PROGRESS BAR
-   ============================ */
-ion-progress-bar {
-  --background: rgba(219, 209, 214, 0.6) !important;
-  --progress-background: #3a0f55 !important;
-  border-radius: 4px !important;
-}
-
-
-/* ============================
-   CHIPS
-   ============================ */
-ion-chip {
-  --background: rgba(73, 27, 109, 0.1) !important;
-  --color: #491B6D !important;
-  border-radius: 20px !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-}
-
-ion-chip[color="success"] {
-  --background: #EAF3DE !important;
-  --color: #3B6D11 !important;
-}
-
-ion-chip[color="warning"] {
-  --background: #FAEEDA !important;
-  --color: #854F0B !important;
-}
-
-ion-chip[color="danger"] {
-  --background: #FCEBEB !important;
-  --color: #A32D2D !important;
-}
-
-
-/* ============================
-   SIDE MENU
-   ============================ */
-ion-menu {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
-}
-
-ion-menu ion-content {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
-}
-
-ion-menu ion-item {
-  --background: #DBD1D6 !important;
-  background: #DBD1D6 !important;
-  --color: #491B6D !important;
-}
-
-ion-menu ion-toggle {
-  --background: white !important;
-  --background-checked: #3a0f55 !important;
-  --handle-background: white !important;
-}
-
-
-/* ============================
-   ACTION SHEET
-   ============================ */
-ion-action-sheet {
-  --background: #D4D1D9 !important;
-}
-
-ion-action-sheet .action-sheet-wrapper {
-  background: #D4D1D9 !important;
-  border-radius: 20px 20px 0 0 !important;
-}
-
-ion-action-sheet .action-sheet-group {
-  background: #D4D1D9 !important;
-}
-
-ion-action-sheet .action-sheet-button {
-  color: #3a0f55 !important;
-}
-
-ion-action-sheet .action-sheet-cancel {
-  background: #D4D1D9 !important;
-  border-top: 1px solid rgba(58, 15, 85, 0.2) !important;
-}
-
 
 /* ============================
    FLOATING HOME BUTTON
    ============================ */
 .floating-home-logo {
   position: fixed !important;
-  bottom: 32px !important;
+  bottom: 25px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  width: 60px !important;
-  height: 60px !important;
+
+  width: 70px !important;
+  height: 70px !important;
   border-radius: 50% !important;
+
   background: white !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-  z-index: 100000 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
   border: 2px solid #DBD1D6 !important;
-  cursor: pointer !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 100000 !important;
 }
 
 .floating-home-logo img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-
 
 /* ============================
-   TAB3 SPECIAL STYLES
+   BUTTONS
    ============================ */
-ion-tab-button[tab="tab3"] img {
-  display: none !important;
+ion-button {
+  --border-radius: 30px !important;
+  --box-shadow: none !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
 }
 
-ion-tab-button[tab="tab3"] ion-label {
-  margin-top: 45px !important;
-  position: relative !important;
-  z-index: 2 !important;
+ion-button[fill="solid"],
+ion-button:not([fill]) {
+  --background: #3a0f55 !important;
+  --color: white !important;
 }
-
 
 /* ============================
-   UTILITIES
+   INPUTS
    ============================ */
-.ion-padding {
-  padding: 16px !important;
+ion-input,
+ion-textarea {
+  --background: white !important;
+  background: white !important;
 }
 
-.text-center {
-  text-align: center !important;
+/* ============================
+   SIDE MENU
+   ============================ */
+ion-menu,
+ion-menu ion-content,
+ion-menu ion-item {
+  --background: #DBD1D6 !important;
+  background: #DBD1D6 !important;
+  --color: #491B6D !important;
 }
-
-.mt-4 {
-  margin-top: 20px !important;
-}
-
-.mb-4 {
-  margin-bottom: 20px !important;
-}
-
 
 /* ============================
    REMOVE OUTLINES
@@ -318,30 +233,35 @@ ion-tab-button[tab="tab3"] ion-label {
   outline: none !important;
 }
 
-ion-button:focus,
-ion-button:focus-visible,
-ion-button.ion-focused {
-  outline: none !important;
-}
-
-ion-button::part(native):focus,
-ion-button::part(native):focus-visible {
-  outline: none !important;
-}
-
-button:focus,
-button:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-a:focus,
-a:focus-visible,
-div:focus,
-div:focus-visible {
-  outline: none !important;
-}
-
 * {
   -webkit-tap-highlight-color: transparent !important;
+}
+
+/* ============================
+   FLOATING ACTION BUTTON (FAB)
+   ============================ */
+ion-fab-button {
+  /* Make the circle transparent */
+  --background: transparent !important;
+  --background-activated: rgba(73, 27, 109, 0.1) !important;
+  --background-hover: rgba(73, 27, 109, 0.05) !important;
+
+  /* The Plus Icon Color */
+  --color: #491B6D !important;
+
+  /* The Purple Outline */
+  border: 2px solid #491B6D !important;
+  border-radius: 50% !important;
+
+  /* Remove the default heavy shadow for a cleaner look */
+  box-shadow: none !important;
+  
+  /* Smooth transition when clicking */
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ensure the internal button part is also transparent */
+ion-fab-button::part(native) {
+  background: transparent !important;
+  border: none !important;
 }

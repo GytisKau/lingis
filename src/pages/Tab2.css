@@ -1,0 +1,130 @@
+.stats-container {
+  background: #f6f7fb;
+  color: #222;
+}
+
+/* Tabs */
+.top-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 999px;
+  border: none;
+  background: #eee;
+  color: #333;
+  font-size: 14px;
+}
+
+.tab-btn.active {
+  background: #eafaf1;
+  color: #1b5e20;
+}
+
+/* Overview */
+.overview {
+  text-align: center;
+  padding: 28px 16px;
+}
+
+.overview h1 {
+  font-size: 42px;
+  margin: 0;
+}
+
+.overview p {
+  color: #666;
+}
+
+/* Pastel stat cards */
+.mini-card {
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.pastel-blue { background: #eef4ff; }
+.pastel-green { background: #eafaf1; }
+.pastel-purple { background: #f3efff; }
+.pastel-orange { background: #fff4e8; }
+
+/* Coming up */
+.coming-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.coming-left h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.coming-left span {
+  font-size: 12px;
+  color: #777;
+}
+
+.coming-right {
+  text-align: right;
+  min-width: 80px;
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* TYPE COLORS */
+.type-exam { background: #ffecec; }
+.type-lab { background: #eef4ff; }
+.type-other { background: #eafaf1; }
+
+/* Lists */
+.list {
+  padding: 12px;
+}
+
+/* Cards */
+.assignment {
+  background: #fff;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  cursor: pointer;
+}
+
+.assignment:active {
+  transform: scale(0.98);
+}
+
+.assignment.completed {
+  opacity: 0.8;
+  border-left: 4px solid #81c784;
+}
+
+/* Rows */
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.row.small {
+  font-size: 12px;
+  color: #777;
+}
+
+/* Progress */
+ion-progress-bar {
+  margin-top: 10px;
+  height: 4px;
+  --background: #eee;
+}
