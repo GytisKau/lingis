@@ -1,19 +1,17 @@
 /// <reference types="vitest" />
 
-import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "lingis",
-  // build: {
-    // target: ['chrome79', 'edge79', 'firefox70', 'safari14']
-  // },
+  // base: "lingis",
+  build: {
+    outDir: "build"
+  },
   plugins: [
     react(),
-    // legacy(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: { enabled: false },
@@ -40,19 +38,6 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // exclude .wasm
-        // runtimeCaching: [
-        //   {
-        //     urlPattern: /.*\.wasm$/,
-        //     handler: 'CacheFirst',
-        //     options: {
-        //       cacheName: 'wasm-cache',
-        //       expiration: {
-        //         maxEntries: 3,
-        //         maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-        //       }
-        //     }
-        //   }
-        // ]
       }
     })
   ],

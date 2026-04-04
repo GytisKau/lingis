@@ -129,7 +129,7 @@ const LoginWizard: React.FC = () => {
       <IonContent fullscreen className="login-content">
         <div className="register-content">
 
-          <img src="/lingis/logo.png" alt="Logo" className="register-logo" />
+          <img src="/logo.png" alt="Logo" className="register-logo" />
 
           <div className="status-message">{status}</div>
 
