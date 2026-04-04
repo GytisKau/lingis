@@ -1,5 +1,7 @@
 # Lingis
 
+https://lingis.web.app/
+
 ## Installation
 
 ```bash

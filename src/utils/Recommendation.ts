@@ -63,10 +63,10 @@ let practiceSessionPromise: Promise<ort.InferenceSession> | null = null;
 
 function getSession(type: RecommendationType) {
   if (type === "theory") {
-    theorySessionPromise ??= ort.InferenceSession.create("/lingis/models/knn_pipeline_theory.onnx");
+    theorySessionPromise ??= ort.InferenceSession.create("/models/knn_pipeline_theory.onnx");
     return theorySessionPromise;
   }
-  practiceSessionPromise ??= ort.InferenceSession.create("/lingis/models/knn_pipeline_practice.onnx");
+  practiceSessionPromise ??= ort.InferenceSession.create("/models/knn_pipeline_practice.onnx");
   return practiceSessionPromise;
 }
 

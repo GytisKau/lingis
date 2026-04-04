@@ -3,7 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar,
   useIonViewWillEnter } from '@ionic/react';
 import './Session.css';
 import TaskList from '../components/TaskList'
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
 import { RouteComponentProps } from 'react-router';
 import QuestionnaireModal from '../forms/QuestionnaireModal';
 import { db } from "../db/db"
@@ -247,6 +247,7 @@ useIonViewWillEnter(() => {
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }, any, { studyMinutes?: number }> {}
 
 const Session: React.FC<AssignmentViewProps> = ({ match, location }) => {
+  const modal = useRef<HTMLIonModalElement>(null);
   const [mode, setMode] = useState<"study" | "break">("study")
   const [mentalTestTrigger, setMentalTestTrigger] = useState<string | null>(null)
   const id = Number(match.params.id)
@@ -293,6 +294,7 @@ const studyMinutes =
               style={{ display: "none" }}
             />
             <QuestionnaireModal
+              modal={modal}
               trigger={mentalTestTrigger}
               key={mentalTestTrigger}
               onClosed={closeMentalTestTrigger}

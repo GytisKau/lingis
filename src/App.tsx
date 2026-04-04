@@ -48,7 +48,7 @@ setupIonicReact();
 const App: React.FC = () => (
   <IonApp>
     <AuthProvider>
-      <IonReactRouter basename="lingis">
+      <IonReactRouter>
         <IonRouterOutlet animated={false}>
           {/* Public */}
           <Route path="/" component={RootRedirect} exact />
