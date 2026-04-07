@@ -69,7 +69,8 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ assignment_id }) => {
     is_done: false,
     task_type: taskType,
     toggle_order: tasks.length, // WHAT IS WRONG WITH THIS LINE?
-    fk_assignment: assignment_id
+    fk_assignment: assignment_id,
+    parent_task_id: null
   });
 
   setStatus(`Task ${title} successfully added. Got id ${id}`);

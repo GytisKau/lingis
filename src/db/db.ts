@@ -62,6 +62,7 @@ interface Task {
   task_type: number;
   fk_assignment: number;
   toggle_order: number;
+  parent_task_id: number | null;
 }
 
 const db = new Dexie("LingisDatabase") as Dexie & {
@@ -80,7 +81,7 @@ db.version(1).stores({
   events: "++id, start, end, is_free",
   assignments: "++id, title, date, start_date, est_hours, assignment_type",
   sessions: "++id, start, end, is_done, fk_assignment",
-  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order"
+  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order, parent_task_id"
 })
 
 export type { User, Assignment, LingisEvent, Session, Task, Questionnaire }
