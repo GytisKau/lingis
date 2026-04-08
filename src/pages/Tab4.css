@@ -1,6 +1,65 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAB4 SPECIFIC OVERRIDES (Must be at the top to override global CSS)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Override global transparency rules for TaskList items */
+.tab4-page ion-item,
+.tab4-page ion-list,
+.tab4-page ion-accordion,
+.tab4-page ion-item-sliding {
+  --background: transparent !important;
+  background: transparent !important;
+  --inner-background: transparent !important;
+}
+
+/* Override button styles for TaskList buttons only */
+.tab4-page ion-button {
+  --border-radius: auto !important;
+  --box-shadow: none !important;
+}
+
+/* Override input styles for TaskList inputs only */
+.tab4-page ion-input {
+  --background: transparent !important;
+}
+
+/* FIX: + TOPIC Button - Clean rounded button without square wrapper */
+.tab4-page .add-topic-btn {
+  --padding-start: 0 !important;
+  --padding-end: 0 !important;
+  --padding-top: 0 !important;
+  --padding-bottom: 0 !important;
+  --border-radius: 10px !important;
+  --background: transparent !important;
+  --border-color: #491B6D !important;
+  --border-width: 2px !important;
+  --color: #491B6D !important;
+  border-radius: 10px !important;
+  border: 2px solid #491B6D !important;
+  background: transparent !important;
+}
+
+.tab4-page .add-topic-btn::part(native) {
+  border-radius: 10px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.tab4-page .add-topic-btn::part(button) {
+  border-radius: 10px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   REST OF TAB4 STYLING
+   ───────────────────────────────────────────────────────────────────────────── */
+
 /* Container setup */
 .tab4-page {
-  --background: #f6f7fb; 
+  --background: #f6f7fb;
 }
 
 .assignment-list-container {
@@ -8,7 +67,7 @@
   padding: 12px;
 }
 
-/* Base Card Style - REMOVES THE WHITE BLOCK */
+/* Base Card Style */
 .assignment-card-item {
   margin-bottom: 12px;
   border-radius: 14px;
@@ -20,9 +79,17 @@
 }
 
 /* Pastel Colors */
-.assignment-card-item.exam { background: #ffecec !important; }
-.assignment-card-item.lab { background: #eef4ff !important; }
-.assignment-card-item.other { background: #eafaf1 !important; }
+.assignment-card-item.exam {
+  background: #ffecec !important;
+}
+
+.assignment-card-item.lab {
+  background: #eef4ff !important;
+}
+
+.assignment-card-item.other {
+  background: #eafaf1 !important;
+}
 
 /* Text & Layout Styling */
 .assignment-header {
@@ -30,7 +97,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
-  padding: 14px 14px 4px 14px; 
+  padding: 14px 14px 4px 14px;
 }
 
 .assignment-title {
@@ -65,8 +132,8 @@
 .cute-trash-option {
   --background: #ff4d6d;
   color: white;
-  border-radius: 14px; /* Rounded corners */
-  margin: 8px 4px;    /* Makes it look like it's floating */
+  border-radius: 14px;
+  margin: 8px 4px;
   height: calc(100% - 16px);
   width: 60px;
   box-shadow: 0 4px 8px rgba(255, 77, 109, 0.3);
@@ -75,4 +142,751 @@
 /* Removes default Ionic background on the swipe container */
 ion-item-options {
   background: transparent !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODERN TASK LIST STYLING (Deep Purple Theme #491B6D)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.task-list-container {
+  background: transparent !important;
+  padding: 8px 0;
+  --list-background: transparent !important;
+}
+
+/* MODERN CHECKBOX - UNCHECKED = PURPLE OUTLINE CIRCLE */
+.modern-checkbox {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+
+.modern-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #491B6D;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.modern-checkbox input[type="checkbox"]:checked {
+  background: #491B6D;
+  border-color: #491B6D;
+}
+
+.modern-checkbox input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* TASK & TOPIC ITEMS */
+.task-list-item,
+.topic-list-item {
+  --background: white;
+  border-radius: 12px;
+  margin: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
+}
+
+.task-item-content,
+.topic-item-content {
+  --border-style: none !important;
+  border: none !important;
+}
+
+.task-completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+/* INLINE EDITING */
+.task-item-editing {
+  --background: #f9f9f9;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin: 8px 12px;
+}
+
+.edit-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.edit-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #491B6D;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* EDIT INPUT - ROUNDED EDGES WITH PURPLE BORDER */
+.edit-input {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --border-radius: 12px !important;
+  --background: transparent !important;
+  --color: #222;
+  border: 2px solid #491B6D !important;
+  border-radius: 12px !important;
+}
+
+.edit-input:focus {
+  --border-color: #491B6D !important;
+}
+
+.edit-input::part(container) {
+  border: 2px solid #491B6D !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+}
+
+.edit-input::part(native-input) {
+  border-radius: 12px !important;
+  background: transparent !important;
+}
+
+.edit-input input,
+.edit-input textarea {
+  border-radius: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #222 !important;
+  outline: none !important;
+}
+
+.edit-input input:focus,
+.edit-input textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.edit-input::placeholder {
+  color: #999 !important;
+}
+
+.subtask-edit-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subtask-edit-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.subtask-edit-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-subtask-btn {
+  width: 100%;
+  --border-radius: 10px;
+  font-size: 12px;
+  --border-color: #491B6D !important;
+  --color: #491B6D !important;
+  --background: transparent !important;
+  border: 2px solid #491B6D !important;
+}
+
+.add-subtask-btn {
+  --border-radius: 10px;
+  --border-width: 2px !important;
+  --border-color: #491B6D !important;
+  --color: #491B6D !important;
+  --background: transparent !important;
+  border: 2px solid #491B6D !important;
+  font-size: 13px;
+}
+
+.edit-button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.edit-button-group ion-button {
+  margin: 0;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  height: 32px;
+  font-size: 13px;
+}
+
+/* TOPIC SPECIFIC - MATCHING TASK STYLE */
+.topic-item-content {
+  --min-height: 0 !important;
+  --padding-start: 0 !important;
+  --padding-end: 16px !important;
+  --padding-top: 0 !important;
+  --padding-bottom: 0 !important;
+  --inner-padding-start: 0 !important;
+
+  border-radius: 12px;
+  margin: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: auto;
+  min-height: 56px;
+  --border-width: 0 !important;
+  position: relative;
+  z-index: 1;
+}
+
+.topic-item-content ion-label {
+  flex: 1;
+  margin: 0;
+  padding: 14px 0;
+}
+
+.topic-item-content ion-icon {
+  flex-shrink: 0;
+  order: 2;
+}
+
+.topic-item-content ion-reorder {
+  flex-shrink: 0;
+  order: 3;
+}
+
+/* Topic expanded content - transparent background */
+.topic-expanded-content {
+  background: transparent;
+  padding: 0 12px 12px 12px;
+  border-radius: 0 0 12px 12px;
+  margin: 0 12px 8px 12px;
+  position: relative;
+  z-index: 0;
+}
+
+/* Child reorder group - isolated from parent */
+.child-reorder-group {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto;
+  background: transparent;
+}
+
+/* Child task sliding wrapper */
+.child-task-sliding {
+  --background: white;
+  border-radius: 12px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
+  --border-width: 0 !important;
+  position: relative;
+  z-index: 0;
+}
+
+/* Child task items inside topic */
+.child-task-item {
+  --background: transparent;
+  --inner-background: transparent;
+  --border-style: none;
+  --border-width: 0 !important;
+  padding: 0;
+  margin: 0;
+  --min-height: 0;
+  height: auto;
+  min-height: 56px;
+}
+
+.child-task-item ion-label {
+  margin: 0;
+  padding: 14px 0;
+  flex: 1;
+}
+
+.child-task-item ion-reorder {
+  flex-shrink: 0;
+}
+
+/* Override default accordion header styling */
+ion-accordion .ion-accordion-header {
+  padding: 0 !important;
+}
+
+/* Remove default accordion header background */
+ion-accordion .accordion-header {
+  background: transparent !important;
+}
+
+/* CUTE SWIPE ACTIONS - Small Purple Circle with Icon */
+ion-item-sliding {
+  position: relative;
+  z-index: 1;
+}
+
+ion-item-sliding.topic-list-item {
+  z-index: 100;
+  overflow: visible !important;
+}
+
+ion-item-option {
+  --background: transparent !important;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: auto;
+  z-index: 101;
+}
+
+ion-item-options {
+  z-index: 101;
+}
+
+ion-item-option ion-icon {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #491B6D;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #491B6D;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 102;
+}
+
+ion-item-option:hover ion-icon {
+  background: rgba(73, 27, 109, 0.1);
+  transform: scale(1.1);
+}
+
+ion-item-option:active ion-icon {
+  background: rgba(73, 27, 109, 0.2);
+  transform: scale(0.95);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ADD MODAL STYLING
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.add-modal {
+  --background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.add-modal::part(backdrop) {
+  opacity: 1;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #491B6D;
+}
+
+.close-btn {
+  --color: #491B6D;
+}
+
+.modal-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #491B6D;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* FORM INPUT - ROUNDED EDGES WITH PURPLE BORDER */
+.form-input {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --border-radius: 12px !important;
+  --background: transparent !important;
+  --color: #222;
+  border: 2px solid #491B6D !important;
+  border-radius: 12px !important;
+}
+
+.form-input:focus {
+  --border-color: #491B6D !important;
+}
+
+.form-input::part(container) {
+  border: 2px solid #491B6D !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+}
+
+.form-input::part(native-input) {
+  border-radius: 12px !important;
+  background: transparent !important;
+}
+
+.form-input input,
+.form-input textarea {
+  border-radius: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #222 !important;
+  outline: none !important;
+}
+
+.form-input input:focus,
+.form-input textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.form-input::placeholder {
+  color: #999 !important;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+/* Custom Button Styling - No IonButton Square Box */
+.custom-button {
+  background: transparent;
+  border: 2px solid #491B6D;
+  color: #491B6D;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.custom-button:hover {
+  background: rgba(73, 27, 109, 0.05);
+}
+
+.custom-button:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.custom-button.active {
+  background: #491B6D;
+  color: white;
+  border-color: #491B6D;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+/* Task list actions buttons */
+.task-list-actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 12px;
+}
+
+.add-task-btn {
+  --background: #491B6D !important;
+  --color: white !important;
+  --border-radius: 10px;
+  flex: 1;
+  font-weight: 600;
+}
+
+.add-topic-btn {
+  --color: #491B6D !important;
+  --border-color: #491B6D !important;
+  --border-width: 2px !important;
+  --border-radius: 10px;
+  --background: transparent !important;
+  flex: 1;
+  font-weight: 600;
+}
+
+/* Task badges styling */
+.task-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.topic-badge {
+  --background: #491B6D;
+  --color: white;
+}
+
+/* Difficulty and Type buttons */
+.difficulty-buttons,
+.type-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.difficulty-buttons .custom-button,
+.type-buttons .custom-button {
+  flex: 1;
+  min-width: auto;
+}
+
+/* Fix for accordion inside swipable item */
+ion-item-sliding ion-accordion-group {
+  position: relative;
+  z-index: 5;
+}
+
+ion-item-sliding ion-accordion {
+  position: relative;
+  z-index: 5;
+}
+
+/* Ensure reorder doesn't overlap on swipe */
+ion-reorder {
+  position: relative;
+  z-index: 15;
+  flex-shrink: 0;
+}
+
+/* Accordion header proper positioning */
+ion-accordion .accordion-header {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+}
+
+/* Remove outer box styling from ion-input */
+ion-input {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  --border-radius: 12px !important;
+}
+
+ion-input:focus {
+  --border-color: #491B6D !important;
+}
+
+ion-input::part(container) {
+  border: 2px solid #491B6D !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  padding: 10px 12px !important;
+}
+
+ion-input::part(native-input) {
+  border-radius: 12px !important;
+  background: transparent !important;
+  outline: none !important;
+}
+
+/* Subtask buttons consistency */
+.add-subtask-btn,
+.delete-subtask-btn {
+  --border-radius: 12px !important;
+  border-radius: 12px !important;
+}
+
+/* Remove line breaks from items */
+ion-item {
+  --border-style: none !important;
+  --border-width: 0 !important;
+  border: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TASK PROGRESS BAR
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.task-progress-section {
+  background: white;
+  padding: 16px 12px;
+  margin: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.progress-percentage {
+  font-size: 18px;
+  font-weight: 700;
+  color: #491B6D;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: #777;
+  font-weight: 500;
+}
+
+.task-progress-bar {
+  --background: #e0d5f0;
+  --progress-background: #491B6D;
+}
+
+/* ─────────────────────────────────────────────────��───────────────────────────
+   TASK TYPE DISTRIBUTION BAR
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.task-type-distribution {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.type-bar-container {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #e0e0e0;
+  gap: 0;
+}
+
+.type-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.type-bar-empty {
+  width: 100%;
+  height: 100%;
+  background: #e0e0e0;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #999;
+}
+
+.passive-bar {
+  background: #33b5e5;
+}
+
+.active-bar {
+  background: #ffb81c;
+}
+
+.testing-bar {
+  background: #ff6b6b;
+}
+
+.type-labels {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  justify-content: space-between;
+}
+
+.type-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.type-label.passive::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #33b5e5;
+  border-radius: 2px;
+}
+
+.type-label.active::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #ffb81c;
+  border-radius: 2px;
+}
+
+.type-label.testing::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #ff6b6b;
+  border-radius: 2px;
 }

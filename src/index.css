@@ -42,18 +42,136 @@ ion-content::part(background) {
 }
 
 /* ============================
-   HEADER (TRANSPARENT)
+   HEADER - Transparent but blocks content underneath
    ============================ */
-ion-header,
+ion-header {
+  --background: transparent !important;
+  background: transparent !important;
+  position: relative;
+  z-index: 100;
+}
+
 ion-toolbar {
   --background: transparent !important;
   background: transparent !important;
+  --border-style: none !important;
   box-shadow: none !important;
-  border: none !important;
+  position: relative;
+  z-index: 101;
 }
 
-ion-header::after {
+/* Remove default borders */
+ion-header::after,
+.header-md::after,
+.header-ios::after,
+ion-toolbar::after {
   display: none !important;
+}
+
+/* Title styling */
+ion-title {
+  color: #491B6D !important;
+  font-weight: 600 !important;
+  padding-left: 20px !important;
+  font-family: 'Poppins', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  text-align: left !important;
+  font-size: 20px !important;
+  position: relative;
+  z-index: 102;
+}
+
+/* Back button and header buttons */
+ion-back-button {
+  --color: #491B6D !important;
+  --background: transparent !important;
+  position: relative;
+  z-index: 102;
+}
+
+ion-header ion-button {
+  --color: #491B6D !important;
+  --background: transparent !important;
+  position: relative;
+  z-index: 102;
+}
+
+/* ============================
+   REMOVE VISIBLE BLOCKS FROM TOPICS
+   ============================ */
+
+/* Make topic items transparent */
+ion-accordion ion-item,
+.topic-header-item,
+.topic-accordion ion-item {
+  --background: transparent !important;
+  background: transparent !important;
+  --inner-background: transparent !important;
+}
+
+/* Remove white background from topic headers */
+ion-accordion [slot="header"] {
+  --background: transparent !important;
+  background: transparent !important;
+}
+
+/* Make the content area of topics transparent */
+ion-accordion [slot="content"] {
+  --background: transparent !important;
+  background: transparent !important;
+}
+
+/* Remove any card-like appearance from topics */
+ion-accordion {
+  --background: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* If topics are wrapped in any container, make it transparent */
+.topic-accordion-group,
+.topic-accordion {
+  --background: transparent !important;
+  background: transparent !important;
+}
+/* ============================
+   CONTENT - Scrolls UNDER the header
+   ============================ */
+ion-content {
+  --background: transparent !important;
+  background: transparent !important;
+  --offset-top: 0px !important;
+}
+
+/* Add padding to the top of the scrollable content so it starts below the header */
+ion-content::part(scroll) {
+  padding-top: 56px !important;
+  margin-top: 0 !important;
+}
+
+/* For iOS devices */
+.ios ion-content::part(scroll) {
+  padding-top: 44px !important;
+}
+
+/* Make sure the content doesn't overlap the header */
+ion-content.scroll-y {
+  --padding-top: 0 !important;
+}
+
+/* The background image stays fixed behind everything */
+ion-app {
+  background: url('/background_pc.png') center / cover no-repeat fixed;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  ion-app {
+    background: url('/background_phone.png') center / cover no-repeat fixed;
+  }
 }
 
 /* ============================
@@ -83,13 +201,30 @@ ion-card {
   box-shadow: none !important;
 }
 
-ion-card-header,
-ion-card-content,
-ion-item,
-ion-list,
-ion-list-header {
+/* ============================
+   CARDS & LISTS - Only cards should be white, items should be transparent
+   ============================ */
+ion-card {
   --background: white !important;
   background: white !important;
+  margin: 16px !important;
+  border-radius: 12px !important;
+  border: 0.5px solid #C9BFCA !important;
+  box-shadow: none !important;
+}
+
+ion-card-header,
+ion-card-content {
+  --background: white !important;
+  background: white !important;
+}
+
+/* Make lists and items transparent by default */
+ion-list,
+ion-list-header,
+ion-item {
+  --background: transparent !important;
+  background: transparent !important;
 }
 
 /* ============================
@@ -264,4 +399,40 @@ ion-fab-button {
 ion-fab-button::part(native) {
   background: transparent !important;
   border: none !important;
+}
+
+/* ============================
+   REMOVE HEADER BORDER LINE COMPLETELY
+   ============================ */
+
+/* Remove Ionic shadow separator */
+ion-header,
+ion-toolbar {
+  --border-width: 0 !important;
+  --border-style: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* iOS hairline fix */
+.header-ios,
+.header-md {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove pseudo-element divider Ionic injects */
+ion-header::after,
+ion-toolbar::after,
+.header-ios::after,
+.header-md::after {
+  display: none !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Remove safe-area separator */
+ion-header ion-toolbar:first-of-type {
+  --min-height: auto;
+  border-bottom: none !important;
 }
