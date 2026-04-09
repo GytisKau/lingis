@@ -37,7 +37,7 @@
 ============================ */
 .auth-item {
   width: 100%;
-  /* margin-bottom: 25px; */
+  margin-bottom: 25px;
 
   --background: transparent;
   --border-width: 0;
@@ -56,7 +56,7 @@
 ============================ */
 .auth-item {
   width: 100%;
-  /* margin-bottom: 20px; */
+  margin-bottom: 20px;
 
   /* outer wrapper - purple border */
   border: 1px solid #491B6D;  /* thinner border */
@@ -101,7 +101,7 @@
 .auth-label {
   width: 100%;
   max-width: 320px;
-  margin: 16px auto 4px auto;
+  margin: 8px auto 4px auto;
   color: #491B6D;
   font-weight: 600;
 }
