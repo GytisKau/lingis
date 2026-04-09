@@ -40,7 +40,7 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import TabsLayout from './components/TabsLayout';
 import { AuthProvider } from './hooks/useAuth';
-import Login from './pages/Login';
+import Welcome from './pages/Welcome';
 import RootRedirect from './components/RootRedirect';
 
 setupIonicReact();
@@ -52,7 +52,7 @@ const App: React.FC = () => (
         <IonRouterOutlet animated={false}>
           {/* Public */}
           <Route path="/" component={RootRedirect} exact />
-          <Route path="/login" render={() => <Login/>} exact />
+          <Route path="/welcome" render={() => <Welcome/>} exact />
 
           {/* Wizard requires login */}
           <Route

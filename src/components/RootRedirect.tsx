@@ -5,7 +5,7 @@ const RootRedirect: React.FC = () => {
   const { loggedIn, wizardDone } = useAuth()
 
   if (!loggedIn) {
-    return <Redirect to="/login" />
+    return <Redirect to="/welcome" />
   }
 
   if (!wizardDone) {

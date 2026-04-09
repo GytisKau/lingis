@@ -27,7 +27,7 @@ interface FormData {
 
 const LoginWizard: React.FC = () => {
   const router = useIonRouter();
-  const { finishWizard } = useAuth();
+  const { user, loggedIn, finishWizard } = useAuth();
   const [status, setStatus] = useState("")
   const [form, setForm] = useState<FormData>({})
 
@@ -53,7 +53,10 @@ const LoginWizard: React.FC = () => {
 
   useEffect(() => {
     if (users && users.length > 0) {
-      setForm(users[0]);
+      const dbUser = users[0];
+      dbUser.email = user?.email ?? "";
+      // dbUser.username = user?.displayName ?? "";
+      setForm(dbUser);
     }
   }, [users]);
 
@@ -142,16 +145,6 @@ const LoginWizard: React.FC = () => {
                 placeholder="Enter text"
                 value={form?.username}
                 onIonChange={e => setForm({ ...form, username: e.detail.value ?? "" })}
-              />
-            </IonItem>
-
-            <p className="auth-label">Email</p>
-            <IonItem className="auth-item">
-              <IonInput
-                type="email"
-                placeholder="email@mail.com"
-                value={form?.email}
-                onIonChange={e => setForm({ ...form, email: e.detail.value ?? "" })}
               />
             </IonItem>
 
