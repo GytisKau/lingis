@@ -75,7 +75,7 @@ const Login: React.FC = () => {
         <IonButton
           expand="block"
           onClick={resetMode ? handleReset : handleLogin}
-          disabled={loading || email == "" || !resetMode && password == "" }
+          disabled={loading || email == "" || !resetMode && password.length < 6 }
           type="button">
           {loading ? "Please wait..." :
             resetMode ? "Send reset email" : "Login"}
