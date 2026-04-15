@@ -53,14 +53,18 @@ const LoginWizard: React.FC = () => {
 
   useEffect(() => {
     if (users && users.length > 0) {
-      const dbUser = users[0];
-      dbUser.email = user?.email ?? "";
-      // dbUser.username = user?.displayName ?? "";
-      setForm(dbUser);
+      setForm(users[0]);
     }
   }, [users]);
 
   const handleConfirm = async () => {
+    if(user == null){
+      setStatus("Can't find firebase user.")
+      return;
+    } else if(user.email == null){
+      setStatus("Firebase user has no email.")
+      return;
+    }
     if (
       form == undefined ||
       form.avg_sleep_hours == undefined ||
@@ -70,7 +74,6 @@ const LoginWizard: React.FC = () => {
       form.avg_active_time == undefined ||
       form.chronotype == undefined ||
       form.effectiveness_rating == undefined ||
-      form.email == undefined ||
       form.preffered_session_time == undefined ||
       form.study_field == undefined ||
       form.username == undefined ||
@@ -85,7 +88,7 @@ const LoginWizard: React.FC = () => {
 
     if (users.length == 0) {
       await db.users.add({
-        email: form.email,
+        email: user.email,
         username: form.username,
         avg_theory_time: form.avg_theory_time,
         avg_practice_time: form.avg_practice_time,
@@ -104,7 +107,7 @@ const LoginWizard: React.FC = () => {
       });
     } else {
       await db.users.update(users[0].id!, {
-        email: form.email,
+        email: user.email,
         username: form.username,
         avg_theory_time: form.avg_theory_time,
         avg_practice_time: form.avg_practice_time,
