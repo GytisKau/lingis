@@ -27,7 +27,7 @@ function PasswordInput({label, onIonInput}: PasswordInputProps) {
       helperText={password.length == 0 ? "Enter your password" : ""}
       onIonInput={(event) => {
         setPassword(event.detail.value ?? "")
-        if(onIonInput) onIonInput(event, undefined)
+        if(onIonInput) onIonInput(event, true)
       }}
       onIonBlur={() => markTouched()}
     ></IonInput>
