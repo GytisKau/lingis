@@ -9,8 +9,23 @@ interface PasswordInputProps {
 
 function PasswordInput({label, onIonInput}: PasswordInputProps) {
   const [isTouched, setIsTouched] = useState(false);
+  const [isValid, setIsValid] = useState<boolean>();
   const [password, setPassword] = useState<string>("");
 
+  const validate = (event: IonInputCustomEvent<InputChangeEventDetail>) => {
+    const value = event.detail.value ?? ""
+    setPassword(value)
+
+    setIsValid(undefined);
+
+    if (value === ''){
+      if (onIonInput) onIonInput(event, isValid)
+      return;
+    }
+
+    setIsValid(value.length >= 6)
+    if (onIonInput) onIonInput(event, value.length >= 6)
+  };
 
   const markTouched = () => {
     setIsTouched(true);
@@ -18,17 +33,15 @@ function PasswordInput({label, onIonInput}: PasswordInputProps) {
 
   return (
     <IonInput
-      className={`${isTouched && 'ion-touched'}`}
+      className={`${(isValid === false) && 'ion-invalid'} ${isTouched && 'ion-touched'}`}
       debounce={100}
       type="password"
       fill="outline"
       label={label ?? "Password"}
       labelPlacement="floating"
+      errorText={"Minimum 6 characters"}
       helperText={password.length == 0 ? "Enter your password" : ""}
-      onIonInput={(event) => {
-        setPassword(event.detail.value ?? "")
-        if(onIonInput) onIonInput(event, true)
-      }}
+      onIonInput={(event) => validate(event)}
       onIonBlur={() => markTouched()}
     ></IonInput>
   );
