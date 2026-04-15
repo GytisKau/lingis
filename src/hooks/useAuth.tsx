@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   createUserWithEmailAndPassword,
-  User
+  User,
+  sendPasswordResetEmail 
 } from "firebase/auth"
 
 interface AuthError {
@@ -18,8 +19,10 @@ interface AuthState {
   loggedIn: boolean
   wizardDone: boolean
   loginError: AuthError | null
-  login: (email: string, password: string) => Promise<boolean>
   registerError: AuthError | null
+  resetPasswordError: AuthError | null
+  resetPassword: (email: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
   register: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   finishWizard: () => void
@@ -35,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
   const [loginError, setLoginError] = useState<AuthError | null>(null)
   const [registerError, setRegisterError] = useState<AuthError | null>(null)
+  const [resetPasswordError, setResetPasswordError] = useState<AuthError | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -46,6 +50,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => unsubscribe()
   }, [])
+
+  const resetPassword = async (email: string): Promise<boolean> => {
+    setResetPasswordError(null)
+
+    try {
+      await sendPasswordResetEmail(auth, email)
+      return true
+    } catch (err: any) {
+      switch (err.code) {
+        case "auth/user-not-found":
+          setResetPasswordError({ type: "email", message: "User not found" })
+          break
+        case "auth/invalid-email":
+          setResetPasswordError({ type: "email", message: "Invalid email" })
+          break
+        default:
+          setResetPasswordError({ type: "other", message: "Failed to send reset email" })
+      }
+      return false
+    }
+  }
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoginError(null)
@@ -121,8 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loggedIn: !!user,
         wizardDone,
         loginError,
-        login,
         registerError,
+        resetPasswordError,
+        resetPassword,
+        login,
         register,
         logout,
         finishWizard,

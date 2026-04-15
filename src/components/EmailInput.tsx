@@ -28,8 +28,9 @@ function EmailInput({onIonInput}: EmailInputProps) {
       return;
     }
 
-    setIsValid(validateEmail(value) !== null)
-    if (onIonInput) onIonInput(event, isValid)
+    const valid = validateEmail(value) !== null
+    setIsValid(valid)
+    if (onIonInput) onIonInput(event, valid)
   };
 
   const markTouched = () => {
