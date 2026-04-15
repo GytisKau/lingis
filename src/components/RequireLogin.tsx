@@ -5,7 +5,7 @@ const RequireLogin: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const { loggedIn } = useAuth()
 
-  if (!loggedIn) return <Redirect to="/login" />
+  if (!loggedIn) return <Redirect to="/welcome" />
 
   return children
 }
