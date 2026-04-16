@@ -1,7 +1,7 @@
 import {
   IonContent, IonPage, IonButton,
   IonInput, IonItem, IonSelect, IonSelectOption,
-  useIonRouter, IonProgressBar, IonList
+  useIonRouter
 } from '@ionic/react';
 import './LoginWizard.css';
 import { db } from '../db/db';
@@ -10,34 +10,92 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useAuth } from '../hooks/useAuth';
 
 interface FormData {
-  email?: string,
-  username?: string,
-  avg_theory_time?: number,
-  avg_practice_time?: number,
-  avg_passive_time?: number,
-  avg_active_time?: number,
-  avg_sleep_hours?: number,
-  preffered_session_time?: number,
-  work_hours_start?: number,
-  work_hours_end?: number,
-  effectiveness_rating?: number,
-  study_field?: number,
-  chronotype?: number
+  email: string;
+  username: string;
+  avg_theory_time: number;
+  avg_practice_time: number;
+  avg_passive_time: number;
+  avg_active_time: number;
+  avg_sleep_hours: number;
+  preffered_session_time: number;
+  work_hours_start: number;
+  work_hours_end: number;
+  effectiveness_rating: number;
+  study_field: number;
+  chronotype: number;
 }
+
+const defaultForm: FormData = {
+  email: "",
+  username: "",
+  avg_theory_time: 0,
+  avg_practice_time: 0,
+  avg_passive_time: 0,
+  avg_active_time: 0,
+  avg_sleep_hours: 8,
+  preffered_session_time: 30,
+  work_hours_start: 8,
+  work_hours_end: 17,
+  effectiveness_rating: 2,
+  study_field: 0,
+  chronotype: 0
+};
+
+type FieldError = {
+  type: keyof FormData;
+  error: string;
+};
 
 const LoginWizard: React.FC = () => {
   const router = useIonRouter();
-  const { user, loggedIn, finishWizard } = useAuth();
-  const [status, setStatus] = useState("")
-  const [form, setForm] = useState<FormData>({})
+  const { user, finishWizard } = useAuth();
 
-  const questions = [
-    "Average theory studying time",
-    "Average practical studying time",
-    "Average passive studying time",
-    "Average active studying time",
-    "Prefered study session time"
-  ];
+  const [status, setStatus] = useState("");
+  const [form, setForm] = useState<FormData>(defaultForm);
+  const [step, setStep] = useState(0);
+
+  const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
+
+  useEffect(() => {
+    if (users.length > 0) {
+      setForm({
+        ...defaultForm,
+        ...users[0],
+        email: users[0].email ?? ""
+      });
+    }
+  }, [users]);
+
+  const totalSteps = 4;
+
+  const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
+  const back = () => setStep(s => Math.max(s - 1, 0));
+
+  const handleConfirm = async () => {
+    if (!user?.email) {
+      setStatus("Firebase user error");
+      return;
+    }
+
+    if (form.username.trim() === "") {
+      setStatus("Username is required");
+      return;
+    }
+
+    const userData = {
+      ...form,
+      email: user.email
+    };
+
+    if (users.length === 0) {
+      await db.users.add(userData);
+    } else {
+      await db.users.update(users[0].id!, userData);
+    }
+
+    finishWizard();
+    router.push("/tabs/tab1", "root", "replace");
+  };
 
   const timeOptions = [
     { label: "<5 min", value: 5 },
@@ -48,241 +106,228 @@ const LoginWizard: React.FC = () => {
     { label: "90 min", value: 90 },
     { label: ">90 min", value: 120 }
   ];
+  
+  // TODO: Add proper validation
+  // const validateStep = () => {
+  //   const errors: FieldError[] = [];
 
-  const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
+  //   switch (step) {
+  //     case 0:
+  //       if (form.username.trim() === "")
+  //         errors.push({ type: "username", error: "Enter username" });
+  //       break;
+        
+  //     case 1:
+  //       if (form.study_field < 0 || form.study_field > 3)
+  //         errors.push({ type: "study_field", error: "Select study field" });
+        
+  //       if (form.chronotype < 0 || form.chronotype > 3)
+  //         errors.push({ type: "chronotype", error: "Incorrect chronotype" });
 
-  useEffect(() => {
-    if (users && users.length > 0) {
-      setForm(users[0]);
-    }
-  }, [users]);
+  //       if (form.effectiveness_rating < 0 || form.effectiveness_rating > 4)
+  //         errors.push({ type: "effectiveness_rating", error: "Select effectiveness" });
 
-  const handleConfirm = async () => {
-    if(user == null){
-      setStatus("Can't find firebase user.")
-      return;
-    } else if(user.email == null){
-      setStatus("Firebase user has no email.")
-      return;
-    }
-    if (
-      form == undefined ||
-      form.avg_sleep_hours == undefined ||
-      form.avg_theory_time == undefined ||
-      form.avg_practice_time == undefined ||
-      form.avg_passive_time == undefined ||
-      form.avg_active_time == undefined ||
-      form.chronotype == undefined ||
-      form.effectiveness_rating == undefined ||
-      form.preffered_session_time == undefined ||
-      form.study_field == undefined ||
-      form.username == undefined ||
-      form.work_hours_end == undefined ||
-      form.work_hours_start == undefined
-    ) {
-      setStatus("Please fill in all required fields")
-      return;
-    }
+  //       if (form.avg_sleep_hours < 3 || form.avg_sleep_hours > 13)
+  //         errors.push({ type: "avg_sleep_hours", error: "3-13 hours required" });
+  //       break;
 
-    setStatus("")
+  //     case 2:
+  //       if (form.avg_theory_time <= 0)
+  //         errors.push({ type: "avg_theory_time", error: "Required" });
 
-    if (users.length == 0) {
-      await db.users.add({
-        email: user.email,
-        username: form.username,
-        avg_theory_time: form.avg_theory_time,
-        avg_practice_time: form.avg_practice_time,
-        avg_passive_time: form.avg_passive_time,
-        avg_active_time: form.avg_active_time,
-        avg_sleep_hours: form.avg_sleep_hours,
-        preffered_session_time: form.preffered_session_time,
-        work_hours_start: form.work_hours_start,
-        work_hours_end: form.work_hours_end,
-        effectiveness_rating: form.effectiveness_rating,
-        study_field: form.study_field,
-        chronotype: form.chronotype
-      }).catch((error) => {
-        setStatus(`Failed to add: ${error}`);
-        return;
-      });
-    } else {
-      await db.users.update(users[0].id!, {
-        email: user.email,
-        username: form.username,
-        avg_theory_time: form.avg_theory_time,
-        avg_practice_time: form.avg_practice_time,
-        avg_passive_time: form.avg_passive_time,
-        avg_active_time: form.avg_active_time,
-        avg_sleep_hours: form.avg_sleep_hours,
-        preffered_session_time: form.preffered_session_time,
-        work_hours_start: form.work_hours_start,
-        work_hours_end: form.work_hours_end,
-        effectiveness_rating: form.effectiveness_rating,
-        study_field: form.study_field,
-        chronotype: form.chronotype
-      }).catch((error) => {
-        setStatus(`Failed update: ${error}`);
-        return;
-      });
-    }
+  //       if (form.avg_practice_time <= 0)
+  //         errors.push({ type: "avg_practice_time", error: "Required" });
 
-    finishWizard()
-    router.push("/tabs/tab1", "root", "replace");
-  };
+  //       if (form.avg_passive_time <= 0)
+  //         errors.push({ type: "avg_passive_time", error: "Required" });
+
+  //       if (form.avg_active_time <= 0)
+  //         errors.push({ type: "avg_active_time", error: "Required" });
+
+  //       if (form.preffered_session_time <= 0)
+  //         errors.push({ type: "preffered_session_time", error: "Required" });
+  //       break;
+
+  //     case 3:
+  //       if (form.work_hours_end <= form.work_hours_start)
+  //         errors.push({ type: "work_hours_end", error: "Must be after start" });
+  //       break;
+  //   }
+
+  //   return {
+  //     isValid: errors.length === 0,
+  //     errors
+  //   };
+  // };
 
   return (
     <IonPage>
-      <IonContent fullscreen className="login-content">
-        <div className="register-content">
+      <IonContent fullscreen className='ion-padding'>
 
-          <img src="/logo.svg" alt="Logo" className="register-logo" />
+          <div style={{width: "100%"}} className='ion-text-center'>
+          <img src="/logo.svg" alt="Logo" className="ion-margin-bottom" width={100} height={100}/>
+          </div>
 
-          <div className="status-message">{status}</div>
+          {status.length > 0 && (
+            <div className="status-message">{status}</div>
+          )}
 
-          <IonList className="auth-list">
+            {/* STEP 0 */}
+            {step === 0 && (
+              <>
+                <h2 className='ion-text-center'>Enter Username</h2>
+                <p className="auth-label">Username</p>
+                <IonItem className="auth-item">
+                  <IonInput
+                    errorText={"Username required"}
+                    type="text"
+                    placeholder="Enter username"
+                    value={form?.username}
+                    onIonChange={e => setForm({ ...form, username: e.detail.value ?? "" })}
+                  />
+                </IonItem>
+              </>
+            )}
 
-            <p className="auth-label">Username</p>
-            <IonItem className="auth-item">
-              <IonInput
-                type="text"
-                placeholder="Enter text"
-                value={form?.username}
-                onIonChange={e => setForm({ ...form, username: e.detail.value ?? "" })}
-              />
-            </IonItem>
-
-            <p className="auth-label">Study field</p>
-            <IonItem className="auth-item">
-              <IonSelect
-                interface="popover"
-                interfaceOptions={{ cssClass: "custom-select-popover" }}
-                placeholder="Select..."
-                onIonChange={e => setForm({ ...form, study_field: Number(e.detail.value) ?? 0 })}
-                value={String(form?.study_field)}
-              >
-                <IonSelectOption value="0">STEM</IonSelectOption>
-                <IonSelectOption value="1">Social and humanitarian studies</IonSelectOption>
-                <IonSelectOption value="2">Arts and creative studies</IonSelectOption>
-                <IonSelectOption value="3">Finance and management</IonSelectOption>
-              </IonSelect>
-            </IonItem>
-
-            <p className="auth-label">Chronotype</p>
-            <IonItem className="auth-item">
-              <IonSelect
-                interface="popover"
-                interfaceOptions={{ cssClass: "custom-select-popover" }}
-                placeholder="Select..."
-                onIonChange={e => setForm({ ...form, chronotype: e.detail.value ?? 0 })}
-                value={form?.chronotype}
-              >
-                <IonSelectOption value="morning">Morning person</IonSelectOption>
-                <IonSelectOption value="noon">Noon person</IonSelectOption>
-                <IonSelectOption value="evening">Evening person</IonSelectOption>
-              </IonSelect>
-            </IonItem>
-
-            <p className="auth-label">Study habits</p>
-            <IonItem className="auth-item">
-              <IonSelect
-                interface="popover"
-                interfaceOptions={{cssClass: "custom-select-popover" }}
-                placeholder="Select..."
-                onIonChange={e => setForm({ ...form, effectiveness_rating: Number(e.detail.value) ?? 0 })}
-                value={String(form?.effectiveness_rating)}
-              >
-                <IonSelectOption value="0">Terrible</IonSelectOption>
-                <IonSelectOption value="1">Not good</IonSelectOption>
-                <IonSelectOption value="2">Okay</IonSelectOption>
-                <IonSelectOption value="3">Good</IonSelectOption>
-                <IonSelectOption value="4">Excellent</IonSelectOption>
-              </IonSelect>
-            </IonItem>
-
-            <p className="auth-label">Average well rested sleep hours</p>
-            <IonItem className="auth-item">
-              <IonInput
-                type="number"
-                placeholder="3-13"
-                value={form?.avg_sleep_hours}
-                onIonChange={e => {
-                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 0;
-                  setForm({ ...form, avg_sleep_hours: val });
-                }}
-                min={3}
-                max={13}
-              />
-            </IonItem>
-
-            {questions.map((q, i) => (
-              <div key={i}>
-                <p className="auth-label">{q}</p>
+            {/* STEP 1 */}
+            {step === 1 && (
+              <>
+                <h2 className='ion-text-center'>Fill all personal info</h2>
+                <p className="auth-label">Study field</p>
                 <IonItem className="auth-item">
                   <IonSelect
                     interface="popover"
                     interfaceOptions={{ cssClass: "custom-select-popover" }}
                     placeholder="Select..."
-                    value={
-                      i === 0 ? form.avg_theory_time :
-                        i === 1 ? form.avg_practice_time :
-                        i === 2 ? form.avg_passive_time :
-                        i === 3 ? form.avg_active_time :
-                          form.preffered_session_time
-                    }
-                    onIonChange={e => {
-                      const val = e.detail.value;
-                      if (i === 0) setForm({ ...form, avg_theory_time: val });
-                      if (i === 1) setForm({ ...form, avg_practice_time: val });
-                      if (i === 2) setForm({ ...form, avg_passive_time: val });
-                      if (i === 3) setForm({ ...form, avg_active_time: val });
-                      if (i === 4) setForm({ ...form, preffered_session_time: val });
-                    }}
+                    onIonChange={e => setForm({ ...form, study_field: Number(e.detail.value) })}
+                    value={String(form.study_field)}
                   >
-                    {timeOptions.map(opt => (
-                      <IonSelectOption key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </IonSelectOption>
-                    ))}
+                    <IonSelectOption value="0">STEM</IonSelectOption>
+                    <IonSelectOption value="1">Social</IonSelectOption>
+                    <IonSelectOption value="2">Arts</IonSelectOption>
+                    <IonSelectOption value="3">Finance</IonSelectOption>
                   </IonSelect>
                 </IonItem>
-              </div>
-            ))}
 
-            <p className="auth-label">Working hours start</p>
-            <IonItem className="auth-item">
-              <IonInput
-                type="number"
-                placeholder="From"
-                value={form?.work_hours_start}
-                onIonChange={e => {
-                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 0;
-                  setForm({ ...form, work_hours_start: val })
-                }}
-              />
-            </IonItem>
+                <p className="auth-label">Chronotype</p>
+                <IonItem className="auth-item">
+                  <IonSelect
+                    interface="popover"
+                    interfaceOptions={{ cssClass: "custom-select-popover" }}
+                    placeholder="Select..."
+                    onIonChange={e => setForm({ ...form, chronotype: Number(e.detail.value) })}
+                    value={String(form.chronotype)}
+                  >
+                    <IonSelectOption value="0">Morning</IonSelectOption>
+                    <IonSelectOption value="1">Noon</IonSelectOption>
+                    <IonSelectOption value="2">Evening</IonSelectOption>
+                  </IonSelect>
+                </IonItem>
 
-            <p className="auth-label">Working hours end</p>
-            <IonItem className="auth-item">
-              <IonInput
-                type="number"
-                placeholder="To"
-                value={form?.work_hours_end}
-                onIonChange={e => {
-                  const val = e.detail.value ? Math.floor(Number(e.detail.value)) : 24;
-                  setForm({ ...form, work_hours_end: val })
-                }}
-              />
-            </IonItem>
+                <p className="auth-label">Effectiveness</p>
+                <IonItem className="auth-item">
+                  <IonSelect
+                    interface="popover"
+                    interfaceOptions={{cssClass: "custom-select-popover" }}
+                    placeholder="Select..."
+                    onIonChange={e => setForm({ ...form, effectiveness_rating: Number(e.detail.value) })}
+                    value={String(form.effectiveness_rating)}
+                    >
+                    <IonSelectOption value="0">Terrible</IonSelectOption>
+                    <IonSelectOption value="1">Not good</IonSelectOption>
+                    <IonSelectOption value="2">Okay</IonSelectOption>
+                    <IonSelectOption value="3">Good</IonSelectOption>
+                    <IonSelectOption value="4">Excellent</IonSelectOption>
+                  </IonSelect>
+                </IonItem>
 
-          </IonList>
+                <p className="auth-label">Sleep hours</p>
+                <IonItem className="auth-item">
+                  <IonInput
+                    type="number"
+                    value={form.avg_sleep_hours}
+                    onIonChange={e => setForm({ ...form, avg_sleep_hours: Number(e.detail.value) })}
+                    min={3}
+                    max={13}  
+                  />
+                </IonItem>
+              </>
+            )}
 
+            {/* STEP 2 */}
+            {step === 2 && (
+              <>
+                <h2 className='ion-text-center'>Select all study times</h2>
+                {["Theory", "Practice", "Passive", "Active", "Session"].map((q, i) => (
+                  <div key={i}>
+                    <p className="auth-label">{q}</p>
+                    <IonItem className="auth-item">
+                      <IonSelect
+                        interface="popover"
+                        interfaceOptions={{ cssClass: "custom-select-popover" }}
+                        placeholder="Select..."
+                        value={
+                          i === 0 ? form.avg_theory_time :
+                          i === 1 ? form.avg_practice_time :
+                          i === 2 ? form.avg_passive_time :
+                          i === 3 ? form.avg_active_time :
+                            form.preffered_session_time
+                        }
+                        onIonChange={e => {
+                          const val = e.detail.value;
+                          const keys = [
+                            "avg_theory_time",
+                            "avg_practice_time",
+                            "avg_passive_time",
+                            "avg_active_time",
+                            "preffered_session_time"
+                          ];
+                          setForm({ ...form, [keys[i]]: val });
+                        }}
+                      >
+                        {timeOptions.map(opt => (
+                          <IonSelectOption key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </IonSelectOption>
+                        ))}
+                      </IonSelect>
+                    </IonItem>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* STEP 3 */}
+            {step === 3 && (
+              <>
+                <h2 className='ion-text-center'>Check working hours</h2>
+                <p className="auth-label">Work start</p>
+                <IonItem className="auth-item">
+                  <IonInput
+                    type="number"
+                    placeholder="From"
+                    value={form.work_hours_start}
+                    onIonChange={e => setForm({ ...form, work_hours_start: Number(e.detail.value) })}
+                  />
+                </IonItem>
+
+                <p className="auth-label">Work end</p>
+                <IonItem className="auth-item">
+                  <IonInput
+                    type="number"
+                    value={form.work_hours_end}
+                    onIonChange={e => setForm({ ...form, work_hours_end: Number(e.detail.value) })}
+                  />
+                </IonItem>
+              </>
+            )}
           <div className="button-container">
-            <IonButton onClick={handleConfirm} className="auth-button">
-              Confirm
-            </IonButton>
+            {step > 0 && <IonButton onClick={back}>Back</IonButton>}
+            {step < totalSteps - 1 && <IonButton onClick={next}>Next</IonButton>}
+            {step === totalSteps - 1 && (
+              <IonButton onClick={handleConfirm}>Confirm</IonButton>
+            )}
           </div>
-
-        </div>
       </IonContent>
     </IonPage>
   );

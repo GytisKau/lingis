@@ -20,8 +20,6 @@
 .register-logo {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  margin-bottom: 20px;
 }
 
 /* ============================
@@ -101,7 +99,7 @@
 .auth-label {
   width: 100%;
   max-width: 320px;
-  margin: 8px auto 4px auto;
+  margin: 1em 0 0.5em 1em;
   color: #491B6D;
   font-weight: 600;
 }
