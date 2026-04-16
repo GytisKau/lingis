@@ -42,7 +42,7 @@ const TabsLayout: React.FC = () => {
         className={`floating-home-logo ${activeTab === "tab3" ? "active" : ""}`}
         onClick={handleHomeClick}
       >
-        <img src="/logo.png" alt="Home" />
+        <img src="/logo.svg" alt="Home" />
       </div>
 
       <IonTabs>

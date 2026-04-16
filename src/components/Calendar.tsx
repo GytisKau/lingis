@@ -8,11 +8,7 @@ import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
 import "../theme/emerald.css"
 
-import { Assignment, db, LingisEvent } from "../db/db";
-import { IonContent, IonHeader, IonLabel, IonTitle, IonToolbar, useIonModal } from '@ionic/react'
-import { useState } from 'react'
-import AssignmentCard from './AssignmentCard'
-import TaskList from './TaskList'
+import { db, LingisEvent } from "../db/db";
 
 interface Props {
   events: EventInput[]

@@ -15,7 +15,7 @@ const Welcome: React.FC = () => {
     <IonPage>
       <IonContent className="ion-padding" fullscreen>
         <div style={{ textAlign: "center", marginTop: "2em" }}>
-          <img src="/logo.png" alt="Logo" className="register-logo" />
+          <img src="/logo.svg" alt="Logo" className="register-logo" />
           <IonText>
             <h1>Welcome</h1>
             <p>Login or create an account</p>
