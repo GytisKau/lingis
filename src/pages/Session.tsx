@@ -302,7 +302,7 @@ const studyMinutes =
           </>
         )}
 
-        {mode === "study" && <TaskList assignmentId={id} />}
+        {mode === "study" && <TaskList assignmentId={id} view="session" />}
       </IonContent>
     </IonPage>
   )
