@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { db } from "../db/db"
-import { IonButton, IonItem, IonInput, IonSegment, IonSegmentButton, IonLabel, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonContent, IonText  } from "@ionic/react"
+import { IonButton, IonInput, IonLabel, IonModal, IonIcon, IonText  } from "@ionic/react"
+import { close } from "ionicons/icons"
 
 function formatDateTimeLocal(date: Date) {
   const d = new Date(date)
@@ -57,97 +58,120 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
     }
   }
 
+  const getModalColor = () => {
+    switch (testType) {
+      case 0:
+        return '#ffecec'; // Exam - light red
+      case 1:
+        return '#eef4ff'; // Lab - light blue
+      case 2:
+        return '#eafaf1'; // Other - light green
+      default:
+        return 'white';
+    }
+  };
+
   return (
-    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues}>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonButton onClick={() => modal.current?.dismiss()}>
+    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues} className="add-modal">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2>Add Assignment</h2>
+          <IonButton fill="clear" onClick={() => modal.current?.dismiss()} className="close-btn">
+            <IonIcon icon={close} />
+          </IonButton>
+        </div>
+
+        <div className="modal-body">
+          {status && (
+            <IonText color="danger" style={{ marginBottom: '16px', display: 'block' }}>
+              {status}
+            </IonText>
+          )}
+
+          <div className="form-group">
+            <label>Title</label>
+            <IonInput
+              className="form-input title-input"
+              value={title}
+              placeholder="Assignment title"
+              autocapitalize="off"
+              onIonChange={(e) => setTitle(e.detail.value!)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Due date</label>
+            <IonInput
+              className="form-input"
+              type="date"
+              value={formatDateTimeLocal(dueDate).slice(0,10)}
+              onIonChange={(e) => setDueDate(new Date(e.detail.value!))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>From which date would you like to study?</label>
+            <IonInput
+              className="form-input"
+              type="date"
+              value={formatDateTimeLocal(startDate).slice(0,10)}
+              onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Time estimate (hours)</label>
+            <IonInput
+              className="form-input"
+              type="number"
+              placeholder="Time estimate (hours)"
+              value={timeEst}
+              onIonChange={(e) => setTimeEst(Number(e.detail.value))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Test type</label>
+            <div className="button-group">
+              {[
+                { value: 0, label: 'Exam' },
+                { value: 1, label: 'Lab' },
+                { value: 2, label: 'Other' }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  className={`custom-button ${testType === option.value ? 'active' : ''}`}
+                  onClick={() => setTestType(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <IonButton
+              expand="block"
+              fill="solid"
+              disabled={!title || timeEst <= 0}
+              onClick={confirm}
+              className="add-btn"
+              style={{ '--background': '#491B6D' } as React.CSSProperties}
+            >
+              Add Assignment
+            </IonButton>
+            <IonButton
+              expand="block"
+              fill="outline"
+              onClick={() => modal.current?.dismiss()}
+              className="cancel-btn"
+              style={{ '--border-color': '#491B6D', '--color': '#491B6D' } as React.CSSProperties}
+            >
               Cancel
             </IonButton>
-          </IonButtons>
-
-          <IonTitle>Add assignment</IonTitle>
-
-          <IonButtons slot="end">
-            <IonButton strong={true} routerLink="/tabs/tab4" onClick={confirm}>
-              Add
-            </IonButton>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-
-      <IonContent className="ion-padding">
-        {status && (
-          <IonText color="danger">{status}</IonText>
-        )}
-
-        <IonItem>
-          <IonInput
-            label="Title"
-            labelPlacement="stacked"
-            type="text"
-            placeholder="Assignment title"
-            value={title}
-            required
-            onIonChange={(e) => setTitle(e.detail.value!)}
-          />
-        </IonItem>
-
-        <IonItem>
-          <IonInput
-            label="Due date"
-            labelPlacement="stacked"
-            type="date"
-            required
-            value={formatDateTimeLocal(dueDate).slice(0,10)}
-            onIonChange={(e) => setDueDate(new Date(e.detail.value!))}
-          />
-        </IonItem>
-
-        <IonItem>
-          <IonInput
-            label="From which date would you like to study?"
-            labelPlacement="stacked"
-            type="date"
-            required
-            value={formatDateTimeLocal(startDate).slice(0,10)}
-            onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
-          />
-        </IonItem>
-
-        <IonItem>
-          <IonInput
-            label="Time estimate (hours)"
-            labelPlacement="stacked"
-            type="number"
-            placeholder="Time estimate (hours)"
-            value={timeEst}
-            onIonChange={(e) => setTimeEst(Number(e.detail.value))}
-          />
-        </IonItem>
-
-        <IonItem>
-          <IonLabel>Test type</IonLabel>
-
-          <IonSegment
-            value={String(testType)}
-            onIonChange={(e) => setTestType(Number(e.detail.value))}
-          >
-            <IonSegmentButton value="0">
-              <IonLabel>Exam</IonLabel>
-            </IonSegmentButton>
-
-            <IonSegmentButton value="1">
-              <IonLabel>Lab</IonLabel>
-            </IonSegmentButton>
-
-            <IonSegmentButton value="2">
-              <IonLabel>Other</IonLabel>
-            </IonSegmentButton>
-          </IonSegment>
-        </IonItem>
-      </IonContent>
+          </div>
+        </div>
+      </div>
     </IonModal>
   )
 }

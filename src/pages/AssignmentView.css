@@ -53,3 +53,64 @@
   gap: 4px;
   margin-top: 4px;
 }
+
+.task-progress-badge {
+  --background: transparent !important;
+  background: transparent !important;
+  --color: #491B6D !important;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.task-progress-icon {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 16px;
+  color: #491B6D !important;
+}
+
+/* Remove default red styling */
+.delete-option {
+  --background: transparent !important;
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cute purple circle button */
+.delete-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #491B6D;
+  background: rgba(73, 27, 109, 0.08); /* soft purple tint */
+
+  transition: all 0.2s ease;
+}
+
+/* Trash icon styling */
+.delete-button ion-icon {
+  color: #491B6D;
+  font-size: 18px;
+}
+
+/* Tap effect */
+.delete-button:active {
+  transform: scale(0.9);
+  background: rgba(73, 27, 109, 0.15);
+}

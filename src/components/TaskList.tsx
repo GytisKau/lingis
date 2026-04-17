@@ -25,6 +25,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 interface TaskListProps {
   assignmentId: number;
+  view?: "default" | "session";
 }
 
 const DIFFICULTY_LABELS: Record<number, string> = { 1: '1', 2: '2', 3: '3' };
@@ -41,15 +42,22 @@ const isTopicTask = (task: Task) => task.task_type === -1 && task.parent_task_id
 // ─── Modern Checkbox Component ─────────────────────────────────────────────
 interface ModernCheckboxProps {
   checked: boolean;
+  loading?: boolean;
   onChange: (checked: boolean) => void;
   onClick?: (e: React.MouseEvent) => void;
   slot?: string;
 }
 
-const ModernCheckbox: React.FC<ModernCheckboxProps> = ({ checked, onChange, onClick, slot }) => (
+const ModernCheckbox: React.FC<ModernCheckboxProps> = ({
+  checked,
+  loading = false,
+  onChange,
+  onClick,
+  slot
+}) => (
   <div
     slot={slot}
-    className="modern-checkbox"
+    className={`modern-checkbox ${loading ? 'loading' : ''}`}
     onClick={(e) => {
       if (onClick) onClick(e as any);
       e.stopPropagation();
@@ -58,9 +66,11 @@ const ModernCheckbox: React.FC<ModernCheckboxProps> = ({ checked, onChange, onCl
     <input
       type="checkbox"
       checked={checked}
+      disabled={loading}
       onChange={(e) => onChange(e.target.checked)}
       onClick={(e) => e.stopPropagation()}
     />
+    {loading && <div className="checkbox-spinner" />}
   </div>
 );
 
@@ -255,6 +265,7 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel 
 interface TaskRowProps {
   task: Task;
   editing: boolean;
+  loading?: boolean;
   showReorder?: boolean;
   showActions?: boolean;
   onToggleDone: (id: number, val: boolean) => void;
@@ -264,9 +275,10 @@ interface TaskRowProps {
   onDelete: (id: number) => void;
 }
 
-const TaskRow: React.FC<TaskRowProps> = ({
+const TaskRow: React.FC<TaskRowProps> = (({
   task,
   editing,
+  loading = false,
   showReorder = false,
   showActions = true,
   onToggleDone,
@@ -375,6 +387,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
         <ModernCheckbox
           slot="start"
           checked={task.is_done}
+          loading={loading}
           onClick={(e) => {
             e.stopPropagation();
           }}
@@ -417,7 +430,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
       )}
     </IonItemSliding>
   );
-};
+}) as React.FC<TaskRowProps>;
 
 // ─── Topic Row (with swipe working properly) ─────────────────────────────────
 interface SubtaskEditState {
@@ -433,6 +446,7 @@ interface TopicRowProps {
   children: Task[];
   expandedTopics: string[];
   editing: boolean;
+  pendingDoneIds: Set<number>;
   onToggleDone: (id: number, val: boolean) => void;
   onStartEdit: (id: number) => void;
   onDelete: (id: number) => void;
@@ -447,6 +461,7 @@ const TopicRow: React.FC<TopicRowProps> = ({
   children,
   expandedTopics,
   editing,
+  pendingDoneIds,
   onToggleDone,
   onStartEdit,
   onDelete,
@@ -458,6 +473,13 @@ const TopicRow: React.FC<TopicRowProps> = ({
   const slidingRef = useRef<HTMLIonItemSlidingElement>(null);
   const accordionValue = `topic-${topic.id}`;
   const [editTitle, setEditTitle] = useState(topic.title);
+
+  useEffect(() => {
+    if (editing) {
+      setEditTitle(topic.title);
+    }
+  }, [topic.title, editing]);
+
   const [childState, setChildState] = useState<SubtaskEditState[]>(
     children.map((child) => ({
       id: child.id,
@@ -466,6 +488,20 @@ const TopicRow: React.FC<TopicRowProps> = ({
       task_type: child.task_type,
     }))
   );
+
+  useEffect(() => {
+    if (editing) {
+      setChildState(
+        children.map((child) => ({
+          id: child.id,
+          title: child.title,
+          difficulty_rating:
+            child.difficulty_rating === -1 ? 1 : child.difficulty_rating,
+          task_type: child.task_type,
+        }))
+      );
+    }
+  }, [children, editing]);
 
   const isExpanded = expandedTopics.includes(accordionValue);
 
@@ -654,6 +690,7 @@ const TopicRow: React.FC<TopicRowProps> = ({
           <ModernCheckbox
             slot="start"
             checked={topic.is_done}
+            loading={pendingDoneIds.has(topic.id)}
             onClick={(e) => {
               e.stopPropagation();
             }}
@@ -672,7 +709,6 @@ const TopicRow: React.FC<TopicRowProps> = ({
           <IonIcon 
             slot="end" 
             icon={isExpanded ? chevronBack : chevronForward} 
-            style={{ color: '#491B6D', fontSize: '22px', marginRight: '12px' }}
           />
           <IonReorder slot="end" />
         </IonItem>
@@ -709,6 +745,7 @@ const TopicRow: React.FC<TopicRowProps> = ({
                     <ModernCheckbox
                       slot="start"
                       checked={child.is_done}
+                      loading={pendingDoneIds.has(child.id)}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(checked) => onToggleDone(child.id, checked)}
                     />
@@ -734,11 +771,13 @@ const TopicRow: React.FC<TopicRowProps> = ({
 };
 
 // ─── Main Task List Component ─────────────────────────────────────────────
-const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
+const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) => {
   const [editingIds, setEditingIds] = useState<Set<number>>(new Set());
   const [expandedTopics, setExpandedTopics] = useState<string[]>([]);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
+  const [pendingDoneIds, setPendingDoneIds] = useState<Set<number>>(new Set());
+  const [isEditingPriority, setIsEditingPriority] = useState(false);
 
   const dbTasks = useLiveQuery(() => db.tasks.where('fk_assignment').equals(assignmentId).toArray(), [assignmentId]) ?? [];
 
@@ -760,6 +799,44 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
     }
     return map;
   }, [tasks]);
+
+  const sessionSections = useMemo(() => {
+  if (view !== "session") {
+    return {
+      priority: [] as Task[],
+      todo: [] as Task[],
+      done: [] as Task[],
+    };
+  }
+
+  const isDoneInSession = (task: Task) => {
+    if (!isTopicTask(task)) {
+      return task.is_done;
+    }
+
+    const children = childrenByParent.get(task.id) ?? [];
+
+    if (children.length === 0) {
+      return task.is_done;
+    }
+
+    return children.every((child) => child.is_done);
+  };
+
+    const processed = topLevelTasks.map((task) => ({
+      ...task,
+      sessionDone: isDoneInSession(task),
+    }));
+
+    const unfinished = processed.filter((task) => !task.sessionDone);
+    const done = processed.filter((task) => task.sessionDone);
+
+    return {
+      priority: unfinished.slice(0, 3),
+      todo: unfinished.slice(3),
+      done,
+    };
+  }, [view, topLevelTasks, childrenByParent]);
 
   // Calculate progress including subtasks
   const progressStats = useMemo(() => {
@@ -816,22 +893,52 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
 
   const handleToggleDone = async (id: number, val: boolean) => {
     blurActive();
-    const task = taskMap.get(id);
-    if (!task) return;
-    if (isTopicTask(task)) {
-      const children = childrenByParent.get(id) ?? [];
-      await db.transaction('rw', db.tasks, async () => {
+
+    setPendingDoneIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+
+    setTimeout(async () => {
+      const task = taskMap.get(id);
+
+      if (!task) {
+        setPendingDoneIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        return;
+      }
+
+      if (isTopicTask(task)) {
+        const children = childrenByParent.get(id) ?? [];
+
+        await db.transaction('rw', db.tasks, async () => {
+          await db.tasks.update(id, { is_done: val });
+          for (const child of children) {
+            await db.tasks.update(child.id, { is_done: val });
+          }
+        });
+      } else {
         await db.tasks.update(id, { is_done: val });
-        for (const child of children) await db.tasks.update(child.id, { is_done: val });
+
+        if (task.parent_task_id != null) {
+          const siblings = childrenByParent.get(task.parent_task_id) ?? [];
+          const allDone = siblings.every((sibling) =>
+            sibling.id === id ? val : sibling.is_done
+          );
+          await db.tasks.update(task.parent_task_id, { is_done: allDone });
+        }
+      }
+
+      setPendingDoneIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
       });
-      return;
-    }
-    await db.tasks.update(id, { is_done: val });
-    if (task.parent_task_id != null) {
-      const siblings = childrenByParent.get(task.parent_task_id) ?? [];
-      const allDone = siblings.every((sibling) => (sibling.id === id ? val : sibling.is_done));
-      await db.tasks.update(task.parent_task_id, { is_done: allDone });
-    }
+    }, 650);
   };
 
   const handleStartEdit = (id: number) => {
@@ -940,6 +1047,27 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
     });
   };
 
+  const handleSessionPriorityReorderEnd = async (event: ReorderEndCustomEvent) => {
+  blurActive();
+
+    const unfinished = [...sessionSections.priority, ...sessionSections.todo];
+    const doneItems = [...sessionSections.done];
+
+    const reordered = [...unfinished];
+    const [moved] = reordered.splice(event.detail.from, 1);
+    reordered.splice(event.detail.to, 0, moved);
+
+    const finalOrder = [...reordered, ...doneItems];
+
+    await db.transaction('rw', db.tasks, async () => {
+      for (let i = 0; i < finalOrder.length; i++) {
+        await db.tasks.update(finalOrder[i].id, { toggle_order: i });
+      }
+    });
+
+    event.detail.complete();
+  };
+
   const handleAddTask = async (title: string, difficulty: number, type: number) => {
     const maxOrder = Math.max(-1, ...topLevelTasks.map((t) => t.toggle_order ?? -1));
     await db.tasks.add({
@@ -997,7 +1125,264 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
     setIsAddingTopic(false);
   };
 
-  return (
+if (view === "session") {
+  const unfinishedForPriorityEdit = [...sessionSections.priority, ...sessionSections.todo];
+
+    return (
+      <>
+        <div className="task-progress-section">
+          <div className="progress-header">
+            <span className="progress-percentage">
+              {Math.round(progressStats.progress * 100)}%
+            </span>
+            <span className="progress-text">
+              {progressStats.completedTasks} / {progressStats.totalTasks} tasks completed
+            </span>
+          </div>
+          <IonProgressBar value={progressStats.progress} color="medium" className="task-progress-bar" />
+        </div>
+
+        <div className="task-list-actions">
+          <IonButton
+            expand="block"
+            fill={isEditingPriority ? "solid" : "outline"}
+            onClick={() => {
+              blurActive();
+              setIsEditingPriority((prev) => !prev);
+            }}
+            style={
+              isEditingPriority
+                ? ({ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties)
+                : ({ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties)
+            }
+          >
+            {isEditingPriority ? "Done editing priority" : "Edit priority"}
+          </IonButton>
+
+          <IonButton
+            expand="block"
+            onClick={() => {
+              blurActive();
+              setIsAddingTask(true);
+            }}
+            className="add-task-btn"
+            style={{ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+          >
+            + Task
+          </IonButton>
+
+          <IonButton
+            expand="block"
+            fill="outline"
+            onClick={() => {
+              blurActive();
+              setIsAddingTopic(true);
+            }}
+            className="add-topic-btn"
+            style={{ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+          >
+            + Topic
+          </IonButton>
+        </div>
+
+        <AddTaskModal
+          isOpen={isAddingTask}
+          onSave={handleAddTask}
+          onCancel={() => setIsAddingTask(false)}
+        />
+
+        <AddTopicModal
+          isOpen={isAddingTopic}
+          onSave={handleAddTopic}
+          onCancel={() => setIsAddingTopic(false)}
+        />
+
+        {isEditingPriority ? (
+          <IonList className="task-list-container">
+            <IonItem lines="none">
+              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px" }}>
+                Reorder unfinished tasks
+              </IonLabel>
+            </IonItem>
+
+            <IonReorderGroup disabled={false} onIonReorderEnd={handleSessionPriorityReorderEnd}>
+              {unfinishedForPriorityEdit.map((task) =>
+                isTopicTask(task) ? (
+                  <TopicRow
+                    key={task.id}
+                    topic={task}
+                    children={childrenByParent.get(task.id) ?? []}
+                    expandedTopics={expandedTopics}
+                    editing={editingIds.has(task.id)}
+                    pendingDoneIds={pendingDoneIds}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onDelete={handleDelete}
+                    onExpandChange={setExpandedTopics}
+                    onSaveTopicGroup={handleSaveTopicGroup}
+                    onCancelEdit={handleCancelEdit}
+                    onReorderChildren={handleReorderChildren}
+                  />
+                ) : (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    editing={editingIds.has(task.id)}
+                    loading={pendingDoneIds.has(task.id)}
+                    showReorder
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onDelete={handleDelete}
+                  />
+                )
+              )}
+            </IonReorderGroup>
+          </IonList>
+        ) : (
+          <IonList className="task-list-container">
+            <IonItem lines="none">
+              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px" }}>
+                Priority
+              </IonLabel>
+            </IonItem>
+
+            {sessionSections.priority.length === 0 ? (
+              <IonItem lines="none">
+                <IonLabel>No priority tasks</IonLabel>
+              </IonItem>
+            ) : (
+              sessionSections.priority.map((task) =>
+                isTopicTask(task) ? (
+                  <TopicRow
+                    key={task.id}
+                    topic={task}
+                    children={childrenByParent.get(task.id) ?? []}
+                    expandedTopics={expandedTopics}
+                    editing={editingIds.has(task.id)}
+                    pendingDoneIds={pendingDoneIds}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onDelete={handleDelete}
+                    onExpandChange={setExpandedTopics}
+                    onSaveTopicGroup={handleSaveTopicGroup}
+                    onCancelEdit={handleCancelEdit}
+                    onReorderChildren={handleReorderChildren}
+                  />
+                ) : (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    editing={editingIds.has(task.id)}
+                    loading={pendingDoneIds.has(task.id)}
+                    showReorder={false}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onDelete={handleDelete}
+                  />
+                )
+              )
+            )}
+
+            <IonItem lines="none">
+              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px", marginTop: "12px" }}>
+                To do
+              </IonLabel>
+            </IonItem>
+
+            {sessionSections.todo.length === 0 ? (
+              <IonItem lines="none">
+                <IonLabel>No more tasks to do</IonLabel>
+              </IonItem>
+            ) : (
+              sessionSections.todo.map((task) =>
+                isTopicTask(task) ? (
+                  <TopicRow
+                    key={task.id}
+                    topic={task}
+                    children={childrenByParent.get(task.id) ?? []}
+                    expandedTopics={expandedTopics}
+                    editing={editingIds.has(task.id)}
+                    pendingDoneIds={pendingDoneIds}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onDelete={handleDelete}
+                    onExpandChange={setExpandedTopics}
+                    onSaveTopicGroup={handleSaveTopicGroup}
+                    onCancelEdit={handleCancelEdit}
+                    onReorderChildren={handleReorderChildren}
+                  />
+                ) : (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    editing={editingIds.has(task.id)}
+                    loading={pendingDoneIds.has(task.id)}
+                    showReorder={false}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onDelete={handleDelete}
+                  />
+                )
+              )
+            )}
+
+            <IonItem lines="none">
+              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px", marginTop: "12px" }}>
+                Done
+              </IonLabel>
+            </IonItem>
+
+            {sessionSections.done.length === 0 ? (
+              <IonItem lines="none">
+                <IonLabel>Nothing done yet</IonLabel>
+              </IonItem>
+            ) : (
+              sessionSections.done.map((task) =>
+                isTopicTask(task) ? (
+                  <TopicRow
+                    key={task.id}
+                    topic={task}
+                    children={childrenByParent.get(task.id) ?? []}
+                    expandedTopics={expandedTopics}
+                    editing={editingIds.has(task.id)}
+                    pendingDoneIds={pendingDoneIds}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onDelete={handleDelete}
+                    onExpandChange={setExpandedTopics}
+                    onSaveTopicGroup={handleSaveTopicGroup}
+                    onCancelEdit={handleCancelEdit}
+                    onReorderChildren={handleReorderChildren}
+                  />
+                ) : (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    editing={editingIds.has(task.id)}
+                    loading={pendingDoneIds.has(task.id)}
+                    showReorder={false}
+                    onToggleDone={handleToggleDone}
+                    onStartEdit={handleStartEdit}
+                    onSaveEdit={handleSaveEdit}
+                    onCancelEdit={handleCancelEdit}
+                    onDelete={handleDelete}
+                  />
+                )
+              )
+            )}
+          </IonList>
+        )}
+      </>
+    );
+  }
+
+    return (
     <>
       {/* PROGRESS BAR SECTION */}
       <div className="task-progress-section">
@@ -1011,23 +1396,22 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
         </div>
         <IonProgressBar value={progressStats.progress} color="medium" className="task-progress-bar" />
 
-        {/* Type Distribution Bar */}
         <div className="task-type-distribution">
           <div className="type-bar-container">
             {progressStats.totalTasks > 0 ? (
               <>
-                <div 
-                  className="type-bar passive-bar" 
+                <div
+                  className="type-bar passive-bar"
                   style={{ width: `${(progressStats.passiveCount / progressStats.totalTasks) * 100}%` }}
                   title={`Passive: ${progressStats.passiveCount}`}
                 />
-                <div 
-                  className="type-bar active-bar" 
+                <div
+                  className="type-bar active-bar"
                   style={{ width: `${(progressStats.activeCount / progressStats.totalTasks) * 100}%` }}
                   title={`Active: ${progressStats.activeCount}`}
                 />
-                <div 
-                  className="type-bar testing-bar" 
+                <div
+                  className="type-bar testing-bar"
                   style={{ width: `${(progressStats.testingCount / progressStats.totalTasks) * 100}%` }}
                   title={`Testing: ${progressStats.testingCount}`}
                 />
@@ -1054,6 +1438,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
                 children={childrenByParent.get(task.id) ?? []}
                 expandedTopics={expandedTopics}
                 editing={editingIds.has(task.id)}
+                pendingDoneIds={pendingDoneIds}
                 onToggleDone={handleToggleDone}
                 onStartEdit={handleStartEdit}
                 onDelete={handleDelete}
@@ -1067,6 +1452,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
                 key={task.id}
                 task={task}
                 editing={editingIds.has(task.id)}
+                loading={pendingDoneIds.has(task.id)}
                 showReorder
                 onToggleDone={handleToggleDone}
                 onStartEdit={handleStartEdit}
@@ -1079,21 +1465,18 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
         </IonReorderGroup>
       </IonList>
 
-      {/* Add Task Modal */}
       <AddTaskModal
         isOpen={isAddingTask}
         onSave={handleAddTask}
         onCancel={() => setIsAddingTask(false)}
       />
 
-      {/* Add Topic Modal */}
       <AddTopicModal
         isOpen={isAddingTopic}
         onSave={handleAddTopic}
         onCancel={() => setIsAddingTopic(false)}
       />
 
-      {/* Buttons for adding Task or Topic */}
       <div className="task-list-actions">
         <IonButton
           expand="block"
@@ -1124,3 +1507,4 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId }) => {
 };
 
 export default TaskList;
+

@@ -1,30 +1,86 @@
-.session-buttons{
-    display: flex;
-    flex-direction: column;   /* stack vertically */
-    align-items: center;      /* center horizontally */
-    gap: 12px;   
-    position: relative;
-    top: 40%;
+.session-view-page {
+  --background: rgba(255, 255, 255, 0.9);
 }
 
+.session-view-container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding-top: 1rem;
+}
+
+/* Timer */
+.timer {
+  text-align: center;
+  color: #491B6D;
+  font-size: clamp(3rem, 14vw, 6rem);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  margin: 1.5rem 0 2rem;
+}
+
+/* Segment */
+.session-segment {
+  margin-bottom: 2rem;
+  --background: transparent;
+}
+
+.session-segment ion-segment-button {
+  --color: #491B6D;
+  --color-checked: #ffffff;
+  --background-checked: #491B6D;
+  --indicator-color: #491B6D;
+  --border-radius: 14px;
+  min-width: 64px;
+  font-weight: 600;
+}
+
+/* Buttons area */
+.session-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Buttons */
 .session-button {
-  width: 200px;             /* fixed width for each button */
+  width: 200px;
   height: 50px;
   font-size: 20px;
-  background-color: lightblue; /* optional styling */
+  --border-radius: 14px;
+  text-transform: none;
 }
 
-.centered-text{
+.purple-button {
+  --background: #491B6D;
+  --background-hover: #491B6D;
+  --background-activated: #491B6D;
+  --background-focused: #491B6D;
+  --color: #ffffff;
+}
+
+/* Optional text if used elsewhere */
+.centered-text {
   position: absolute;
   font-style: italic;
   font-size: 30px;
   left: 50%;
   top: 30%;
-  transform: translate(-50%, -50%); 
+  transform: translate(-50%, -50%);
   padding: 2em;
+  color: #491B6D;
 }
 
+/* Small screens / iPhone */
+@media (max-width: 390px) {
+  .timer {
+    font-size: clamp(2.5rem, 13vw, 4rem);
+  }
 
-.session-buttons {
-  margin-top: 20px;
+  .session-button {
+    width: 100%;
+    max-width: 220px;
+  }
 }

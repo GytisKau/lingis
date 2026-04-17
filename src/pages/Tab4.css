@@ -53,7 +53,7 @@
   padding: 0 !important;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* ────────────────────────────────────────────────────────────────────────────
    REST OF TAB4 STYLING
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -192,7 +192,7 @@ ion-item-options {
   transform: translate(-50%, -50%);
 }
 
-/* TASK & TOPIC ITEMS */
+/* UNIFIED TASK & TOPIC ITEMS */
 .task-list-item,
 .topic-list-item {
   --background: white;
@@ -206,6 +206,7 @@ ion-item-options {
 .topic-item-content {
   --border-style: none !important;
   border: none !important;
+  --padding-end: 12px !important;
 }
 
 .task-completed {
@@ -213,12 +214,15 @@ ion-item-options {
   text-decoration: line-through;
 }
 
-/* INLINE EDITING */
+/* INLINE EDITING - SEMI-TRANSPARENT BACKGROUND */
 .task-item-editing {
-  --background: #f9f9f9;
+  --background: rgba(255, 255, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(6px);
   padding: 12px 14px;
   border-radius: 12px;
   margin: 8px 12px;
+  border: 1px solid rgba(73, 27, 109, 0.15);
 }
 
 .edit-form-row {
@@ -238,18 +242,17 @@ ion-item-options {
   font-size: 12px;
   font-weight: 600;
   color: #491B6D;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* EDIT INPUT - ROUNDED EDGES WITH PURPLE BORDER */
+/* EDIT INPUT - SEMI-TRANSPARENT WITH PURPLE BORDER */
 .edit-input {
   --padding-start: 12px;
   --padding-end: 12px;
   --padding-top: 10px;
   --padding-bottom: 10px;
   --border-radius: 12px !important;
-  --background: transparent !important;
+  --background: rgba(255, 255, 255, 0.3) !important;
   --color: #222;
   border: 2px solid #491B6D !important;
   border-radius: 12px !important;
@@ -257,12 +260,13 @@ ion-item-options {
 
 .edit-input:focus {
   --border-color: #491B6D !important;
+  --background: rgba(255, 255, 255, 0.5) !important;
 }
 
 .edit-input::part(container) {
   border: 2px solid #491B6D !important;
   border-radius: 12px !important;
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .edit-input::part(native-input) {
@@ -292,7 +296,7 @@ ion-item-options {
 .subtask-edit-item {
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(73, 27, 109, 0.1);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -345,19 +349,18 @@ ion-item-options {
   font-size: 13px;
 }
 
-/* TOPIC SPECIFIC - MATCHING TASK STYLE */
+/* TOPIC SPECIFIC - UNIFIED WITH TASK STYLING */
 .topic-item-content {
   --min-height: 0 !important;
   --padding-start: 0 !important;
-  --padding-end: 16px !important;
+  --padding-end: 12px !important;
   --padding-top: 0 !important;
   --padding-bottom: 0 !important;
   --inner-padding-start: 0 !important;
-
+  --background: white;
   border-radius: 12px;
   margin: 8px 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  background: white;
   display: flex;
   align-items: center;
   gap: 0;
@@ -377,133 +380,103 @@ ion-item-options {
 .topic-item-content ion-icon {
   flex-shrink: 0;
   order: 2;
+  color: #491B6D;
+  font-size: 22px;
+  margin-right: 4px;
 }
 
 .topic-item-content ion-reorder {
-  flex-shrink: 0;
   order: 3;
+  margin-left: 4px;
 }
 
-/* Topic expanded content - transparent background */
-.topic-expanded-content {
-  background: transparent;
-  padding: 0 12px 12px 12px;
-  border-radius: 0 0 12px 12px;
-  margin: 0 12px 8px 12px;
-  position: relative;
-  z-index: 0;
-}
-
-/* Child reorder group - isolated from parent */
-.child-reorder-group {
-  position: relative;
-  z-index: 5;
-  pointer-events: auto;
-  background: transparent;
-}
-
-/* Child task sliding wrapper */
-.child-task-sliding {
-  --background: white;
-  border-radius: 12px;
-  margin: 8px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: visible !important;
-  --border-width: 0 !important;
-  position: relative;
-  z-index: 0;
-}
-
-/* Child task items inside topic */
-.child-task-item {
-  --background: transparent;
-  --inner-background: transparent;
-  --border-style: none;
-  --border-width: 0 !important;
-  padding: 0;
-  margin: 0;
-  --min-height: 0;
-  height: auto;
-  min-height: 56px;
-}
-
-.child-task-item ion-label {
-  margin: 0;
-  padding: 14px 0;
-  flex: 1;
-}
-
-.child-task-item ion-reorder {
-  flex-shrink: 0;
-}
-
-/* Override default accordion header styling */
-ion-accordion .ion-accordion-header {
-  padding: 0 !important;
-}
-
-/* Remove default accordion header background */
-ion-accordion .accordion-header {
-  background: transparent !important;
-}
-
-/* CUTE SWIPE ACTIONS - Small Purple Circle with Icon */
-ion-item-sliding {
+/* Topic sliding wrapper */
+.topic-sliding-wrapper {
   position: relative;
   z-index: 1;
 }
 
-ion-item-sliding.topic-list-item {
-  z-index: 100;
-  overflow: visible !important;
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   TASK ITEM EDITING (SUBTASK ACCORDION)
+   ───────────────────────────────────────────────────────────────────────────── */
 
-ion-item-option {
-  --background: transparent !important;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: auto;
-  z-index: 101;
-}
-
-ion-item-options {
-  z-index: 101;
-}
-
-ion-item-option ion-icon {
-  width: 28px;
-  height: 28px;
-  border: 1.5px solid #491B6D;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  color: #491B6D;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  cursor: pointer;
+.task-item-accordion-wrapper {
   position: relative;
-  z-index: 102;
+  z-index: 1;
 }
 
-ion-item-option:hover ion-icon {
-  background: rgba(73, 27, 109, 0.1);
-  transform: scale(1.1);
+.task-item-accordion-wrapper ion-accordion {
+  --background: transparent;
 }
 
-ion-item-option:active ion-icon {
-  background: rgba(73, 27, 109, 0.2);
-  transform: scale(0.95);
+.task-item-accordion-wrapper ion-accordion-group {
+  --background: transparent;
+}
+
+.accordion-item-header {
+  --background: white;
+  border-radius: 12px;
+  margin: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --padding-start: 0;
+  --padding-end: 12px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 56px;
+  display: flex;
+  align-items: center;
+  --border-width: 0;
+}
+
+.accordion-item-header ion-label {
+  flex: 1;
+  margin: 0;
+  padding: 14px 0;
+}
+
+.accordion-button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.accordion-button-group ion-button {
+  margin: 0;
+}
+
+.accordion-item-content {
+  --background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border-radius: 0 0 12px 12px;
+  margin: 0 12px 8px 12px;
+  border: 1px solid rgba(73, 27, 109, 0.15);
+  border-top: none;
+}
+
+.accordion-item-content .task-badges {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ADD MODAL STYLING
+   MODALS - ADD TASK AND ADD TOPIC (IONIC MODAL)
    ───────────────────────────────────────────────────────────────────────────── */
 
 .add-modal {
+  --width: 100%;
+  --height: auto;
+  --max-height: 90vh;
+  align-items: flex-end;
+}
+
+.add-modal::part(backdrop) {
   --background: rgba(0, 0, 0, 0.5) !important;
 }
 
@@ -519,6 +492,7 @@ ion-item-option:active ion-icon {
   flex-direction: column;
   max-height: 90vh;
   overflow-y: auto;
+  width: 100%;
 }
 
 .modal-header {
@@ -560,7 +534,6 @@ ion-item-option:active ion-icon {
   font-size: 13px;
   font-weight: 600;
   color: #491B6D;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
@@ -571,7 +544,7 @@ ion-item-option:active ion-icon {
   --padding-top: 10px;
   --padding-bottom: 10px;
   --border-radius: 12px !important;
-  --background: transparent !important;
+  --background: rgba(255, 255, 255, 0.3) !important;
   --color: #222;
   border: 2px solid #491B6D !important;
   border-radius: 12px !important;
@@ -579,12 +552,13 @@ ion-item-option:active ion-icon {
 
 .form-input:focus {
   --border-color: #491B6D !important;
+  --background: rgba(255, 255, 255, 0.5) !important;
 }
 
 .form-input::part(container) {
   border: 2px solid #491B6D !important;
   border-radius: 12px !important;
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .form-input::part(native-input) {
@@ -803,7 +777,7 @@ ion-item {
   --progress-background: #491B6D;
 }
 
-/* ─────────────────────────────────────────────────��───────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
    TASK TYPE DISTRIBUTION BAR
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -889,4 +863,133 @@ ion-item {
   height: 8px;
   background: #ff6b6b;
   border-radius: 2px;
+}
+
+.task-progress-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.task-progress-icon {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 16px;
+}
+
+.assignment-footer .due-date small {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+}
+
+.title-input {
+  text-transform: none !important;
+}
+
+.title-input,
+.title-input input,
+.title-input::part(native) {
+  text-transform: none !important;
+}
+
+.tab3-content {
+  --background: rgba(245, 240, 255, 0.75);
+}
+
+.empty-text {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  font-size: 18px;
+  color: #6b46c1;
+}
+
+.start-session-button {
+  --background: transparent;
+  --border-color: #8b5cf6;
+  --border-style: solid;
+  --border-width: 2px;
+  --color: #6d28d9;
+  --border-radius: 18px;
+  width: 220px;
+  margin: 2rem auto;
+  display: block;
+  font-weight: 600;
+}
+
+.assignment-modal-toolbar {
+  --background: rgba(248, 245, 255, 0.95);
+  --color: #6d28d9;
+}
+
+.assignment-modal-title {
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+.assignment-modal-content {
+  --background: rgba(248, 245, 255, 0.88);
+}
+
+.close-x-button {
+  --background: transparent;
+  --box-shadow: none;
+  --color: #6d28d9;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.assignment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.assignment-item {
+  --background: rgba(139, 92, 246, 0.08);
+  --border-color: #8b5cf6;
+  --border-style: solid;
+  --border-width: 2px;
+  --border-radius: 16px;
+  --color: #6d28d9;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.modern-checkbox {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-checkbox.loading input {
+  opacity: 0.35;
+}
+
+.checkbox-spinner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(73, 27, 109, 0.25);
+  border-top: 2px solid #491B6D;
+  border-radius: 50%;
+  animation: checkbox-spin 0.7s linear infinite;
+}
+
+@keyframes checkbox-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
