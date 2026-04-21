@@ -213,12 +213,9 @@ ion-item-options {
   opacity: 0.6;
   text-decoration: line-through;
 }
-
-/* INLINE EDITING - SEMI-TRANSPARENT BACKGROUND */
 .task-item-editing {
-  --background: rgba(255, 255, 255, 0.25) !important;
-  background: rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(6px);
+  --background: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   padding: 12px 14px;
   border-radius: 12px;
   margin: 8px 12px;
@@ -349,7 +346,6 @@ ion-item-options {
   font-size: 13px;
 }
 
-/* TOPIC SPECIFIC - UNIFIED WITH TASK STYLING */
 .topic-item-content {
   --min-height: 0 !important;
   --padding-start: 0 !important;
@@ -368,7 +364,6 @@ ion-item-options {
   min-height: 56px;
   --border-width: 0 !important;
   position: relative;
-  z-index: 1;
 }
 
 .topic-item-content ion-label {
@@ -677,23 +672,7 @@ ion-item-options {
   min-width: auto;
 }
 
-/* Fix for accordion inside swipable item */
-ion-item-sliding ion-accordion-group {
-  position: relative;
-  z-index: 5;
-}
 
-ion-item-sliding ion-accordion {
-  position: relative;
-  z-index: 5;
-}
-
-/* Ensure reorder doesn't overlap on swipe */
-ion-reorder {
-  position: relative;
-  z-index: 15;
-  flex-shrink: 0;
-}
 
 /* Accordion header proper positioning */
 ion-accordion .accordion-header {
@@ -992,4 +971,8 @@ ion-item {
   to {
     transform: rotate(360deg);
   }
+}
+
+ion-item-sliding {
+  overflow: visible !important;
 }

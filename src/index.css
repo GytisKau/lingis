@@ -33,22 +33,22 @@ body {
    ROOT TRANSPARENCY
    ============================ */
 ion-app,
-ion-router-outlet,
-ion-page,
-ion-content,
-ion-content::part(background) {
+ion-router-outlet {
+  background: transparent !important;
+  --background: transparent !important;
+}
+
+ion-page {
   background: transparent !important;
   --background: transparent !important;
 }
 
 /* ============================
-   HEADER - Transparent but blocks content underneath
+   HEADER - STICKY (Transparent but blocks content underneath)
    ============================ */
 ion-header {
   --background: transparent !important;
   background: transparent !important;
-  position: relative;
-  z-index: 100;
 }
 
 ion-toolbar {
@@ -56,8 +56,7 @@ ion-toolbar {
   background: transparent !important;
   --border-style: none !important;
   box-shadow: none !important;
-  position: relative;
-  z-index: 101;
+  min-height: 56px !important;
 }
 
 /* Remove default borders */
@@ -68,40 +67,40 @@ ion-toolbar::after {
   display: none !important;
 }
 
-/* Title styling */
 ion-title {
   color: #491B6D !important;
   font-weight: 600 !important;
   padding-left: 20px !important;
+  padding-top: 8px !important;
+  padding-bottom: 6px !important;
   font-family: 'Poppins', sans-serif !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
   text-align: left !important;
   font-size: 20px !important;
-  position: relative;
-  z-index: 102;
 }
 
-/* Back button and header buttons */
 ion-back-button {
   --color: #491B6D !important;
   --background: transparent !important;
-  position: relative;
-  z-index: 102;
 }
 
 ion-header ion-button {
   --color: #491B6D !important;
   --background: transparent !important;
-  position: relative;
-  z-index: 102;
+}
+
+/* ============================
+   CONTENT - Scrolls UNDER the header
+   ============================ */
+ion-content {
+  --background: transparent !important;
+  background: transparent !important;
 }
 
 /* ============================
    REMOVE VISIBLE BLOCKS FROM TOPICS
    ============================ */
-
-/* Make topic items transparent */
 ion-accordion ion-item,
 .topic-header-item,
 .topic-accordion ion-item {
@@ -110,19 +109,16 @@ ion-accordion ion-item,
   --inner-background: transparent !important;
 }
 
-/* Remove white background from topic headers */
 ion-accordion [slot="header"] {
   --background: transparent !important;
   background: transparent !important;
 }
 
-/* Make the content area of topics transparent */
 ion-accordion [slot="content"] {
   --background: transparent !important;
   background: transparent !important;
 }
 
-/* Remove any card-like appearance from topics */
 ion-accordion {
   --background: transparent !important;
   background: transparent !important;
@@ -131,78 +127,14 @@ ion-accordion {
   padding: 0 !important;
 }
 
-/* If topics are wrapped in any container, make it transparent */
 .topic-accordion-group,
 .topic-accordion {
   --background: transparent !important;
   background: transparent !important;
 }
-/* ============================
-   CONTENT - Scrolls UNDER the header
-   ============================ */
-ion-content {
-  --background: transparent !important;
-  background: transparent !important;
-  --offset-top: 0px !important;
-}
-
-/* Add padding to the top of the scrollable content so it starts below the header */
-ion-content::part(scroll) {
-  padding-top: 56px !important;
-  margin-top: 0 !important;
-}
-
-/* For iOS devices */
-.ios ion-content::part(scroll) {
-  padding-top: 44px !important;
-}
-
-/* Make sure the content doesn't overlap the header */
-ion-content.scroll-y {
-  --padding-top: 0 !important;
-}
-
-/* The background image stays fixed behind everything */
-ion-app {
-  background: url('/background_pc.png') center / cover no-repeat fixed;
-  position: relative;
-}
-
-@media (max-width: 600px) {
-  ion-app {
-    background: url('/background_phone.png') center / cover no-repeat fixed;
-  }
-}
-
-/* ============================
-   TITLE
-   ============================ */
-ion-title {
-  color: #491B6D !important;
-  font-weight: 600 !important;
-  padding-left: 20px !important;
-
-  font-family: 'Poppins', sans-serif !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-
-  text-align: left !important;
-}
 
 /* ============================
    CARDS & LISTS
-   ============================ */
-ion-card {
-  --background: white !important;
-  background: white !important;
-  margin: 16px !important;
-  border-radius: 12px !important;
-  border: 0.5px solid #C9BFCA !important;
-  box-shadow: none !important;
-}
-
-/* ============================
-   CARDS & LISTS - Only cards should be white, items should be transparent
    ============================ */
 ion-card {
   --background: white !important;
@@ -219,7 +151,6 @@ ion-card-content {
   background: white !important;
 }
 
-/* Make lists and items transparent by default */
 ion-list,
 ion-list-header,
 ion-item {
@@ -234,22 +165,22 @@ ion-tab-bar {
   --background: #E3D4D2 !important;
   background: #E3D4D2 !important;
   height: 70px;
-
   display: flex;
   align-items: center;
   justify-content: space-around;
+  position: relative;
+  overflow: visible !important;
+  contain: none !important;
 }
 
 /* TAB BUTTONS */
 ion-tab-button {
   --background: #E3D4D2 !important;
   background: #E3D4D2 !important;
-
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
   --color: #8A8A8A !important;
   --color-selected: #491B6D !important;
 }
@@ -272,57 +203,127 @@ ion-tab-button.tab-selected ion-icon {
   color: #491B6D !important;
 }
 
+ion-tabs {
+  overflow: visible !important;
+}
+
 /* ============================
-   CENTER TAB (HOME FIXED)
+   CENTER TAB (HOME)
    ============================ */
 ion-tab-button[tab="tab3"] {
+  position: relative;
+  top: -10px;
+  width: 82px !important;
+  height: 98px !important;
+  min-width: 82px !important;
+  min-height: 98px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+
   display: flex !important;
   flex-direction: column !important;
-  justify-content: flex-end !important;
+  justify-content: flex-start !important;
   align-items: center !important;
+
+  background: transparent !important;
+  --background: transparent !important;
+  overflow: visible !important;
+  z-index: 20 !important;
 }
 
-/* SHOW ICON AGAIN */
-ion-tab-button[tab="tab3"] img,
-ion-tab-button[tab="tab3"] ion-icon {
-  width: 26px !important;
-  height: 26px !important;
-  margin-bottom: 4px !important;
-}
-
-/* FIX TEXT POSITION */
-ion-tab-button[tab="tab3"] ion-label {
-  margin-top: 0,5px !important;
-  font-size: 12px !important;
-}
-
-/* ============================
-   FLOATING HOME BUTTON
-   ============================ */
-.floating-home-logo {
-  position: fixed !important;
-  bottom: 25px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-
+/* transparent native clickable area */
+ion-tab-button[tab="tab3"]::part(native) {
   width: 70px !important;
   height: 70px !important;
+  min-width: 70px !important;
+  min-height: 70px !important;
+  padding: 0 !important;
   border-radius: 50% !important;
+  background: transparent !important;
+  overflow: visible !important;
+  border: none !important;
+  box-sizing: border-box !important;
 
-  background: white !important;
-  border: 2px solid #DBD1D6 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: none !important;
+}
 
-  z-index: 100000 !important;
+/* ring around logo */
+ion-tab-button[tab="tab3"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 2px solid #DBD1D6;
+  box-sizing: border-box;
+  background: transparent;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* logo image */
+ion-tab-button[tab="tab3"] img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 70px !important;
+  height: 70px !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 50% !important;
+  margin: 0 !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+/* hide only icon, keep label */
+ion-tab-button[tab="tab3"] ion-icon {
+  display: none !important;
+}
+
+ion-tab-button[tab="tab3"] ion-label {
+  position: absolute !important;
+  top: 74px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #8A8A8A !important;
+  text-transform: none !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  z-index: 2 !important;
+}
+
+ion-tab-button[tab="tab3"].tab-selected ion-label {
+  color: #491B6D !important;
+}
+
+
+/* ============================
+   FLOATING HOME BUTTON (Logo)
+   ============================ */
+.floating-home-logo {
+  display: none !important;
 }
 
 .floating-home-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 /* ============================
@@ -376,26 +377,16 @@ ion-menu ion-item {
    FLOATING ACTION BUTTON (FAB)
    ============================ */
 ion-fab-button {
-  /* Make the circle transparent */
   --background: transparent !important;
   --background-activated: rgba(73, 27, 109, 0.1) !important;
   --background-hover: rgba(73, 27, 109, 0.05) !important;
-
-  /* The Plus Icon Color */
   --color: #491B6D !important;
-
-  /* The Purple Outline */
   border: 2px solid #491B6D !important;
   border-radius: 50% !important;
-
-  /* Remove the default heavy shadow for a cleaner look */
   box-shadow: none !important;
-  
-  /* Smooth transition when clicking */
   transition: all 0.2s ease-in-out;
 }
 
-/* Ensure the internal button part is also transparent */
 ion-fab-button::part(native) {
   background: transparent !important;
   border: none !important;
@@ -404,8 +395,6 @@ ion-fab-button::part(native) {
 /* ============================
    REMOVE HEADER BORDER LINE COMPLETELY
    ============================ */
-
-/* Remove Ionic shadow separator */
 ion-header,
 ion-toolbar {
   --border-width: 0 !important;
@@ -414,14 +403,12 @@ ion-toolbar {
   box-shadow: none !important;
 }
 
-/* iOS hairline fix */
 .header-ios,
 .header-md {
   border-bottom: none !important;
   box-shadow: none !important;
 }
 
-/* Remove pseudo-element divider Ionic injects */
 ion-header::after,
 ion-toolbar::after,
 .header-ios::after,
@@ -431,7 +418,6 @@ ion-toolbar::after,
   background: transparent !important;
 }
 
-/* Remove safe-area separator */
 ion-header ion-toolbar:first-of-type {
   --min-height: auto;
   border-bottom: none !important;

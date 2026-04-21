@@ -1,0 +1,195 @@
+.daily-tip-card {
+  margin: 16px 16px 18px;
+  padding: 18px 18px 14px;
+  border-radius: 20px;
+  background: white;
+}
+
+.daily-tip-card--memory {
+  background: linear-gradient(135deg, #f6ecff 0%, #ffffff 100%);
+}
+
+.daily-tip-card--focus {
+  background: linear-gradient(135deg, #fff0f7 0%, #ffffff 100%);
+}
+
+.daily-tip-card--active {
+  background: linear-gradient(135deg, #ecfbf6 0%, #ffffff 100%);
+}
+
+.daily-tip-card--understanding {
+  background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
+}
+
+.daily-tip-card--strategy {
+  background: linear-gradient(135deg, #fff6ea 0%, #ffffff 100%);
+}
+
+.daily-tip-card__text {
+  margin: 0;
+  color: #35194d;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 600;
+  text-align: center;
+  white-space: normal;
+}
+
+.daily-tip-card__actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.daily-tip-card__button-plain {
+  border: none;
+  background: rgba(255, 255, 255, 255);
+  color: #491B6D;
+  border-radius: 12px;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* modal */
+.learning-tip-modal::part(content) {
+  width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  max-width: none;
+  max-height: none;
+  border: 2px solid #491B6D;
+  border-radius: 18px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.learning-tip-modal--memory::part(content) {
+  background: linear-gradient(135deg, #f6ecff 0%, #ffffff 100%);
+}
+
+.learning-tip-modal--focus::part(content) {
+  background: linear-gradient(135deg, #fff0f7 0%, #ffffff 100%);
+}
+
+.learning-tip-modal--active::part(content) {
+  background: linear-gradient(135deg, #ecfbf6 0%, #ffffff 100%);
+}
+
+.learning-tip-modal--understanding::part(content) {
+  background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
+}
+
+.learning-tip-modal--strategy::part(content) {
+  background: linear-gradient(135deg, #fff6ea 0%, #ffffff 100%);
+}
+
+.learning-tip-content {
+  --background: transparent;
+  --padding-top: 0;
+  --padding-bottom: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  overflow-y: auto;
+}
+
+.learning-tip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+}
+
+.learning-tip-close-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.learning-tip-short {
+  margin: 0;
+  color: #491B6D;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.learning-tip-description {
+  margin: 0;
+  color: #4a305d;
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: justify;
+
+}
+
+.learning-tip-source-box {
+  margin-top: auto;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #491B6D;
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.learning-tip-source-label {
+  margin: 0 0 8px;
+  color: #7b5b94;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.learning-tip-source-text {
+  margin: 0 0 12px;
+  color: #4a305d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.learning-tip-link {
+  border: none;
+  background: transparent;
+  color: #491B6D;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .daily-tip-card {
+    width: min(100% - 32px, 820px);
+    margin: 18px auto 20px;
+    padding: 20px 20px 14px;
+  }
+
+  .daily-tip-card__text {
+    font-size: 16px;
+  }
+
+  .learning-tip-modal::part(content) {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 40px);
+    border-radius: 22px;
+  }
+
+  .learning-tip-content {
+    --padding-start: 18px;
+    --padding-end: 18px;
+    --padding-bottom: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .learning-tip-modal::part(content) {
+    width: calc(100vw - 64px);
+    height: calc(100vh - 64px);
+    border-radius: 24px;
+  }
+}

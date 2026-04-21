@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -11,44 +11,69 @@ import {
   IonItem,
   IonText
 } from '@ionic/react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import './Tab3.css';
-import { useLiveQuery } from 'dexie-react-hooks';
+import TipsCarousel from '../components/TipsCarousel';
+import DailyLearningTip from '../components/DailyLearningTip';
+import { useLocation } from 'react-router';
 
 const Tab3: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
+  const location = useLocation<{ openAssignmentPicker?: boolean }>();
 
   const assignments =
     useLiveQuery(async () => {
-      const assignments = await db.assignments.toArray();
-      return assignments.map((ass) => ({ title: ass.title, id: ass.id }));
+      const allAssignments = await db.assignments.toArray();
+      return allAssignments.map((ass) => ({
+        title: ass.title,
+        id: ass.id
+      }));
     }, []) ?? [];
+
+  const username =
+    useLiveQuery(async () => {
+      const users = await db.users.toArray();
+      return users[0]?.username?.trim() || '';
+    }, []) ?? '';
+
+  useEffect(() => {
+    if (location.state?.openAssignmentPicker && assignments.length > 0) {
+      setTimeout(() => {
+        modal.current?.present();
+        window.history.replaceState({}, document.title);
+      }, 100);
+    }
+  }, [location.state, assignments.length]);
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Tab 3</IonTitle>
+          <IonTitle>{username ? `Hello, ${username}` : 'Hello'}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="tab3-page">
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Tab 3</IonTitle>
-          </IonToolbar>
-        </IonHeader>
+      <IonContent className="tab3-page">
+        <DailyLearningTip />
 
         {assignments.length === 0 ? (
-          <IonText className="empty-text">No assignments added yet</IonText>
+          <>
+            <IonText className="empty-text">No assignments added yet</IonText>
+            <TipsCarousel />
+          </>
         ) : (
           <>
-            <IonButton
-              id="assignment-picker"
-              className="start-session-button"
-            >
-              Start session
-            </IonButton>
+            <TipsCarousel />
+
+            <div className="start-session-wrap">
+              <IonButton
+                id="assignment-picker"
+                className="start-session-button"
+              >
+                Start session
+              </IonButton>
+            </div>
 
             <IonModal
               ref={modal}
@@ -58,7 +83,7 @@ const Tab3: React.FC = () => {
               <IonHeader>
                 <IonToolbar className="assignment-toolbar">
                   <IonTitle className="assignment-title">
-                    <div>Pick the assignment</div>
+                    Pick the assignment
                   </IonTitle>
 
                   <IonButtons slot="end">
@@ -75,8 +100,12 @@ const Tab3: React.FC = () => {
 
               <IonContent className="ion-padding assignment-content">
                 <div className="assignment-list">
-                  {assignments.map((ass, i) => (
-                    <IonItem key={i} lines="none" className="assignment-item">
+                  {assignments.map((ass) => (
+                    <IonItem
+                      key={ass.id}
+                      lines="none"
+                      className="assignment-item"
+                    >
                       <IonButton
                         routerLink={`/tabs/tab3/viewsession/${ass.id}`}
                         size="large"
