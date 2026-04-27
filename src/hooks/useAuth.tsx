@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react"
-import { auth } from "../utils/Firebase" // pasitikrink kelią
+import { analytics, auth } from "../utils/Firebase" // pasitikrink kelią
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -8,6 +8,7 @@ import {
   User,
   sendPasswordResetEmail 
 } from "firebase/auth"
+import { logEvent, setUserId } from "firebase/analytics";
 
 interface AuthError {
   type: "email" | "password" | "other";
@@ -44,7 +45,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)
+      
+      if (firebaseUser) {
+        setUserId(analytics, firebaseUser.uid)
+      } else {
+        setUserId(analytics, null)
+      }
+
+      logEvent(analytics, firebaseUser ? "auth_session_start" : "auth_session_end", {
+        user_id: firebaseUser?.uid || null
+      })
     })
+
 
     setWizardDone(localStorage.getItem("wizardDone") === "true")
 
@@ -56,8 +68,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       await sendPasswordResetEmail(auth, email)
+
+      logEvent(analytics, "password_reset_sent", {
+        email
+      })
+
       return true
     } catch (err: any) {
+      logEvent(analytics, "password_reset_error", {
+        error_code: err.code
+      })
+
       switch (err.code) {
         case "auth/user-not-found":
           setResetPasswordError({ type: "email", message: "User not found" })
@@ -76,9 +97,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoginError(null)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const res = await signInWithEmailAndPassword(auth, email, password)
+
+      logEvent(analytics, "login", {
+        method: "email"
+      })
+
       return true
     } catch (err: any) {
+      logEvent(analytics, "login_error", {
+        method: "email",
+        error_code: err.code
+      })
+
       switch (err.code) {
         case "auth/user-not-found":
           setLoginError({type: "email", message: "User not found"})
@@ -98,14 +129,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false
     }
   }
-
   const register = async (email: string, password: string): Promise<boolean> => {
     setRegisterError(null)
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const res = await createUserWithEmailAndPassword(auth, email, password)
+
+      logEvent(analytics, "sign_up", {
+        method: "email"
+      })
+
       return true
     } catch (err: any) {
+      logEvent(analytics, "sign_up_error", {
+        method: "email",
+        error_code: err.code
+      })
+
       switch (err.code) {
         case "auth/email-already-in-use":
           setRegisterError({ type: "email", message: "Email already in use" })
@@ -124,6 +164,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = async () => {
+    if (user) {
+      logEvent(analytics, "logout", {
+        user_id: user.uid
+      })
+    }
+
     await signOut(auth)
   }
 
