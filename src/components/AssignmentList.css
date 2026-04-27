@@ -1,0 +1,36 @@
+.subject-color-dot-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.subject-color-dot {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 50%;
+  background-color: #cccccc;
+}
+.assignment-sort-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.assignment-subject-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 4px 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.assignment-subject-header-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}

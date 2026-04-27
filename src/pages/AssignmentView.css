@@ -114,3 +114,39 @@
   transform: scale(0.9);
   background: rgba(73, 27, 109, 0.15);
 }
+
+.done-option {
+  --background: transparent !important;
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cute purple circle button */
+.done-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #491B6D;
+  background: rgba(73, 27, 109, 0.08); /* soft purple tint */
+
+  transition: all 0.2s ease;
+}
+
+/* Trash icon styling */
+.done-button ion-icon {
+  color: #491B6D;
+  font-size: 18px;
+}
+
+/* Tap effect */
+.done-button:active {
+  transform: scale(0.9);
+  background: rgba(73, 27, 109, 0.15);
+}

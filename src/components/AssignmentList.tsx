@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   IonList,
@@ -9,27 +10,102 @@ import {
   IonLabel,
   IonNote,
   IonBadge,
-  IonText
+  IonText,
+  IonButton
 } from "@ionic/react";
-import { trash, checkmarkDoneOutline } from "ionicons/icons";
+import { trash, arrowUndo, checkmarkDone, checkmarkDoneOutline } from "ionicons/icons";
 import { db } from "../db/db";
+import type { Assignment } from "../db/db";
+
+type AssignmentWithMeta = Assignment & {
+  subjectName: string;
+  subjectColor: string;
+  completedCount: number;
+  totalCount: number;
+  isDone: boolean;
+  isOverdue: boolean;
+  isOld: boolean;
+};
+import "./AssignmentList.css";
+
+type SortMode = "deadline" | "subject-deadline";
 
 const AssignmentList: React.FC = () => {
+  const [sortMode, setSortMode] = useState<SortMode>("deadline");
+  const [showOldAssignments, setShowOldAssignments] = useState(false);
+
   const assignments = useLiveQuery(async () => {
     const asgns = await db.assignments.toArray();
     const tasks = await db.tasks.toArray();
+    const subjects = await db.subjects.toArray();
 
     return asgns.map((a) => {
       const assignmentTasks = tasks.filter((t) => t.fk_assignment === a.id);
       const completed = assignmentTasks.filter((t) => t.is_done).length;
+      const subject = subjects.find((s) => s.id === Number(a.fk_subject));
+
+      const isDone =
+      a.is_done //|| (assignmentTasks.length > 0) // && completed === assignmentTasks.length);
+
+      const isOverdue = new Date(a.date).getTime() < new Date().getTime();
 
       return {
         ...a,
+        subjectName: subject?.name ?? "No subject",
+        subjectColor: subject?.color ?? "#cccccc",
         completedCount: completed,
-        totalCount: assignmentTasks.length
+        totalCount: assignmentTasks.length,
+        isDone,
+        isOverdue,
+        isOld: isDone || isOverdue
       };
     });
   }, []);
+
+  const handleDoneButton = async (assignment: AssignmentWithMeta) => {
+
+  if ((assignment.isDone)  && (assignment.isOverdue)) {
+    const newDueDate = new Date();
+    newDueDate.setDate(newDueDate.getDate() + 7);
+
+    await db.assignments.update(assignment.id!, {
+      date: newDueDate
+    });
+
+    await db.assignments.update(assignment.id!, {
+      is_done: false
+    });
+
+    return;
+  }
+
+
+  if (assignment.isOverdue) {
+    const newDueDate = new Date();
+    newDueDate.setDate(newDueDate.getDate() + 7);
+
+    await db.assignments.update(assignment.id!, {
+      date: newDueDate
+    });
+
+    return;
+  }
+
+  if (assignment.isDone) {
+    await db.assignments.update(assignment.id!, {
+      is_done: false
+    });
+    return;
+  }
+
+  await db.assignments.update(assignment.id!, {
+    is_done: true
+  });
+
+  await db.tasks.where("fk_assignment").equals(assignment.id!).modify({
+    is_done: true
+  });
+};
 
   const deleteAssignment = async (id: number) => {
     await db.tasks.where("fk_assignment").equals(id).delete();
@@ -54,13 +130,8 @@ const AssignmentList: React.FC = () => {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (days > 0) {
-      return `${days} day${days !== 1 ? "s" : ""} left`;
-    }
-
-    if (hours > 0) {
-      return `${hours} hour${hours !== 1 ? "s" : ""} left`;
-    }
+    if (days > 0) return `${days} day${days !== 1 ? "s" : ""} left`;
+    if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""} left`;
 
     return `${minutes} min left`;
   };
@@ -69,22 +140,81 @@ const AssignmentList: React.FC = () => {
     return <p className="centered-text">No assignments added yet.</p>;
   }
 
-  return (
-    <IonList lines="none" className="assignment-list-container">
-      {assignments.map((assignment) => (
-        <IonItemSliding key={assignment.id} className="assignment-sliding-item">
+  const sortAssignments = (list: typeof assignments) => {
+    return [...list].sort((a, b) => {
+      if (sortMode === "deadline") {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }
+
+      const subjectCompare = a.subjectName.localeCompare(b.subjectName);
+
+      if (subjectCompare !== 0) {
+        return subjectCompare;
+      }
+
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+  };
+
+  const activeAssignments = sortAssignments(
+    assignments.filter((a) => !a.isOld)
+  );
+
+  const oldAssignments = sortAssignments(
+    assignments.filter((a) => a.isOld)
+  );
+
+  const renderAssignment = (
+    assignment: typeof assignments[number],
+    index: number,
+    list: typeof assignments
+  ) => {
+    const previousAssignment = list[index - 1];
+
+    const showSubjectHeader =
+      sortMode === "subject-deadline" &&
+      (!previousAssignment ||
+        previousAssignment.subjectName !== assignment.subjectName);
+
+    return (
+      <div key={assignment.id}>
+        {showSubjectHeader && (
+          <div className="assignment-subject-header">
+            <span
+              className="assignment-subject-header-dot"
+              style={{ backgroundColor: assignment.subjectColor }}
+            />
+            {assignment.subjectName}
+          </div>
+        )}
+
+        <IonItemSliding className="assignment-sliding-item">
           <IonItem
             button
             detail={false}
-            className={`assignment-card-item ${getTypeClass(assignment.assignment_type)}`}
+            className={`assignment-card-item ${getTypeClass(
+              assignment.assignment_type
+            )}`}
             routerLink={`/tabs/tab4/viewassignment/${assignment.id}`}
           >
+            <div slot="start" className="subject-color-dot-wrapper">
+              <div
+                className="subject-color-dot"
+                style={{ backgroundColor: assignment.subjectColor }}
+              />
+            </div>
+
             <IonLabel>
               <div className="assignment-header">
-                <IonText className="assignment-title">{assignment.title}</IonText>
+                <IonText className="assignment-title">
+                  {assignment.title}
+                </IonText>
 
                 <IonBadge className="task-progress-badge">
-                  <IonIcon icon={checkmarkDoneOutline} className="task-progress-icon" />
+                  <IonIcon
+                    icon={checkmarkDoneOutline}
+                    className="task-progress-icon"
+                  />
                   <span>
                     {assignment.completedCount}/{assignment.totalCount}
                   </span>
@@ -93,10 +223,14 @@ const AssignmentList: React.FC = () => {
 
               <div className="assignment-footer">
                 <div className="due-date">
-                  <small>{getTimeLeft(assignment.date)}</small>
+                  <small>
+                    {assignment.isDone ? "Done" : getTimeLeft(assignment.date)}
+                  </small>
                 </div>
 
-                <IonNote color="dark">{assignment.est_hours / 60}h</IonNote>
+                <IonNote color="dark">
+                  {assignment.est_hours / 60}h
+                </IonNote>
               </div>
             </IonLabel>
           </IonItem>
@@ -110,10 +244,68 @@ const AssignmentList: React.FC = () => {
                 <IonIcon icon={trash} />
               </div>
             </IonItemOption>
+            <IonItemOption
+              className="done-option"
+              onClick={() => handleDoneButton(assignment)}
+            >
+              <div className="done-button">
+                <IonIcon icon={assignment.isDone || assignment.isOverdue ? arrowUndo : checkmarkDone} />
+              </div>
+            </IonItemOption>
           </IonItemOptions>
         </IonItemSliding>
-      ))}
-    </IonList>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="assignment-sort-buttons">
+        <IonButton
+          size="small"
+          fill={sortMode === "deadline" ? "solid" : "outline"}
+          onClick={() => setSortMode("deadline")}
+        >
+          Sort by deadline
+        </IonButton>
+
+        <IonButton
+          size="small"
+          fill={sortMode === "subject-deadline" ? "solid" : "outline"}
+          onClick={() => setSortMode("subject-deadline")}
+        >
+          Sort by subject + deadline
+        </IonButton>
+      </div>
+
+      <IonList lines="none" className="assignment-list-container">
+        {activeAssignments.map((assignment, index) =>
+          renderAssignment(assignment, index, activeAssignments)
+        )}
+      </IonList>
+
+      {oldAssignments.length > 0 && (
+        <>
+          <IonButton
+            expand="block"
+            fill="outline"
+            onClick={() => setShowOldAssignments((prev) => !prev)}
+          >
+            {showOldAssignments
+              ? "Hide overdue/done"
+              : `Show overdue/done (${oldAssignments.length})`}
+          </IonButton>
+
+          {showOldAssignments && (
+            <IonList lines="none" className="assignment-list-container">
+              {oldAssignments.map((assignment, index) =>
+                renderAssignment(assignment, index, oldAssignments)
+              )}
+            </IonList>
+          )}
+        </>
+      )}
+    </>
   );
 };
 

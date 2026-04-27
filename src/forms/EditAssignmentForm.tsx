@@ -9,6 +9,7 @@ import {
   IonSelectOption,
   IonNote
 } from "@ionic/react";
+import { useLiveQuery } from "dexie-react-hooks";
 
 function formatDateTimeLocal(date: Date) {
   const d = new Date(date);
@@ -32,6 +33,8 @@ export default function EditAssignmentForm({
   const [timeEst, setTimeEst] = useState<number>(0);
   const [testType, setTestType] = useState<number>(0);
   const [status, setStatus] = useState("");
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const subjects = useLiveQuery(() => db.subjects.toArray(), []) ?? [];
 
   useEffect(() => {
     const loadAssignment = async () => {
@@ -42,6 +45,7 @@ export default function EditAssignmentForm({
         setStartDate(new Date(assignment.start_date));
         setTimeEst(assignment.est_hours);
         setTestType(assignment.assignment_type);
+        setSelectedSubjectId(assignment.fk_subject ?? null);
       }
     };
     loadAssignment();
@@ -59,7 +63,9 @@ export default function EditAssignmentForm({
         date,
         start_date: startDate,
         est_hours: timeEst,
-        assignment_type: testType
+        assignment_type: testType,
+        fk_subject: selectedSubjectId
+
       });
 
       if (success) {
@@ -127,6 +133,28 @@ export default function EditAssignmentForm({
           onIonInput={(e) => setTimeEst(Number(e.detail.value) * 60)}
         />
       </IonItem>
+
+      <IonItem>
+      <IonSelect
+        label="Subject optional"
+        labelPlacement="stacked"
+        interface="popover"
+        placeholder="No subject"
+        value={selectedSubjectId}
+        onIonChange={(e) => {
+          const value = e.detail.value;
+          setSelectedSubjectId(value === "none" ? null : Number(value));
+        }}
+      >
+        <IonSelectOption value="none">No subject</IonSelectOption>
+
+        {subjects.map((subject) => (
+          <IonSelectOption key={subject.id} value={subject.id}>
+            {subject.name}
+          </IonSelectOption>
+        ))}
+      </IonSelect>
+    </IonItem>
 
       <IonItem>
         <IonSelect
