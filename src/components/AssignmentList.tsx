@@ -66,11 +66,11 @@ const AssignmentList: React.FC = () => {
   };
 
   if (!assignments || assignments.length === 0) {
-    return <p className="centered-text">No assignments added yet.</p>;
+    return <h3 className="ion-text-center">Add an assignment!</h3>
   }
 
   return (
-    <IonList lines="none" className="assignment-list-container">
+    <IonList lines="none">
       {assignments.map((assignment) => (
         <IonItemSliding key={assignment.id} className="assignment-sliding-item">
           <IonItem

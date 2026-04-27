@@ -105,7 +105,7 @@ ion-accordion ion-item,
 .topic-header-item,
 .topic-accordion ion-item {
   --background: transparent !important;
-  background: transparent !important;
+  /* background: transparent !important; */
   --inner-background: transparent !important;
 }
 
@@ -155,7 +155,7 @@ ion-list,
 ion-list-header,
 ion-item {
   --background: transparent !important;
-  background: transparent !important;
+  /* background: transparent !important; */
 }
 
 /* ============================
