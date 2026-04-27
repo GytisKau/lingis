@@ -1,4 +1,4 @@
-import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from "@ionic/react";
+import { IonIcon, IonLabel, IonRouterOutlet, IonBadge, IonTabBar, IonTabButton, IonTabs } from "@ionic/react";
 import {
   calendarOutline,
   statsChartOutline,
@@ -15,8 +15,11 @@ import Tab5 from "../pages/Tab5";
 import Session from "../pages/Session";
 import SessionView from "../pages/SessionView";
 import AssignmentsView from "../pages/AssignmentView";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../db/db";
 
 const TabsLayout: React.FC = () => {
+  
   return (
     <IonTabs>
       <IonRouterOutlet animated={false}>

@@ -1,10 +1,11 @@
 import {
-  IonContent, IonPage, IonButton,
+  IonContent, IonPage, IonButton, IonChip, IonLabel, IonIcon,
   IonInput, IonItem, IonSelect, IonSelectOption,
   useIonRouter
 } from '@ionic/react';
 import './LoginWizard.css';
-import { db } from '../db/db';
+import { closeOutline } from "ionicons/icons";
+import { db, type Subject } from '../db/db';
 import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useAuth } from '../hooks/useAuth';
@@ -38,7 +39,7 @@ const defaultForm: FormData = {
   work_hours_end: 17,
   effectiveness_rating: 2,
   study_field: 0,
-  chronotype: 0
+  chronotype: 0,
 };
 
 type FieldError = {
@@ -49,27 +50,74 @@ type FieldError = {
 const LoginWizard: React.FC = () => {
   const router = useIonRouter();
   const { user, finishWizard } = useAuth();
+  const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
 
+  const [subjectInput, setSubjectInput] = useState("");
+  const [subjectColor, setSubjectColor] = useState("#8b5cf6");
   const [status, setStatus] = useState("");
   const [form, setForm] = useState<FormData>(defaultForm);
   const [step, setStep] = useState(0);
 
   const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
+  const currentUser = users[0];
+
+  const subjects = useLiveQuery(
+    async () => {
+      if (!currentUser?.id) return [];
+      return await db.subjects
+        .where("fk_user")
+        .equals(currentUser.id)
+        .toArray();
+    },
+    [currentUser?.id]
+  ) ?? [];
 
   useEffect(() => {
-    if (users.length > 0) {
-      setForm({
-        ...defaultForm,
-        ...users[0],
-        email: users[0].email ?? ""
-      });
-    }
-  }, [users]);
+  if (users.length > 0) {
+    setForm({
+      ...defaultForm,
+      ...users[0],
+      email: users[0].email ?? ""
+    });
+  }
+}, [users]);
 
   const totalSteps = 4;
 
   const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
+
+  const saveSubject = async () => {
+  const name = subjectInput.trim();
+
+  if (!name) return;
+
+  if (!currentUser?.id) {
+    setStatus("Save user first before adding subjects");
+    return;
+  }
+
+  if (editingSubjectId !== null) {
+    await db.subjects.update(editingSubjectId, {
+      name,
+      color: subjectColor
+    });
+  } else {
+    await db.subjects.add({
+      name,
+      color: subjectColor,
+      fk_user: currentUser.id
+    });
+  }
+
+  setSubjectInput("");
+  setSubjectColor("#8b5cf6");
+  setEditingSubjectId(null);
+};
+
+  const deleteSubject = async (subjectId: number) => {
+    await db.subjects.delete(subjectId);
+  };
 
   const handleConfirm = async () => {
     if (!user?.email) {
@@ -83,9 +131,9 @@ const LoginWizard: React.FC = () => {
     }
 
     const userData = {
-      ...form,
-      email: user.email
-    };
+    ...form,
+    email: user.email
+  };
 
     if (users.length === 0) {
       await db.users.add(userData);
@@ -251,6 +299,73 @@ const LoginWizard: React.FC = () => {
                     max={13}  
                   />
                 </IonItem>
+
+                <p className="auth-label">Semester subjects</p>
+              <IonItem className="auth-item" lines="none">
+  <div style={{ display: "flex", alignItems: "center", width: "100%", gap: "12px" }}>
+    
+    <input
+      type="color"
+      value={subjectColor}
+      onChange={(e) => setSubjectColor(e.target.value)}
+      style={{
+        width: "40px",
+        height: "40px",
+        border: "none",
+        borderRadius: "10px",
+        padding: "0",
+        background: "none",
+        cursor: "pointer"
+      }}
+    />
+
+    <IonInput
+      placeholder="Write a subject..."
+      value={subjectInput}
+      onIonInput={(e) => setSubjectInput(String(e.detail.value ?? ""))}
+      style={{
+        flex: 1
+      }}
+    />
+
+  </div>
+</IonItem>
+
+              <IonButton
+                expand="block"
+                className="purple-button"
+                onClick={saveSubject}
+              >
+                {editingSubjectId !== null ? "Save changes" : "Add subject"}
+              </IonButton>
+
+              <div className="subject-chip-container">
+                {subjects.map((subject) => (
+                  <IonChip
+                    key={subject.id}
+                    onClick={() => {
+                      setEditingSubjectId(subject.id);
+                      setSubjectInput(subject.name);
+                      setSubjectColor(subject.color);
+                    }}
+                    style={{
+                      "--background": subject.color,
+                      "--color": "#ffffff",
+                      cursor: "pointer"
+                    } as React.CSSProperties}
+                  >
+                    <IonLabel>{subject.name}</IonLabel>
+
+                    <IonIcon
+                      icon={closeOutline}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSubject(subject.id);
+                      }}
+                    />
+                  </IonChip>
+                ))}
+              </div>
               </>
             )}
 
@@ -282,7 +397,7 @@ const LoginWizard: React.FC = () => {
                             "avg_active_time",
                             "preffered_session_time"
                           ];
-                          setForm({ ...form, [keys[i]]: val });
+                          setForm({ ...form, [keys[i]]: Number(val) });
                         }}
                       >
                         {timeOptions.map(opt => (

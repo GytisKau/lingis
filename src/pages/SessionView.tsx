@@ -28,15 +28,17 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
 
   const users = useLiveQuery(() => db.users.toArray())
   const user = users !== undefined ? users[0] : undefined
-  const preferredMinutes = user?.preffered_session_time
+  const preferredMinutes = user?.preffered_session_time;
 
-  const [selectedMinutes, setSelectedMinutes] = useState<number>(25)
+  const [selectedMinutes, setSelectedMinutes] = useState<number>(25);
+  const [userChangedMinutes, setUserChangedMinutes] = useState(false);
 
   useEffect(() => {
-    if (preferredMinutes !== undefined) {
-      setSelectedMinutes(preferredMinutes)
+    if (!userChangedMinutes && preferredMinutes !== undefined) {
+      const chosenMinutes = preferredMinutes === 120 ? 90 : preferredMinutes;
+      setSelectedMinutes(chosenMinutes);
     }
-  }, [preferredMinutes])
+  }, [preferredMinutes, userChangedMinutes]);
 
   const startSession = () => {
     history.push(`/tabs/tab3/session/${id}`, {
@@ -62,11 +64,14 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
           <TimerDisplay minutes={selectedMinutes} />
 
           <IonSegment
-            className="session-segment"
-            value={String(selectedMinutes)}
-            onIonChange={(e) => setSelectedMinutes(Number(e.detail.value))}
-            scrollable={true}
-          >
+          className="session-segment"
+          value={String(selectedMinutes)}
+          onIonChange={(e) => {
+            setUserChangedMinutes(true);
+            setSelectedMinutes(Number(e.detail.value));
+          }}
+          scrollable={true}
+        >
             <IonSegmentButton value="10">
               <IonLabel>10</IonLabel>
             </IonSegmentButton>

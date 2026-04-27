@@ -18,6 +18,13 @@ interface User {
   chronotype: number;
 }
 
+interface Subject {
+  id: number;
+  name: string;
+  color: string;
+  fk_user: number;
+}
+
 interface Questionnaire {
   id: number;
   motivation: number;
@@ -40,10 +47,12 @@ interface LingisEvent {
 interface Assignment {
   id: number;
   title: string;
+  is_done: boolean
   date: Date;
   start_date: Date;
   est_hours: number;
   assignment_type: number;
+  fk_subject?: number | null;
 }
 
 interface Session {
@@ -72,6 +81,7 @@ const db = new Dexie("LingisDatabase") as Dexie & {
   assignments: EntityTable<Assignment, "id">,
   sessions: EntityTable<Session, "id">,
   tasks: EntityTable<Task, "id">,
+  subjects: EntityTable<Subject, "id">,
 }
 
 // Schema declaration:
@@ -79,10 +89,11 @@ db.version(1).stores({
   users: "++id",
   questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
   events: "++id, start, end, is_free",
-  assignments: "++id, title, date, start_date, est_hours, assignment_type",
+  assignments: "++id, title, date, start_date, est_hours, assignment_type, fk_subject",
   sessions: "++id, start, end, is_done, fk_assignment",
-  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order, parent_task_id"
+  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order, parent_task_id",
+  subjects: '++id, name, color, fk_user'
 })
 
-export type { User, Assignment, LingisEvent, Session, Task, Questionnaire }
+export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject }
 export { db }

@@ -18,24 +18,28 @@ import { db } from '../db/db';
 import BreakTypeSelector from '../components/BreakTypeSelector';
 import { getBreakMinutesFromStudy } from '../data/breakSuggestions';
 
+const LONG_BREAK_AFTER_MINUTES = 90;
+const MAX_GAP_BETWEEN_SESSIONS_MINUTES = 30;
+const MIN_SESSION_MINUTES = 5;
+
 export function Timer({
   studyMinutes,
   breakMinutes,
   mode,
   setMode,
   assignmentId,
-  onOpenMentalTest,
   onBreakStarted,
-  onGoHome
+  onGoHome,
+  setNeedsLongerBreak
 }: {
   studyMinutes: number;
   breakMinutes: number;
   mode: 'study' | 'break';
   setMode: Dispatch<SetStateAction<'study' | 'break'>>;
   assignmentId: number;
-  onOpenMentalTest: () => void;
   onBreakStarted: () => void;
   onGoHome: () => void;
+  setNeedsLongerBreak: Dispatch<SetStateAction<boolean>>;
 }) {
   const studySeconds = studyMinutes * 60;
   const breakSeconds = breakMinutes * 60;
@@ -78,31 +82,94 @@ export function Timer({
   const startSession = () => setRunning(true);
   const pauseSession = () => setRunning(false);
 
-  const saveStudySession = async () => {
-    if (!sessionStart || sessionSaved) return;
+  const getConsecutiveStudyMinutes = async () => {
+    const sessions = await db.sessions
+      .where('fk_assignment')
+      .equals(assignmentId)
+      .toArray();
 
-    try {
-      await db.sessions.add({
-        start: sessionStart,
-        end: new Date(),
-        is_done: true,
-        fk_assignment: assignmentId
-      });
-      setSessionSaved(true);
-    } catch (error) {
-      console.error('Failed to save session:', error);
+    const sortedSessions = sessions.sort(
+      (a, b) => new Date(b.end).getTime() - new Date(a.end).getTime()
+    );
+
+    let totalMinutes = 0;
+    let newerSessionStart: Date | null = null;
+
+    for (const session of sortedSessions) {
+      const currentStart = new Date(session.start);
+      const currentEnd = new Date(session.end);
+
+      if (newerSessionStart) {
+        const breakGapMinutes =
+          (newerSessionStart.getTime() - currentEnd.getTime()) / 1000 / 60;
+
+        if (breakGapMinutes >= MAX_GAP_BETWEEN_SESSIONS_MINUTES) {
+          break;
+        }
+      }
+
+      const sessionMinutes =
+        (currentEnd.getTime() - currentStart.getTime()) / 1000 / 60;
+
+      totalMinutes += sessionMinutes;
+      newerSessionStart = currentStart;
     }
+
+    return totalMinutes;
   };
+
+  const checkLongerBreak = async () => {
+  const totalMinutes = await getConsecutiveStudyMinutes();
+
+  console.log('Consecutive study minutes:', totalMinutes);
+
+  const shouldTakeLongerBreak = totalMinutes >= LONG_BREAK_AFTER_MINUTES;
+
+  setNeedsLongerBreak(shouldTakeLongerBreak);
+
+  return shouldTakeLongerBreak;
+};
+
+  const saveStudySession = async () => {
+  if (!sessionStart || sessionSaved) return;
+
+  const end = new Date();
+  const sessionMinutes =
+    (end.getTime() - sessionStart.getTime()) / 1000 / 60;
+
+  if (sessionMinutes < MIN_SESSION_MINUTES) {
+    console.log("Session too short, not saved:", sessionMinutes);
+    return;
+  }
+
+  try {
+    await db.sessions.add({
+      start: sessionStart,
+      end,
+      is_done: true,
+      fk_assignment: assignmentId
+    });
+
+    setSessionSaved(true);
+  } catch (error) {
+    console.error("Failed to save session:", error);
+  }
+};
 
   const goToBreak = async () => {
-    await saveStudySession();
-    onBreakStarted();
-    setRunning(true);
-    setMode('break');
-    setTime(breakSeconds);
-  };
+  await saveStudySession();
+
+  const shouldTakeLongerBreak = await checkLongerBreak();
+  const breakTimeSeconds = shouldTakeLongerBreak ? 30 * 60 : breakSeconds;
+
+  onBreakStarted();
+  setRunning(true);
+  setMode('break');
+  setTime(breakTimeSeconds);
+};
 
   const goToStudy = () => {
+    setNeedsLongerBreak(false);
     setSessionSaved(false);
     setSessionStart(new Date());
     setRunning(true);
@@ -111,6 +178,7 @@ export function Timer({
   };
 
   const extendStudy = (minutesToAdd: number) => {
+    setNeedsLongerBreak(false);
     setSessionStart(new Date());
     setSessionSaved(false);
     setMode('study');
@@ -127,14 +195,19 @@ export function Timer({
   };
 
   const switchToBreak = async () => {
-    await saveStudySession();
-    onBreakStarted();
-    setRunning(true);
-    setMode('break');
-    setTime(breakSeconds);
-  };
+  await saveStudySession();
+
+  const shouldTakeLongerBreak = await checkLongerBreak();
+  const breakTimeSeconds = shouldTakeLongerBreak ? 30 * 60 : breakSeconds;
+
+  onBreakStarted();
+  setRunning(true);
+  setMode('break');
+  setTime(breakTimeSeconds);
+};
 
   const switchToStudy = () => {
+    setNeedsLongerBreak(false);
     setSessionStart(new Date());
     setSessionSaved(false);
     setRunning(true);
@@ -144,13 +217,16 @@ export function Timer({
 
   const finishAndGoHome = async () => {
     await saveStudySession();
+    await checkLongerBreak();
+
     setRunning(false);
     setTime(studySeconds);
     onGoHome();
   };
 
-  const handleStudyFinished = () => {
-    saveStudySession();
+  const handleStudyFinished = async () => {
+    await saveStudySession();
+    await checkLongerBreak();
     setShowExtendAlert(true);
   };
 
@@ -164,6 +240,7 @@ export function Timer({
     setTime(studySeconds);
     setShowExtendAlert(false);
     setShowBreakExtendAlert(false);
+    setNeedsLongerBreak(false);
   });
 
   useIonViewWillEnter(() => {
@@ -172,6 +249,7 @@ export function Timer({
     setTime(studySeconds);
     setSessionStart(new Date());
     setSessionSaved(false);
+    setNeedsLongerBreak(false);
   });
 
   return (
@@ -202,11 +280,7 @@ export function Timer({
           </IonButton>
         )}
 
-        <IonButton
-          fill="outline"
-          className="timer-button"
-          onClick={finishAndGoHome}
-        >
+        <IonButton fill="outline" className="timer-button" onClick={finishAndGoHome}>
           Finish study
         </IonButton>
       </div>
@@ -262,6 +336,7 @@ const Session: React.FC<AssignmentViewProps> = ({ match, location, history }) =>
   const [mode, setMode] = useState<'study' | 'break'>('study');
   const [mentalTestTrigger, setMentalTestTrigger] = useState<string | null>(null);
   const [breakResetKey, setBreakResetKey] = useState(0);
+  const [needsLongerBreak, setNeedsLongerBreak] = useState(false);
 
   const id = Number(match.params.id);
 
@@ -307,10 +382,14 @@ const Session: React.FC<AssignmentViewProps> = ({ match, location, history }) =>
           mode={mode}
           setMode={setMode}
           assignmentId={id}
-          onOpenMentalTest={openMentalTest}
           onBreakStarted={handleBreakStarted}
           onGoHome={goHome}
+          setNeedsLongerBreak={setNeedsLongerBreak}
         />
+
+        {mode === 'break' && needsLongerBreak && (
+          <h2 className="longer-break-text">Time for a longer break!</h2>
+        )}
 
         {mode === 'break' && (
           <BreakTypeSelector
