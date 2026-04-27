@@ -20,6 +20,7 @@ import { getBreakMinutesFromStudy } from '../data/breakSuggestions';
 
 const LONG_BREAK_AFTER_MINUTES = 90;
 const MAX_GAP_BETWEEN_SESSIONS_MINUTES = 30;
+const MIN_SESSION_MINUTES = 5;
 
 export function Timer({
   studyMinutes,
@@ -130,21 +131,30 @@ export function Timer({
 };
 
   const saveStudySession = async () => {
-    if (!sessionStart || sessionSaved) return;
+  if (!sessionStart || sessionSaved) return;
 
-    try {
-      await db.sessions.add({
-        start: sessionStart,
-        end: new Date(),
-        is_done: true,
-        fk_assignment: assignmentId
-      });
+  const end = new Date();
+  const sessionMinutes =
+    (end.getTime() - sessionStart.getTime()) / 1000 / 60;
 
-      setSessionSaved(true);
-    } catch (error) {
-      console.error('Failed to save session:', error);
-    }
-  };
+  if (sessionMinutes < MIN_SESSION_MINUTES) {
+    console.log("Session too short, not saved:", sessionMinutes);
+    return;
+  }
+
+  try {
+    await db.sessions.add({
+      start: sessionStart,
+      end,
+      is_done: true,
+      fk_assignment: assignmentId
+    });
+
+    setSessionSaved(true);
+  } catch (error) {
+    console.error("Failed to save session:", error);
+  }
+};
 
   const goToBreak = async () => {
   await saveStudySession();

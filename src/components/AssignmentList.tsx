@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   IonList,
@@ -16,6 +16,7 @@ import {
 import { trash, arrowUndo, checkmarkDone, checkmarkDoneOutline } from "ionicons/icons";
 import { db } from "../db/db";
 import type { Assignment } from "../db/db";
+import ScheduleAllAssignments from '../utils/ScheduleSessions';
 
 type AssignmentWithMeta = Assignment & {
   subjectName: string;
@@ -33,6 +34,9 @@ type SortMode = "deadline" | "subject-deadline";
 const AssignmentList: React.FC = () => {
   const [sortMode, setSortMode] = useState<SortMode>("deadline");
   const [showOldAssignments, setShowOldAssignments] = useState(false);
+  const lingisEvents = useLiveQuery( async () => await db.events.toArray())
+  const user = useLiveQuery( async () => (await db.users.toArray())[0])
+  const [now, setNow] = useState(new Date())
 
   const assignments = useLiveQuery(async () => {
     const asgns = await db.assignments.toArray();
@@ -61,6 +65,54 @@ const AssignmentList: React.FC = () => {
       };
     });
   }, []);
+  const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
+
+  const doneSessions = useLiveQuery(
+  async () => await db.sessions.where("is_done").equals(1).toArray(),
+  []
+) ?? [];
+
+  const recomendedSessions = useMemo(() => {
+    if (!lingisEvents || !user || !assignments) return []
+
+    const freeTimes = lingisEvents.filter(e => e.is_free)
+    
+    return ScheduleAllAssignments(
+      assignments,
+      freeTimes,
+      user
+    )
+
+  }, [lingisEvents, timeForAssignments, now, user])
+  console.log(recomendedSessions)
+
+  const plannedMinutesByAssignment = useMemo(() => {
+  const map = new Map<number, number>();
+
+  recomendedSessions.forEach((session: any) => {
+    const assignmentId = session.fk_assignment ?? session.assignmentId;
+    if (!assignmentId) return;
+
+    const start = new Date(session.start).getTime();
+    const end = new Date(session.end).getTime();
+    const minutes = (end - start) / 1000 / 60;
+
+    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+  });
+
+  doneSessions.forEach((session) => {
+    const assignmentId = session.fk_assignment;
+    if (!assignmentId) return;
+
+    const start = new Date(session.start).getTime();
+    const end = new Date(session.end).getTime();
+    const minutes = (end - start) / 1000 / 60;
+
+    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+  });
+
+  return map;
+}, [recomendedSessions, doneSessions]);
 
   const handleDoneButton = async (assignment: AssignmentWithMeta) => {
 
@@ -78,7 +130,6 @@ const AssignmentList: React.FC = () => {
 
     return;
   }
-
 
   if (assignment.isOverdue) {
     const newDueDate = new Date();
@@ -175,6 +226,8 @@ const AssignmentList: React.FC = () => {
       sortMode === "subject-deadline" &&
       (!previousAssignment ||
         previousAssignment.subjectName !== assignment.subjectName);
+        const plannedMinutes = plannedMinutesByAssignment.get(assignment.id!) ?? 0;
+    const doesNotHaveEnoughPlannedTime = plannedMinutes < assignment.est_hours;
 
     return (
       <div key={assignment.id}>
@@ -227,8 +280,7 @@ const AssignmentList: React.FC = () => {
                     {assignment.isDone ? "Done" : getTimeLeft(assignment.date)}
                   </small>
                 </div>
-
-                <IonNote color="dark">
+                <IonNote color={doesNotHaveEnoughPlannedTime ? "danger" : "dark"}>
                   {assignment.est_hours / 60}h
                 </IonNote>
               </div>

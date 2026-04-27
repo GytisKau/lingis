@@ -25,7 +25,8 @@ const Tab1: React.FC = () => {
   const lingisEvents = useLiveQuery( async () => await db.events.toArray())
   const assignments = useLiveQuery( async () => await db.assignments.toArray())
   const user = useLiveQuery( async () => (await db.users.toArray())[0])
-
+  const doneSessions = useLiveQuery(async () => await db.sessions.toArray());
+  
   const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
 
   useEffect(() => {
@@ -60,14 +61,39 @@ const Tab1: React.FC = () => {
     const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
     const sessionEvents = isEditing ? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
     const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
+    const doneSessionEvents = doneSessionsToCalendarEvents(doneSessions ?? [], assignments ?? [])
 
     return [
       ...freeEvents,
       ...sessionEvents,
+      ...doneSessionEvents,
       ...assignmentEvents
     ]
 
-  }, [lingisEvents, recomendedSessions, assignments, isEditing])
+  }, [lingisEvents, recomendedSessions, assignments,  doneSessions, isEditing])
+
+  function doneSessionsToCalendarEvents(
+  sessions: any[],
+  assignments: Assignment[]
+): EventInput[] {
+  return sessions
+    .filter((s) => s.is_done)
+    .map((s) => {
+      const assignment = assignments.find((a) => a.id === s.fk_assignment);
+
+      return {
+        id: `doneSession-${s.id}`,
+        start: s.start,
+        end: s.end,
+        title: assignment ? `Done: ${assignment.title}` : "Done session",
+        color: "#4caf50",
+        extendedProps: {
+          type: "doneSession",
+          fk_assignment: s.fk_assignment
+        }
+      };
+    });
+}
 
   const ModalAssignment = () => {
     return (
