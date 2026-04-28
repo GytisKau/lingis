@@ -1,36 +1,363 @@
-.subject-color-dot-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
+.assignment-list-container {
+  background: transparent !important;
+  --background: transparent !important;
+  padding: 0;
 }
 
-.subject-color-dot {
-  width: 14px;
-  height: 14px;
-  min-width: 14px;
-  min-height: 14px;
-  border-radius: 50%;
-  background-color: #cccccc;
+.centered-text {
+  text-align: center;
+  color: #491B6D;
+  font-weight: 800;
+  margin-top: 24px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FILTER BUTTONS
+   ───────────────────────────────────────────────────────────────────────────── */
+
 .assignment-sort-buttons {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 0 14px;
 }
+
+.assignment-sort-pill,
+.assignment-overdue-button {
+  width: 100%;
+  min-height: 42px;
+  border: 2px solid #491B6D;
+  border-radius: 14px;
+  background: transparent;
+  color: #491B6D;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: none;
+  text-align: center;
+}
+
+.assignment-sort-pill.active,
+.assignment-overdue-button.active {
+  background: #491B6D;
+  border-color: #491B6D;
+  color: white;
+}
+
+.assignment-sort-pill:active,
+.assignment-overdue-button:active {
+  transform: scale(0.98);
+}
+
+.assignment-overdue-button {
+  margin: 14px 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SUBJECT HEADER WHEN SORTING BY MODULE
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .assignment-subject-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 14px 4px 8px;
-  font-weight: 600;
-  font-size: 14px;
+  padding: 7px 12px;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.08);
+  color: #491B6D;
+  font-weight: 900;
+  font-size: 13px;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   ASSIGNMENT CARDS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.assignment-sliding-item {
+  margin-bottom: 12px;
+}
+
+.assignment-card-item {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  display: block;
+  --background: transparent !important;
+  --inner-background: transparent !important;
+  --border-style: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.assignment-card-item ion-label {
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.assignment-card-item.exam {
+  background: #ffecec !important;
+}
+
+.assignment-card-item.lab {
+  background: #eef4ff !important;
+}
+
+.assignment-card-item.other {
+  background: #eafaf1 !important;
+}
+
+.assignment-card-item.unset {
+  background: #f3efff !important;
+}
+
+.assignment-module-edge-tag,
+.assignment-module-banner,
+.assignment-module-name,
+.subject-color-dot-wrapper,
+.subject-color-dot,
 .assignment-subject-header-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CARD CONTENT
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.assignment-header {
+  position: relative;
+  min-height: 34px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 6px;
+  padding: 14px 14px 4px 14px !important;
+  text-align: left !important;
+}
+
+.assignment-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+  padding-right: 48px;
+  text-align: left !important;
+}
+
+.assignment-title {
+  display: block;
+  width: 100%;
+  text-align: left !important;
+  color: #222 !important;
+  font-weight: 600 !important;
+  font-size: 15px;
+}
+
+/* Task completion number: top-right, no square/chip box */
+.task-progress-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  --background: transparent !important;
+  --color: #491B6D !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-weight: 900;
+  z-index: 5;
+}
+
+.task-progress-badge::part(native) {
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.task-progress-icon {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 15px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FOOTER + TIME/MODULE CHIPS
+   Time bottom-left. Module bottom-right.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.assignment-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 9px;
+  padding: 4px 14px 14px 14px !important;
+}
+
+.due-date {
+  grid-column: 1 / -1;
+  justify-self: start;
+  align-self: end;
+}
+
+.due-date small {
+  color: #777 !important;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.assignment-bottom-chips {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.assignment-time-note {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.assignment-module-note {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.assignment-time-note,
+.assignment-module-note {
+  --color: #491B6D;
+  color: #491B6D !important;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(73, 27, 109, 0.1);
+  border-radius: 999px;
+  padding: 4px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(73, 27, 109, 0.05);
+}
+
+.assignment-time-note .time-label {
+  color: rgba(73, 27, 109, 0.55);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assignment-time-note .time-value,
+.assignment-module-note .module-value {
+  color: #491B6D;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.assignment-module-note {
+  border-color: color-mix(
+    in srgb,
+    var(--module-color) 55%,
+    rgba(73, 27, 109, 0.12)
+  );
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5),
+      color-mix(in srgb, var(--module-color) 20%, white)
+    );
+}
+
+.assignment-time-note.warning {
+  --color: #491B6D;
+  color: #491B6D !important;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1.5px solid rgba(73, 27, 109, 0.18);
+}
+
+.assignment-time-note.warning .time-value {
+  color: #6b3d00;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SWIPE ACTIONS - KEEP IONIC SLIDING MOTION
+   Do not change ion-item-options display/layout.
+   Only style the inner round buttons.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.assignment-sliding-item .delete-option,
+.assignment-sliding-item .done-option {
+  --background: transparent !important;
+  --color: transparent !important;
+}
+
+.assignment-sliding-item .delete-option::part(native),
+.assignment-sliding-item .done-option::part(native) {
+  background: transparent !important;
+  padding: 0 6px !important;
+}
+
+.delete-button,
+.done-button {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  max-width: 46px !important;
+  max-height: 46px !important;
+  border-radius: 50% !important;
+  color: white;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 14px rgba(73, 27, 109, 0.14);
+  overflow: hidden;
+}
+
+.delete-button {
+  background: #ff4d6d;
+}
+
+.done-button {
+  background: #491B6D;
+}
+
+.delete-button ion-icon,
+.done-button ion-icon {
+  font-size: 22px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 430px) {
+  .assignment-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .assignment-bottom-chips {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .assignment-time-note {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .assignment-module-note {
+    grid-column: 3;
+    justify-self: end;
+  }
 }

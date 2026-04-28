@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
-  IonAccordion,
-  IonAccordionGroup,
   IonButton,
   IonChip,
   IonIcon,
@@ -16,33 +14,61 @@ import {
   IonItemOption,
   IonModal,
   IonProgressBar,
-} from '@ionic/react';
-import { pencil, trash, close, chevronForward, add, chevronBack } from 'ionicons/icons';
-import { ReorderEndCustomEvent } from '@ionic/core/components';
-import { db } from '../db/db';
-import type { Task } from '../db/db';
-import { useLiveQuery } from 'dexie-react-hooks';
+} from "@ionic/react";
+import {
+  pencil,
+  trash,
+  chevronForward,
+  add,
+  chevronBack,
+} from "ionicons/icons";
+import { ReorderEndCustomEvent } from "@ionic/core/components";
+import { db } from "../db/db";
+import type { Task } from "../db/db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface TaskListProps {
   assignmentId: number;
   view?: "default" | "session";
+  readOnly?: boolean;
 }
 
-const DIFFICULTY_LABELS: Record<number, string> = { 1: '1', 2: '2', 3: '3' };
-const DIFFICULTY_COLORS: Record<number, string> = { 1: 'success', 2: 'warning', 3: 'danger' };
-const TYPE_LABELS: Record<number, string> = { 0: 'Passive', 1: 'Active', 2: 'Testing' };
+const DIFFICULTY_LABELS: Record<number, string> = {
+  1: "1",
+  2: "2",
+  3: "3",
+};
+
+const DIFFICULTY_COLORS: Record<number, string> = {
+  1: "success",
+  2: "warning",
+  3: "danger",
+};
+
+const TYPE_LABELS: Record<number, string> = {
+  0: "Passive",
+  1: "Active",
+  2: "Testing",
+};
 
 const blurActive = () => {
   const element = document.activeElement as HTMLElement | null;
   element?.blur();
 };
 
-const isTopicTask = (task: Task) => task.task_type === -1 && task.parent_task_id == null;
+const isTopicTask = (task: Task) =>
+  task.task_type === -1 && task.parent_task_id == null;
 
-// ─── Modern Checkbox Component ─────────────────────────────────────────────
+const getAssignmentTypeClass = (type?: number) => {
+  if (type === 0) return "exam";
+  if (type === 1) return "lab";
+  return "other";
+};
+
 interface ModernCheckboxProps {
   checked: boolean;
   loading?: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
   onClick?: (e: React.MouseEvent) => void;
   slot?: string;
@@ -51,13 +77,14 @@ interface ModernCheckboxProps {
 const ModernCheckbox: React.FC<ModernCheckboxProps> = ({
   checked,
   loading = false,
+  disabled = false,
   onChange,
   onClick,
-  slot
+  slot,
 }) => (
   <div
     slot={slot}
-    className={`modern-checkbox ${loading ? 'loading' : ''}`}
+    className={`modern-checkbox ${loading ? "loading" : ""}`}
     onClick={(e) => {
       if (onClick) onClick(e as any);
       e.stopPropagation();
@@ -66,7 +93,7 @@ const ModernCheckbox: React.FC<ModernCheckboxProps> = ({
     <input
       type="checkbox"
       checked={checked}
-      disabled={loading}
+      disabled={loading || disabled}
       onChange={(e) => onChange(e.target.checked)}
       onClick={(e) => e.stopPropagation()}
     />
@@ -74,25 +101,28 @@ const ModernCheckbox: React.FC<ModernCheckboxProps> = ({
   </div>
 );
 
-// ─── Add Task Modal Form ──────────────────────────────────────────
 interface AddTaskModalProps {
   isOpen: boolean;
   onSave: (title: string, difficulty: number, type: number) => void;
   onCancel: () => void;
 }
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel }) => {
-  const [title, setTitle] = useState('');
+const AddTaskModal: React.FC<AddTaskModalProps> = ({
+  isOpen,
+  onSave,
+  onCancel,
+}) => {
+  const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState(-1);
   const [type, setType] = useState(-1);
   const modalRef = useRef<HTMLIonModalElement>(null);
 
-  const isValid = title.trim() !== '' && difficulty !== -1 && type !== -1;
+  const isValid = title.trim() !== "" && difficulty !== -1 && type !== -1;
 
   const handleSave = () => {
     blurActive();
     onSave(title.trim(), difficulty, type);
-    setTitle('');
+    setTitle("");
     setDifficulty(-1);
     setType(-1);
     modalRef.current?.dismiss();
@@ -101,13 +131,20 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
   const handleCancel = () => {
     blurActive();
     onCancel();
-    setTitle('');
+    setTitle("");
     setDifficulty(-1);
     setType(-1);
   };
 
   return (
-    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={handleCancel} className="add-modal" initialBreakpoint={0.75} breakpoints={[0, 0.75, 1]}>
+    <IonModal
+      ref={modalRef}
+      isOpen={isOpen}
+      onDidDismiss={handleCancel}
+      className="add-modal"
+      initialBreakpoint={0.75}
+      breakpoints={[0, 0.75, 1]}
+    >
       <div className="ion-padding">
         <h2>Add New Task</h2>
 
@@ -118,7 +155,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
               className="form-input"
               value={title}
               placeholder="Enter task name"
-              onIonInput={(e) => setTitle(e.detail.value ?? '')}
+              onIonInput={(e) => setTitle(e.detail.value ?? "")}
               autoFocus
             />
           </div>
@@ -129,7 +166,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
               {[1, 2, 3].map((d) => (
                 <button
                   key={d}
-                  className={`custom-button ${difficulty === d ? 'active' : ''}`}
+                  className={`custom-button ${
+                    difficulty === d ? "active" : ""
+                  }`}
                   onClick={() => setDifficulty(d)}
                 >
                   {d}
@@ -144,7 +183,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
               {[0, 1, 2].map((v) => (
                 <button
                   key={v}
-                  className={`custom-button ${type === v ? 'active' : ''}`}
+                  className={`custom-button ${type === v ? "active" : ""}`}
                   onClick={() => setType(v)}
                 >
                   {TYPE_LABELS[v]}
@@ -160,16 +199,22 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
               disabled={!isValid}
               onClick={handleSave}
               className="add-btn"
-              style={{ '--background': '#491B6D' } as React.CSSProperties}
+              style={{ "--background": "#491B6D" } as React.CSSProperties}
             >
               Add Task
             </IonButton>
+
             <IonButton
               expand="block"
               fill="outline"
               onClick={handleCancel}
               className="cancel-btn"
-              style={{ '--border-color': '#491B6D', '--color': '#491B6D' } as React.CSSProperties}
+              style={
+                {
+                  "--border-color": "#491B6D",
+                  "--color": "#491B6D",
+                } as React.CSSProperties
+              }
             >
               Cancel
             </IonButton>
@@ -180,33 +225,43 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
   );
 };
 
-// ─── Add Topic Modal Form ─────────────────────────────────────────────
 interface AddTopicModalProps {
   isOpen: boolean;
   onSave: (title: string) => void;
   onCancel: () => void;
 }
 
-const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel }) => {
-  const [title, setTitle] = useState('');
+const AddTopicModal: React.FC<AddTopicModalProps> = ({
+  isOpen,
+  onSave,
+  onCancel,
+}) => {
+  const [title, setTitle] = useState("");
   const modalRef = useRef<HTMLIonModalElement>(null);
-  const isValid = title.trim() !== '';
+  const isValid = title.trim() !== "";
 
   const handleSave = () => {
     blurActive();
     onSave(title.trim());
-    setTitle('');
+    setTitle("");
     modalRef.current?.dismiss();
   };
 
   const handleCancel = () => {
     blurActive();
     onCancel();
-    setTitle('');
+    setTitle("");
   };
 
   return (
-    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={handleCancel} className="add-modal" initialBreakpoint={0.75} breakpoints={[0, 0.75, 1]}>
+    <IonModal
+      ref={modalRef}
+      isOpen={isOpen}
+      onDidDismiss={handleCancel}
+      className="add-modal"
+      initialBreakpoint={0.75}
+      breakpoints={[0, 0.75, 1]}
+    >
       <div className="ion-padding">
         <h2>Add New Topic</h2>
 
@@ -217,7 +272,7 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel 
               className="form-input"
               value={title}
               placeholder="Enter topic name"
-              onIonInput={(e) => setTitle(e.detail.value ?? '')}
+              onIonInput={(e) => setTitle(e.detail.value ?? "")}
               autoFocus
             />
           </div>
@@ -229,16 +284,22 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel 
               disabled={!isValid}
               onClick={handleSave}
               className="add-btn"
-              style={{ '--background': '#491B6D' } as React.CSSProperties}
+              style={{ "--background": "#491B6D" } as React.CSSProperties}
             >
               Create Topic
             </IonButton>
+
             <IonButton
               expand="block"
               fill="outline"
               onClick={handleCancel}
               className="cancel-btn"
-              style={{ '--border-color': '#491B6D', '--color': '#491B6D' } as React.CSSProperties}
+              style={
+                {
+                  "--border-color": "#491B6D",
+                  "--color": "#491B6D",
+                } as React.CSSProperties
+              }
             >
               Cancel
             </IonButton>
@@ -249,26 +310,32 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel 
   );
 };
 
-// ─── Task Row (with inline editing) ──────────────────────────────────────────────
 interface TaskRowProps {
   task: Task;
   editing: boolean;
   loading?: boolean;
   showReorder?: boolean;
   showActions?: boolean;
+  readOnly?: boolean;
   onToggleDone: (id: number, val: boolean) => void;
   onStartEdit: (id: number) => void;
-  onSaveEdit: (id: number, title: string, difficulty: number, type: number) => void;
+  onSaveEdit: (
+    id: number,
+    title: string,
+    difficulty: number,
+    type: number
+  ) => void;
   onCancelEdit: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
-const TaskRow: React.FC<TaskRowProps> = (({
+const TaskRow: React.FC<TaskRowProps> = ({
   task,
   editing,
   loading = false,
   showReorder = false,
   showActions = true,
+  readOnly = false,
   onToggleDone,
   onStartEdit,
   onSaveEdit,
@@ -281,22 +348,22 @@ const TaskRow: React.FC<TaskRowProps> = (({
   const [editType, setEditType] = useState(task.task_type);
 
   useEffect(() => {
-    if (!slidingRef.current) return;
+    if (!slidingRef.current || readOnly) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
 
       if (slidingRef.current?.contains(target)) return;
 
-      const modal = target.closest('ion-modal');
+      const modal = target.closest("ion-modal");
       if (modal) return;
 
       slidingRef.current?.close();
     };
 
-    document.addEventListener('click', handleClickOutside, true);
-    return () => document.removeEventListener('click', handleClickOutside, true);
-  }, []);
+    document.addEventListener("click", handleClickOutside, true);
+    return () => document.removeEventListener("click", handleClickOutside, true);
+  }, [readOnly]);
 
   const handleSave = () => {
     blurActive();
@@ -311,7 +378,7 @@ const TaskRow: React.FC<TaskRowProps> = (({
     onCancelEdit(task.id);
   };
 
-  if (editing) {
+  if (editing && !readOnly) {
     return (
       <div className="task-list-item task-item-editing">
         <div className="edit-form-row">
@@ -321,7 +388,7 @@ const TaskRow: React.FC<TaskRowProps> = (({
               className="edit-input"
               value={editTitle}
               placeholder="Enter task name"
-              onIonInput={(e) => setEditTitle(e.detail.value ?? '')}
+              onIonInput={(e) => setEditTitle(e.detail.value ?? "")}
               autoFocus
             />
           </div>
@@ -332,7 +399,9 @@ const TaskRow: React.FC<TaskRowProps> = (({
               {[1, 2, 3].map((d) => (
                 <button
                   key={d}
-                  className={`custom-button ${editDifficulty === d ? 'active' : ''}`}
+                  className={`custom-button ${
+                    editDifficulty === d ? "active" : ""
+                  }`}
                   onClick={() => setEditDifficulty(d)}
                 >
                   {d}
@@ -347,7 +416,9 @@ const TaskRow: React.FC<TaskRowProps> = (({
               {[0, 1, 2].map((v) => (
                 <button
                   key={v}
-                  className={`custom-button ${editType === v ? 'active' : ''}`}
+                  className={`custom-button ${
+                    editType === v ? "active" : ""
+                  }`}
                   onClick={() => setEditType(v)}
                 >
                   {TYPE_LABELS[v]}
@@ -357,10 +428,32 @@ const TaskRow: React.FC<TaskRowProps> = (({
           </div>
 
           <div className="edit-button-group">
-            <IonButton size="small" fill="outline" onClick={handleCancel} style={{ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}>
+            <IonButton
+              size="small"
+              fill="outline"
+              onClick={handleCancel}
+              style={
+                {
+                  "--border-color": "#491B6D",
+                  "--color": "#491B6D",
+                  "--border-radius": "10px",
+                } as React.CSSProperties
+              }
+            >
               Cancel
             </IonButton>
-            <IonButton size="small" fill="solid" onClick={handleSave} style={{ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}>
+
+            <IonButton
+              size="small"
+              fill="solid"
+              onClick={handleSave}
+              style={
+                {
+                  "--background": "#491B6D",
+                  "--border-radius": "10px",
+                } as React.CSSProperties
+              }
+            >
               Save
             </IonButton>
           </div>
@@ -372,55 +465,68 @@ const TaskRow: React.FC<TaskRowProps> = (({
   return (
     <IonItemSliding ref={slidingRef} className="task-list-item">
       <IonItem lines="none" className="task-item-content">
-        <ModernCheckbox
-          slot="start"
-          checked={task.is_done}
-          loading={loading}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          onChange={(checked) => onToggleDone(task.id, checked)}
-        />
-        <IonLabel className={task.is_done ? 'task-completed' : ''}>
+        {!readOnly && (
+          <ModernCheckbox
+            slot="start"
+            checked={task.is_done}
+            loading={loading}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            onChange={(checked) => onToggleDone(task.id, checked)}
+          />
+        )}
+
+        <IonLabel className={task.is_done ? "task-completed" : ""}>
           {task.title}
+
           <div className="task-badges">
             {task.difficulty_rating !== -1 && (
               <IonChip color={DIFFICULTY_COLORS[task.difficulty_rating]}>
                 {DIFFICULTY_LABELS[task.difficulty_rating]}
               </IonChip>
             )}
+
             <IonChip>{TYPE_LABELS[task.task_type]}</IonChip>
           </div>
         </IonLabel>
-        {showReorder && <IonReorder slot="end" />}
+
+        {showReorder && !readOnly && <IonReorder slot="end" />}
       </IonItem>
-      {showActions && (
+
+      {showActions && !readOnly && (
         <IonItemOptions side="end">
           <IonItemOption
             onClick={() => {
               blurActive();
               onStartEdit(task.id);
             }}
-            style={{ '--background': 'transparent' } as React.CSSProperties}
+            style={{ "--background": "transparent" } as React.CSSProperties}
           >
-            <IonIcon icon={pencil} style={{ color: '#491B6D', fontSize: '22px' }} />
+            <IonIcon
+              icon={pencil}
+              style={{ color: "#491B6D", fontSize: "22px" }}
+            />
           </IonItemOption>
+
           <IonItemOption
             onClick={() => {
               blurActive();
               onDelete(task.id);
             }}
-            style={{ '--background': 'transparent' } as React.CSSProperties}
+            style={{ "--background": "transparent" } as React.CSSProperties}
           >
-            <IonIcon icon={trash} style={{ color: '#491B6D', fontSize: '22px' }} />
+            <IonIcon
+              icon={trash}
+              style={{ color: "#491B6D", fontSize: "22px" }}
+            />
           </IonItemOption>
         </IonItemOptions>
       )}
     </IonItemSliding>
   );
-}) as React.FC<TaskRowProps>;
+};
 
-// ─── Topic Row (with swipe working properly) ─────────────────────────────────
 interface SubtaskEditState {
   id: number;
   title: string;
@@ -435,11 +541,21 @@ interface TopicRowProps {
   expandedTopics: string[];
   editing: boolean;
   pendingDoneIds: Set<number>;
+  readOnly?: boolean;
   onToggleDone: (id: number, val: boolean) => void;
   onStartEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onExpandChange: (value: string[]) => void;
-  onSaveTopicGroup: (topicId: number, topicTitle: string, childUpdates: { id: number; title: string; difficulty_rating: number }[], newChildren: SubtaskEditState[]) => void;
+  onSaveTopicGroup: (
+    topicId: number,
+    topicTitle: string,
+    childUpdates: {
+      id: number;
+      title: string;
+      difficulty_rating: number;
+    }[],
+    newChildren: SubtaskEditState[]
+  ) => void;
   onCancelEdit: (id: number) => void;
   onReorderChildren: (topicId: number, children: Task[]) => void;
 }
@@ -450,6 +566,7 @@ const TopicRow: React.FC<TopicRowProps> = ({
   expandedTopics,
   editing,
   pendingDoneIds,
+  readOnly = false,
   onToggleDone,
   onStartEdit,
   onDelete,
@@ -472,7 +589,8 @@ const TopicRow: React.FC<TopicRowProps> = ({
     children.map((child) => ({
       id: child.id,
       title: child.title,
-      difficulty_rating: child.difficulty_rating === -1 ? 1 : child.difficulty_rating,
+      difficulty_rating:
+        child.difficulty_rating === -1 ? 1 : child.difficulty_rating,
       task_type: child.task_type,
     }))
   );
@@ -494,24 +612,26 @@ const TopicRow: React.FC<TopicRowProps> = ({
   const isExpanded = expandedTopics.includes(accordionValue);
 
   useEffect(() => {
-    if (!slidingRef.current) return;
+    if (!slidingRef.current || readOnly) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (slidingRef.current?.contains(target)) return;
-      const modal = target.closest('ion-modal');
+      const modal = target.closest("ion-modal");
       if (modal) return;
       slidingRef.current?.close();
     };
 
-    document.addEventListener('click', handleClickOutside, true);
-    return () => document.removeEventListener('click', handleClickOutside, true);
-  }, []);
+    document.addEventListener("click", handleClickOutside, true);
+    return () => document.removeEventListener("click", handleClickOutside, true);
+  }, [readOnly]);
 
   const handleSave = () => {
     blurActive();
+
     const existingChildren = childState.filter((c) => !c.isNew);
     const newChildren = childState.filter((c) => c.isNew);
+
     onSaveTopicGroup(
       topic.id,
       editTitle,
@@ -531,14 +651,18 @@ const TopicRow: React.FC<TopicRowProps> = ({
       children.map((child) => ({
         id: child.id,
         title: child.title,
-        difficulty_rating: child.difficulty_rating === -1 ? 1 : child.difficulty_rating,
+        difficulty_rating:
+          child.difficulty_rating === -1 ? 1 : child.difficulty_rating,
         task_type: child.task_type,
       }))
     );
     onCancelEdit(topic.id);
   };
 
-  const updateChild = (id: number, patch: Partial<Omit<SubtaskEditState, 'id'>>) => {
+  const updateChild = (
+    id: number,
+    patch: Partial<Omit<SubtaskEditState, "id">>
+  ) => {
     setChildState((prev) =>
       prev.map((child) => (child.id === id ? { ...child, ...patch } : child))
     );
@@ -548,7 +672,13 @@ const TopicRow: React.FC<TopicRowProps> = ({
     const newId = Math.min(...childState.map((c) => c.id), 0) - 1;
     setChildState((prev) => [
       ...prev,
-      { id: newId, title: '', difficulty_rating: 1, task_type: 0, isNew: true },
+      {
+        id: newId,
+        title: "",
+        difficulty_rating: 1,
+        task_type: 0,
+        isNew: true,
+      },
     ]);
   };
 
@@ -559,14 +689,21 @@ const TopicRow: React.FC<TopicRowProps> = ({
   const handleChildReorderEnd = async (event: ReorderEndCustomEvent) => {
     blurActive();
     event.stopPropagation();
+
+    if (readOnly) {
+      event.detail.complete();
+      return;
+    }
+
     const reordered = [...children];
     const [moved] = reordered.splice(event.detail.from, 1);
     reordered.splice(event.detail.to, 0, moved);
+
     onReorderChildren(topic.id, reordered);
     event.detail.complete();
   };
 
-  if (editing) {
+  if (editing && !readOnly) {
     return (
       <div className="topic-list-item task-item-editing">
         <div className="edit-form-row">
@@ -576,13 +713,14 @@ const TopicRow: React.FC<TopicRowProps> = ({
               className="edit-input"
               value={editTitle}
               placeholder="Topic name"
-              onIonInput={(e) => setEditTitle(e.detail.value ?? '')}
+              onIonInput={(e) => setEditTitle(e.detail.value ?? "")}
               autoFocus
             />
           </div>
 
           <div className="edit-input-group">
             <label>Subtasks</label>
+
             {childState.length > 0 ? (
               childState.map((child) => (
                 <div key={child.id} className="subtask-edit-item">
@@ -591,39 +729,63 @@ const TopicRow: React.FC<TopicRowProps> = ({
                       className="edit-input"
                       value={child.title}
                       placeholder="Task name"
-                      onIonInput={(e) => updateChild(child.id, { title: e.detail.value ?? '' })}
+                      onIonInput={(e) =>
+                        updateChild(child.id, {
+                          title: e.detail.value ?? "",
+                        })
+                      }
                     />
+
                     <div className="difficulty-buttons">
                       {[1, 2, 3].map((d) => (
                         <button
                           key={d}
-                          className={`custom-button ${child.difficulty_rating === d ? 'active' : ''}`}
-                          onClick={() => updateChild(child.id, { difficulty_rating: d })}
+                          className={`custom-button ${
+                            child.difficulty_rating === d ? "active" : ""
+                          }`}
+                          onClick={() =>
+                            updateChild(child.id, {
+                              difficulty_rating: d,
+                            })
+                          }
                         >
                           {d}
                         </button>
                       ))}
                     </div>
                   </div>
+
                   {child.isNew && (
                     <>
                       <div className="type-buttons">
                         {[0, 1, 2].map((v) => (
                           <button
                             key={v}
-                            className={`custom-button ${child.task_type === v ? 'active' : ''}`}
-                            onClick={() => updateChild(child.id, { task_type: v })}
+                            className={`custom-button ${
+                              child.task_type === v ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              updateChild(child.id, {
+                                task_type: v,
+                              })
+                            }
                           >
                             {TYPE_LABELS[v]}
                           </button>
                         ))}
                       </div>
+
                       <IonButton
                         size="small"
                         fill="outline"
                         onClick={() => deleteChild(child.id)}
                         className="delete-subtask-btn"
-                        style={{ '--border-color': '#491B6D', '--color': '#491B6D' } as React.CSSProperties}
+                        style={
+                          {
+                            "--border-color": "#491B6D",
+                            "--color": "#491B6D",
+                          } as React.CSSProperties
+                        }
                       >
                         Remove
                       </IonButton>
@@ -632,7 +794,9 @@ const TopicRow: React.FC<TopicRowProps> = ({
                 </div>
               ))
             ) : (
-              <p style={{ color: '#999', fontSize: '12px' }}>No subtasks yet</p>
+              <p style={{ color: "#999", fontSize: "12px" }}>
+                No subtasks yet
+              </p>
             )}
           </div>
 
@@ -641,17 +805,44 @@ const TopicRow: React.FC<TopicRowProps> = ({
             fill="outline"
             onClick={addNewSubtask}
             className="add-subtask-btn"
-            style={{ '--border-color': '#491B6D', '--color': '#491B6D' } as React.CSSProperties}
+            style={
+              {
+                "--border-color": "#491B6D",
+                "--color": "#491B6D",
+              } as React.CSSProperties
+            }
           >
             <IonIcon icon={add} slot="start" />
             Add Subtask
           </IonButton>
 
           <div className="edit-button-group">
-            <IonButton size="small" fill="outline" onClick={handleCancel} style={{ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}>
+            <IonButton
+              size="small"
+              fill="outline"
+              onClick={handleCancel}
+              style={
+                {
+                  "--border-color": "#491B6D",
+                  "--color": "#491B6D",
+                  "--border-radius": "10px",
+                } as React.CSSProperties
+              }
+            >
               Cancel
             </IonButton>
-            <IonButton size="small" fill="solid" onClick={handleSave} style={{ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}>
+
+            <IonButton
+              size="small"
+              fill="solid"
+              onClick={handleSave}
+              style={
+                {
+                  "--background": "#491B6D",
+                  "--border-radius": "10px",
+                } as React.CSSProperties
+              }
+            >
               Save
             </IonButton>
           </div>
@@ -663,90 +854,118 @@ const TopicRow: React.FC<TopicRowProps> = ({
   return (
     <div className="topic-sliding-wrapper">
       <IonItemSliding ref={slidingRef} className="topic-list-item">
-        <IonItem 
-          lines="none" 
+        <IonItem
+          lines="none"
           className="topic-item-content"
           button
           onClick={() => {
             if (isExpanded) {
-              onExpandChange(expandedTopics.filter(v => v !== accordionValue));
+              onExpandChange(
+                expandedTopics.filter((v) => v !== accordionValue)
+              );
             } else {
               onExpandChange([...expandedTopics, accordionValue]);
             }
           }}
         >
-          <ModernCheckbox
-            slot="start"
-            checked={topic.is_done}
-            loading={pendingDoneIds.has(topic.id)}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            onChange={(checked) => {
-              onToggleDone(topic.id, checked);
-            }}
-          />
+          {!readOnly && (
+            <ModernCheckbox
+              slot="start"
+              checked={topic.is_done}
+              loading={pendingDoneIds.has(topic.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              onChange={(checked) => {
+                onToggleDone(topic.id, checked);
+              }}
+            />
+          )}
 
-          <IonLabel className={topic.is_done ? 'task-completed' : ''}>
+          <IonLabel className={topic.is_done ? "task-completed" : ""}>
             {topic.title}
+
             <div className="task-badges">
               <IonChip className="topic-badge">Topic</IonChip>
+              {children.length > 0 && (
+                <IonChip>{children.length} tasks</IonChip>
+              )}
             </div>
           </IonLabel>
 
-          <IonIcon 
-            slot="end" 
-            icon={isExpanded ? chevronBack : chevronForward} 
-          />
-          <IonReorder slot="end" />
+          <IonIcon slot="end" icon={isExpanded ? chevronBack : chevronForward} />
+
+          {!readOnly && <IonReorder slot="end" />}
         </IonItem>
 
-        <IonItemOptions side="end">
-          <IonItemOption
-            onClick={() => {
-              blurActive();
-              onStartEdit(topic.id);
-            }}
-            style={{ '--background': 'transparent' } as React.CSSProperties}
-          >
-            <IonIcon icon={pencil} style={{ color: '#491B6D', fontSize: '22px' }} />
-          </IonItemOption>
-          <IonItemOption
-            onClick={() => {
-              blurActive();
-              onDelete(topic.id);
-            }}
-            style={{ '--background': 'transparent' } as React.CSSProperties}
-          >
-            <IonIcon icon={trash} style={{ color: '#491B6D', fontSize: '22px' }} />
-          </IonItemOption>
-        </IonItemOptions>
+        {!readOnly && (
+          <IonItemOptions side="end">
+            <IonItemOption
+              onClick={() => {
+                blurActive();
+                onStartEdit(topic.id);
+              }}
+              style={{ "--background": "transparent" } as React.CSSProperties}
+            >
+              <IonIcon
+                icon={pencil}
+                style={{ color: "#491B6D", fontSize: "22px" }}
+              />
+            </IonItemOption>
+
+            <IonItemOption
+              onClick={() => {
+                blurActive();
+                onDelete(topic.id);
+              }}
+              style={{ "--background": "transparent" } as React.CSSProperties}
+            >
+              <IonIcon
+                icon={trash}
+                style={{ color: "#491B6D", fontSize: "22px" }}
+              />
+            </IonItemOption>
+          </IonItemOptions>
+        )}
       </IonItemSliding>
 
       {isExpanded && (
         <div className="topic-expanded-content">
           <div className="child-reorder-group">
-            <IonReorderGroup disabled={false} onIonReorderEnd={handleChildReorderEnd}>
+            <IonReorderGroup
+              disabled={readOnly}
+              onIonReorderEnd={handleChildReorderEnd}
+            >
               {children.map((child) => (
                 <IonItemSliding key={child.id} className="child-task-sliding">
                   <IonItem lines="none" className="child-task-item">
-                    <ModernCheckbox
-                      slot="start"
-                      checked={child.is_done}
-                      loading={pendingDoneIds.has(child.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(checked) => onToggleDone(child.id, checked)}
-                    />
-                    <IonLabel className={child.is_done ? 'task-completed' : ''}>
+                    {!readOnly && (
+                      <ModernCheckbox
+                        slot="start"
+                        checked={child.is_done}
+                        loading={pendingDoneIds.has(child.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(checked) =>
+                          onToggleDone(child.id, checked)
+                        }
+                      />
+                    )}
+
+                    <IonLabel className={child.is_done ? "task-completed" : ""}>
                       {child.title}
+
                       <div className="task-badges">
-                        <IonChip color={DIFFICULTY_COLORS[child.difficulty_rating]}>
+                        <IonChip
+                          color={DIFFICULTY_COLORS[child.difficulty_rating]}
+                        >
                           {DIFFICULTY_LABELS[child.difficulty_rating]}
                         </IonChip>
+
                         <IonChip>{TYPE_LABELS[child.task_type]}</IonChip>
                       </div>
                     </IonLabel>
-                    <IonReorder slot="end" />
+
+                    {!readOnly && <IonReorder slot="end" />}
                   </IonItem>
                 </IonItemSliding>
               ))}
@@ -758,8 +977,11 @@ const TopicRow: React.FC<TopicRowProps> = ({
   );
 };
 
-// ─── Main Task List Component ─────────────────────────────────────────────
-const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) => {
+const TaskList: React.FC<TaskListProps> = ({
+  assignmentId,
+  view = "default",
+  readOnly = false,
+}) => {
   const [editingIds, setEditingIds] = useState<Set<number>>(new Set());
   const [expandedTopics, setExpandedTopics] = useState<string[]>([]);
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -767,14 +989,37 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
   const [pendingDoneIds, setPendingDoneIds] = useState<Set<number>>(new Set());
   const [isEditingPriority, setIsEditingPriority] = useState(false);
 
-  const dbTasks = useLiveQuery(() => db.tasks.where('fk_assignment').equals(assignmentId).toArray(), [assignmentId]) ?? [];
+  const assignment = useLiveQuery(
+    () => db.assignments.get(assignmentId),
+    [assignmentId]
+  );
 
-  const tasks = useMemo(() => [...dbTasks].sort((a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)), [dbTasks]);
-  const taskMap = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
-  const topLevelTasks = useMemo(() => tasks.filter((t) => t.parent_task_id == null), [tasks]);
+  const assignmentTypeClass = getAssignmentTypeClass(assignment?.assignment_type);
+
+  const dbTasks =
+    useLiveQuery(
+      () => db.tasks.where("fk_assignment").equals(assignmentId).toArray(),
+      [assignmentId]
+    ) ?? [];
+
+  const tasks = useMemo(
+    () => [...dbTasks].sort((a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)),
+    [dbTasks]
+  );
+
+  const taskMap = useMemo(
+    () => new Map(tasks.map((t) => [t.id, t])),
+    [tasks]
+  );
+
+  const topLevelTasks = useMemo(
+    () => tasks.filter((t) => t.parent_task_id == null),
+    [tasks]
+  );
 
   const childrenByParent = useMemo(() => {
     const map = new Map<number, Task[]>();
+
     for (const task of tasks) {
       if (task.parent_task_id != null) {
         const existing = map.get(task.parent_task_id) ?? [];
@@ -782,34 +1027,66 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
         map.set(task.parent_task_id, existing);
       }
     }
+
     for (const [key, value] of map.entries()) {
-      map.set(key, [...value].sort((a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)));
+      map.set(
+        key,
+        [...value].sort(
+          (a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)
+        )
+      );
     }
+
     return map;
   }, [tasks]);
 
-  const sessionSections = useMemo(() => {
-  if (view !== "session") {
-    return {
-      priority: [] as Task[],
-      todo: [] as Task[],
-      done: [] as Task[],
+  const previewSections = useMemo(() => {
+    const isDoneForPreview = (task: Task) => {
+      if (!isTopicTask(task)) {
+        return task.is_done;
+      }
+
+      const children = childrenByParent.get(task.id) ?? [];
+
+      if (children.length === 0) {
+        return task.is_done;
+      }
+
+      return children.every((child) => child.is_done);
     };
-  }
 
-  const isDoneInSession = (task: Task) => {
-    if (!isTopicTask(task)) {
-      return task.is_done;
+    const unfinished = topLevelTasks.filter((task) => !isDoneForPreview(task));
+    const done = topLevelTasks.filter((task) => isDoneForPreview(task));
+
+    return {
+      important: unfinished.slice(0, 3),
+      more: unfinished.slice(3),
+      done,
+    };
+  }, [topLevelTasks, childrenByParent]);
+
+  const sessionSections = useMemo(() => {
+    if (view !== "session") {
+      return {
+        priority: [] as Task[],
+        todo: [] as Task[],
+        done: [] as Task[],
+      };
     }
 
-    const children = childrenByParent.get(task.id) ?? [];
+    const isDoneInSession = (task: Task) => {
+      if (!isTopicTask(task)) {
+        return task.is_done;
+      }
 
-    if (children.length === 0) {
-      return task.is_done;
-    }
+      const children = childrenByParent.get(task.id) ?? [];
 
-    return children.every((child) => child.is_done);
-  };
+      if (children.length === 0) {
+        return task.is_done;
+      }
+
+      return children.every((child) => child.is_done);
+    };
 
     const processed = topLevelTasks.map((task) => ({
       ...task,
@@ -826,7 +1103,6 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
     };
   }, [view, topLevelTasks, childrenByParent]);
 
-  // Calculate progress including subtasks
   const progressStats = useMemo(() => {
     let totalTasks = 0;
     let completedTasks = 0;
@@ -838,7 +1114,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
       if (!isTopicTask(task)) {
         totalTasks++;
         if (task.is_done) completedTasks++;
-        
+
         if (task.task_type === 0) passiveCount++;
         else if (task.task_type === 1) activeCount++;
         else if (task.task_type === 2) testingCount++;
@@ -860,26 +1136,32 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
   useEffect(() => {
     setEditingIds((prev) => {
       const next = new Set<number>();
-      for (const id of prev) if (taskMap.has(id)) next.add(id);
+      for (const id of prev) {
+        if (taskMap.has(id)) next.add(id);
+      }
       return next;
     });
   }, [taskMap]);
 
   useEffect(() => {
-    const content = document.querySelector('ion-content');
+    const content = document.querySelector("ion-content");
+
     if (content) {
       const handleScroll = () => {
-        const openSlides = document.querySelectorAll('ion-item-sliding');
+        const openSlides = document.querySelectorAll("ion-item-sliding");
         openSlides.forEach((slide) => {
           if ((slide as any).close) (slide as any).close();
         });
       };
-      content.addEventListener('scroll', handleScroll);
-      return () => content.removeEventListener('scroll', handleScroll);
+
+      content.addEventListener("scroll", handleScroll);
+      return () => content.removeEventListener("scroll", handleScroll);
     }
   }, []);
 
   const handleToggleDone = async (id: number, val: boolean) => {
+    if (readOnly) return;
+
     blurActive();
 
     setPendingDoneIds((prev) => {
@@ -903,8 +1185,9 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
       if (isTopicTask(task)) {
         const children = childrenByParent.get(id) ?? [];
 
-        await db.transaction('rw', db.tasks, async () => {
+        await db.transaction("rw", db.tasks, async () => {
           await db.tasks.update(id, { is_done: val });
+
           for (const child of children) {
             await db.tasks.update(child.id, { is_done: val });
           }
@@ -917,6 +1200,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
           const allDone = siblings.every((sibling) =>
             sibling.id === id ? val : sibling.is_done
           );
+
           await db.tasks.update(task.parent_task_id, { is_done: allDone });
         }
       }
@@ -930,16 +1214,11 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
   };
 
   const handleStartEdit = (id: number) => {
+    if (readOnly) return;
+
     const task = taskMap.get(id);
     if (!task) return;
-    if (isTopicTask(task)) {
-      setEditingIds((prev) => {
-        const next = new Set(prev);
-        next.add(id);
-        return next;
-      });
-      return;
-    }
+
     setEditingIds((prev) => {
       const next = new Set(prev);
       next.add(id);
@@ -947,9 +1226,22 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
     });
   };
 
-  const handleSaveEdit = async (id: number, title: string, difficulty: number, type: number) => {
+  const handleSaveEdit = async (
+    id: number,
+    title: string,
+    difficulty: number,
+    type: number
+  ) => {
+    if (readOnly) return;
+
     blurActive();
-    await db.tasks.update(id, { title, difficulty_rating: difficulty, task_type: type });
+
+    await db.tasks.update(id, {
+      title,
+      difficulty_rating: difficulty,
+      task_type: type,
+    });
+
     setEditingIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -960,15 +1252,31 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
   const handleSaveTopicGroup = async (
     topicId: number,
     topicTitle: string,
-    childUpdates: { id: number; title: string; difficulty_rating: number }[],
+    childUpdates: {
+      id: number;
+      title: string;
+      difficulty_rating: number;
+    }[],
     newChildren: SubtaskEditState[]
   ) => {
+    if (readOnly) return;
+
     blurActive();
-    await db.transaction('rw', db.tasks, async () => {
-      await db.tasks.update(topicId, { title: topicTitle, difficulty_rating: -1, task_type: -1 });
+
+    await db.transaction("rw", db.tasks, async () => {
+      await db.tasks.update(topicId, {
+        title: topicTitle,
+        difficulty_rating: -1,
+        task_type: -1,
+      });
+
       for (const child of childUpdates) {
-        await db.tasks.update(child.id, { title: child.title, difficulty_rating: child.difficulty_rating });
+        await db.tasks.update(child.id, {
+          title: child.title,
+          difficulty_rating: child.difficulty_rating,
+        });
       }
+
       for (let i = 0; i < newChildren.length; i++) {
         await db.tasks.add({
           title: newChildren[i].title,
@@ -981,6 +1289,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
         });
       }
     });
+
     setEditingIds((prev) => {
       const next = new Set(prev);
       next.delete(topicId);
@@ -997,13 +1306,21 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
   };
 
   const handleDelete = async (id: number) => {
+    if (readOnly) return;
+
     blurActive();
+
     const task = taskMap.get(id);
     if (!task) return;
-    await db.transaction('rw', db.tasks, async () => {
-      if (isTopicTask(task)) await db.tasks.where('parent_task_id').equals(id).delete();
+
+    await db.transaction("rw", db.tasks, async () => {
+      if (isTopicTask(task)) {
+        await db.tasks.where("parent_task_id").equals(id).delete();
+      }
+
       await db.tasks.delete(id);
     });
+
     setEditingIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -1013,30 +1330,50 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
 
   const handleReorderEnd = async (event: ReorderEndCustomEvent) => {
     blurActive();
-    if (editingIds.size > 0) {
+
+    if (readOnly || editingIds.size > 0) {
       event.detail.complete();
       return;
     }
+
     const reordered = [...topLevelTasks];
     const [moved] = reordered.splice(event.detail.from, 1);
     reordered.splice(event.detail.to, 0, moved);
-    await db.transaction('rw', db.tasks, async () => {
-      for (let i = 0; i < reordered.length; i++) await db.tasks.update(reordered[i].id, { toggle_order: i });
+
+    await db.transaction("rw", db.tasks, async () => {
+      for (let i = 0; i < reordered.length; i++) {
+        await db.tasks.update(reordered[i].id, {
+          toggle_order: i,
+        });
+      }
     });
+
     event.detail.complete();
   };
 
   const handleReorderChildren = async (topicId: number, children: Task[]) => {
+    if (readOnly) return;
+
     blurActive();
-    await db.transaction('rw', db.tasks, async () => {
+
+    await db.transaction("rw", db.tasks, async () => {
       for (let i = 0; i < children.length; i++) {
-        await db.tasks.update(children[i].id, { toggle_order: i });
+        await db.tasks.update(children[i].id, {
+          toggle_order: i,
+        });
       }
     });
   };
 
-  const handleSessionPriorityReorderEnd = async (event: ReorderEndCustomEvent) => {
-  blurActive();
+  const handleSessionPriorityReorderEnd = async (
+    event: ReorderEndCustomEvent
+  ) => {
+    blurActive();
+
+    if (readOnly) {
+      event.detail.complete();
+      return;
+    }
 
     const unfinished = [...sessionSections.priority, ...sessionSections.todo];
     const doneItems = [...sessionSections.done];
@@ -1047,17 +1384,29 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
 
     const finalOrder = [...reordered, ...doneItems];
 
-    await db.transaction('rw', db.tasks, async () => {
+    await db.transaction("rw", db.tasks, async () => {
       for (let i = 0; i < finalOrder.length; i++) {
-        await db.tasks.update(finalOrder[i].id, { toggle_order: i });
+        await db.tasks.update(finalOrder[i].id, {
+          toggle_order: i,
+        });
       }
     });
 
     event.detail.complete();
   };
 
-  const handleAddTask = async (title: string, difficulty: number, type: number) => {
-    const maxOrder = Math.max(-1, ...topLevelTasks.map((t) => t.toggle_order ?? -1));
+  const handleAddTask = async (
+    title: string,
+    difficulty: number,
+    type: number
+  ) => {
+    if (readOnly) return;
+
+    const maxOrder = Math.max(
+      -1,
+      ...topLevelTasks.map((t) => t.toggle_order ?? -1)
+    );
+
     await db.tasks.add({
       title,
       difficulty_rating: difficulty,
@@ -1067,11 +1416,18 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
       toggle_order: maxOrder + 1,
       parent_task_id: null,
     });
+
     setIsAddingTask(false);
   };
 
   const handleAddTopic = async (title: string) => {
-    const maxOrder = Math.max(-1, ...topLevelTasks.map((t) => t.toggle_order ?? -1));
+    if (readOnly) return;
+
+    const maxOrder = Math.max(
+      -1,
+      ...topLevelTasks.map((t) => t.toggle_order ?? -1)
+    );
+
     const topicId = await db.tasks.add({
       title,
       difficulty_rating: -1,
@@ -1081,9 +1437,10 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
       toggle_order: maxOrder + 1,
       parent_task_id: null,
     });
+
     await db.tasks.bulkAdd([
       {
-        title: 'Passive',
+        title: "Passive",
         difficulty_rating: 1,
         is_done: false,
         task_type: 0,
@@ -1092,7 +1449,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
         parent_task_id: topicId,
       },
       {
-        title: 'Active',
+        title: "Active",
         difficulty_rating: 1,
         is_done: false,
         task_type: 1,
@@ -1101,7 +1458,7 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
         parent_task_id: topicId,
       },
       {
-        title: 'Testing',
+        title: "Testing",
         difficulty_rating: 1,
         is_done: false,
         task_type: 2,
@@ -1110,25 +1467,206 @@ const TaskList: React.FC<TaskListProps> = ({ assignmentId, view = "default" }) =
         parent_task_id: topicId,
       },
     ]);
+
     setIsAddingTopic(false);
   };
 
-if (view === "session") {
-  const unfinishedForPriorityEdit = [...sessionSections.priority, ...sessionSections.todo];
+  const renderTask = (task: Task, showReorder = false) =>
+    isTopicTask(task) ? (
+      <TopicRow
+        key={task.id}
+        topic={task}
+        children={childrenByParent.get(task.id) ?? []}
+        expandedTopics={expandedTopics}
+        editing={!readOnly && editingIds.has(task.id)}
+        pendingDoneIds={pendingDoneIds}
+        readOnly={readOnly}
+        onToggleDone={handleToggleDone}
+        onStartEdit={handleStartEdit}
+        onDelete={handleDelete}
+        onExpandChange={setExpandedTopics}
+        onSaveTopicGroup={handleSaveTopicGroup}
+        onCancelEdit={handleCancelEdit}
+        onReorderChildren={handleReorderChildren}
+      />
+    ) : (
+      <TaskRow
+        key={task.id}
+        task={task}
+        editing={!readOnly && editingIds.has(task.id)}
+        loading={pendingDoneIds.has(task.id)}
+        showReorder={showReorder && !readOnly}
+        showActions={!readOnly}
+        readOnly={readOnly}
+        onToggleDone={handleToggleDone}
+        onStartEdit={handleStartEdit}
+        onSaveEdit={handleSaveEdit}
+        onCancelEdit={handleCancelEdit}
+        onDelete={handleDelete}
+      />
+    );
+
+  const ProgressSection =
+    progressStats.totalTasks === 0 ? null : (
+      <div className={`task-progress-section ${assignmentTypeClass}`}>
+        <div className="progress-header">
+          <span className="progress-percentage">
+            {Math.round(progressStats.progress * 100)}%
+          </span>
+
+          <span className="progress-text">
+            {progressStats.completedTasks} / {progressStats.totalTasks} tasks
+            completed
+          </span>
+        </div>
+
+        <IonProgressBar
+          value={progressStats.progress}
+          color="medium"
+          className="task-progress-bar"
+        />
+
+        <div className="task-type-distribution">
+          <div className="type-bar-container">
+            <div
+              className="type-bar passive-bar"
+              style={{
+                width: `${
+                  (progressStats.passiveCount / progressStats.totalTasks) *
+                  100
+                }%`,
+              }}
+              title={`Passive: ${progressStats.passiveCount}`}
+            />
+
+            <div
+              className="type-bar active-bar"
+              style={{
+                width: `${
+                  (progressStats.activeCount / progressStats.totalTasks) * 100
+                }%`,
+              }}
+              title={`Active: ${progressStats.activeCount}`}
+            />
+
+            <div
+              className="type-bar testing-bar"
+              style={{
+                width: `${
+                  (progressStats.testingCount / progressStats.totalTasks) *
+                  100
+                }%`,
+              }}
+              title={`Testing: ${progressStats.testingCount}`}
+            />
+          </div>
+
+          <div className="type-labels">
+            <span className="type-label passive" tabIndex={0} title="Passive">
+              P: {progressStats.passiveCount}
+              <span className="type-full-name">Passive</span>
+            </span>
+
+            <span className="type-label active" tabIndex={0} title="Active">
+              A: {progressStats.activeCount}
+              <span className="type-full-name">Active</span>
+            </span>
+
+            <span className="type-label testing" tabIndex={0} title="Testing">
+              T: {progressStats.testingCount}
+              <span className="type-full-name">Testing</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+
+  if (readOnly) {
+    if (progressStats.totalTasks === 0) {
+      return (
+        <div className={`empty-task-preview ${assignmentTypeClass}`}>
+          <h3>No tasks planned yet</h3>
+          <p>Please plan your tasks from the Assignments page.</p>
+        </div>
+      );
+    }
 
     return (
       <>
-        <div className="task-progress-section">
-          <div className="progress-header">
-            <span className="progress-percentage">
-              {Math.round(progressStats.progress * 100)}%
-            </span>
-            <span className="progress-text">
-              {progressStats.completedTasks} / {progressStats.totalTasks} tasks completed
-            </span>
-          </div>
-          <IonProgressBar value={progressStats.progress} color="medium" className="task-progress-bar" />
-        </div>
+        {ProgressSection}
+
+        <IonList className="task-list-container preview-task-list">
+          <IonItem lines="none">
+            <IonLabel
+              style={{
+                color: "#491B6D",
+                fontWeight: 700,
+                fontSize: "18px",
+              }}
+            >
+              Most important
+            </IonLabel>
+          </IonItem>
+
+          {previewSections.important.length === 0 ? (
+            <IonItem lines="none">
+              <IonLabel>No unfinished tasks</IonLabel>
+            </IonItem>
+          ) : (
+            previewSections.important.map((task) => renderTask(task, false))
+          )}
+
+          {previewSections.more.length > 0 && (
+            <>
+              <IonItem lines="none">
+                <IonLabel
+                  style={{
+                    color: "#491B6D",
+                    fontWeight: 700,
+                    fontSize: "18px",
+                    marginTop: "12px",
+                  }}
+                >
+                  More
+                </IonLabel>
+              </IonItem>
+
+              {previewSections.more.map((task) => renderTask(task, false))}
+            </>
+          )}
+
+          {previewSections.done.length > 0 && (
+            <>
+              <IonItem lines="none">
+                <IonLabel
+                  style={{
+                    color: "#491B6D",
+                    fontWeight: 700,
+                    fontSize: "18px",
+                    marginTop: "12px",
+                  }}
+                >
+                  Done
+                </IonLabel>
+              </IonItem>
+
+              {previewSections.done.map((task) => renderTask(task, false))}
+            </>
+          )}
+        </IonList>
+      </>
+    );
+  }
+
+  if (view === "session") {
+    const unfinishedForPriorityEdit = [
+      ...sessionSections.priority,
+      ...sessionSections.todo,
+    ];
+
+    return (
+      <>
+        {ProgressSection}
 
         <div className="task-list-actions">
           <IonButton
@@ -1140,8 +1678,15 @@ if (view === "session") {
             }}
             style={
               isEditingPriority
-                ? ({ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties)
-                : ({ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties)
+                ? ({
+                    "--background": "#491B6D",
+                    "--border-radius": "10px",
+                  } as React.CSSProperties)
+                : ({
+                    "--border-color": "#491B6D",
+                    "--color": "#491B6D",
+                    "--border-radius": "10px",
+                  } as React.CSSProperties)
             }
           >
             {isEditingPriority ? "Done editing priority" : "Edit priority"}
@@ -1154,7 +1699,12 @@ if (view === "session") {
               setIsAddingTask(true);
             }}
             className="add-task-btn"
-            style={{ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+            style={
+              {
+                "--background": "#491B6D",
+                "--border-radius": "10px",
+              } as React.CSSProperties
+            }
           >
             + Task
           </IonButton>
@@ -1167,7 +1717,13 @@ if (view === "session") {
               setIsAddingTopic(true);
             }}
             className="add-topic-btn"
-            style={{ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+            style={
+              {
+                "--border-color": "#491B6D",
+                "--color": "#491B6D",
+                "--border-radius": "10px",
+              } as React.CSSProperties
+            }
           >
             + Topic
           </IonButton>
@@ -1188,50 +1744,34 @@ if (view === "session") {
         {isEditingPriority ? (
           <IonList className="task-list-container">
             <IonItem lines="none">
-              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px" }}>
+              <IonLabel
+                style={{
+                  color: "#491B6D",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                }}
+              >
                 Reorder unfinished tasks
               </IonLabel>
             </IonItem>
 
-            <IonReorderGroup disabled={false} onIonReorderEnd={handleSessionPriorityReorderEnd}>
-              {unfinishedForPriorityEdit.map((task) =>
-                isTopicTask(task) ? (
-                  <TopicRow
-                    key={task.id}
-                    topic={task}
-                    children={childrenByParent.get(task.id) ?? []}
-                    expandedTopics={expandedTopics}
-                    editing={editingIds.has(task.id)}
-                    pendingDoneIds={pendingDoneIds}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onDelete={handleDelete}
-                    onExpandChange={setExpandedTopics}
-                    onSaveTopicGroup={handleSaveTopicGroup}
-                    onCancelEdit={handleCancelEdit}
-                    onReorderChildren={handleReorderChildren}
-                  />
-                ) : (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    editing={editingIds.has(task.id)}
-                    loading={pendingDoneIds.has(task.id)}
-                    showReorder
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    onDelete={handleDelete}
-                  />
-                )
-              )}
+            <IonReorderGroup
+              disabled={false}
+              onIonReorderEnd={handleSessionPriorityReorderEnd}
+            >
+              {unfinishedForPriorityEdit.map((task) => renderTask(task, true))}
             </IonReorderGroup>
           </IonList>
         ) : (
           <IonList className="task-list-container">
             <IonItem lines="none">
-              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px" }}>
+              <IonLabel
+                style={{
+                  color: "#491B6D",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                }}
+              >
                 Priority
               </IonLabel>
             </IonItem>
@@ -1241,42 +1781,18 @@ if (view === "session") {
                 <IonLabel>No priority tasks</IonLabel>
               </IonItem>
             ) : (
-              sessionSections.priority.map((task) =>
-                isTopicTask(task) ? (
-                  <TopicRow
-                    key={task.id}
-                    topic={task}
-                    children={childrenByParent.get(task.id) ?? []}
-                    expandedTopics={expandedTopics}
-                    editing={editingIds.has(task.id)}
-                    pendingDoneIds={pendingDoneIds}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onDelete={handleDelete}
-                    onExpandChange={setExpandedTopics}
-                    onSaveTopicGroup={handleSaveTopicGroup}
-                    onCancelEdit={handleCancelEdit}
-                    onReorderChildren={handleReorderChildren}
-                  />
-                ) : (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    editing={editingIds.has(task.id)}
-                    loading={pendingDoneIds.has(task.id)}
-                    showReorder={false}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    onDelete={handleDelete}
-                  />
-                )
-              )
+              sessionSections.priority.map((task) => renderTask(task, false))
             )}
 
             <IonItem lines="none">
-              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px", marginTop: "12px" }}>
+              <IonLabel
+                style={{
+                  color: "#491B6D",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                  marginTop: "12px",
+                }}
+              >
                 To do
               </IonLabel>
             </IonItem>
@@ -1286,42 +1802,18 @@ if (view === "session") {
                 <IonLabel>No more tasks to do</IonLabel>
               </IonItem>
             ) : (
-              sessionSections.todo.map((task) =>
-                isTopicTask(task) ? (
-                  <TopicRow
-                    key={task.id}
-                    topic={task}
-                    children={childrenByParent.get(task.id) ?? []}
-                    expandedTopics={expandedTopics}
-                    editing={editingIds.has(task.id)}
-                    pendingDoneIds={pendingDoneIds}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onDelete={handleDelete}
-                    onExpandChange={setExpandedTopics}
-                    onSaveTopicGroup={handleSaveTopicGroup}
-                    onCancelEdit={handleCancelEdit}
-                    onReorderChildren={handleReorderChildren}
-                  />
-                ) : (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    editing={editingIds.has(task.id)}
-                    loading={pendingDoneIds.has(task.id)}
-                    showReorder={false}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    onDelete={handleDelete}
-                  />
-                )
-              )
+              sessionSections.todo.map((task) => renderTask(task, false))
             )}
 
             <IonItem lines="none">
-              <IonLabel style={{ color: "#491B6D", fontWeight: 700, fontSize: "18px", marginTop: "12px" }}>
+              <IonLabel
+                style={{
+                  color: "#491B6D",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                  marginTop: "12px",
+                }}
+              >
                 Done
               </IonLabel>
             </IonItem>
@@ -1331,38 +1823,7 @@ if (view === "session") {
                 <IonLabel>Nothing done yet</IonLabel>
               </IonItem>
             ) : (
-              sessionSections.done.map((task) =>
-                isTopicTask(task) ? (
-                  <TopicRow
-                    key={task.id}
-                    topic={task}
-                    children={childrenByParent.get(task.id) ?? []}
-                    expandedTopics={expandedTopics}
-                    editing={editingIds.has(task.id)}
-                    pendingDoneIds={pendingDoneIds}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onDelete={handleDelete}
-                    onExpandChange={setExpandedTopics}
-                    onSaveTopicGroup={handleSaveTopicGroup}
-                    onCancelEdit={handleCancelEdit}
-                    onReorderChildren={handleReorderChildren}
-                  />
-                ) : (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    editing={editingIds.has(task.id)}
-                    loading={pendingDoneIds.has(task.id)}
-                    showReorder={false}
-                    onToggleDone={handleToggleDone}
-                    onStartEdit={handleStartEdit}
-                    onSaveEdit={handleSaveEdit}
-                    onCancelEdit={handleCancelEdit}
-                    onDelete={handleDelete}
-                  />
-                )
-              )
+              sessionSections.done.map((task) => renderTask(task, false))
             )}
           </IonList>
         )}
@@ -1370,86 +1831,16 @@ if (view === "session") {
     );
   }
 
-    return (
+  return (
     <>
-      {/* PROGRESS BAR SECTION */}
-      <div className="task-progress-section">
-        <div className="progress-header">
-          <span className="progress-percentage">
-            {Math.round(progressStats.progress * 100)}%
-          </span>
-          <span className="progress-text">
-            {progressStats.completedTasks} / {progressStats.totalTasks} tasks completed
-          </span>
-        </div>
-        <IonProgressBar value={progressStats.progress} color="medium" className="task-progress-bar" />
-
-        <div className="task-type-distribution">
-          <div className="type-bar-container">
-            {progressStats.totalTasks > 0 ? (
-              <>
-                <div
-                  className="type-bar passive-bar"
-                  style={{ width: `${(progressStats.passiveCount / progressStats.totalTasks) * 100}%` }}
-                  title={`Passive: ${progressStats.passiveCount}`}
-                />
-                <div
-                  className="type-bar active-bar"
-                  style={{ width: `${(progressStats.activeCount / progressStats.totalTasks) * 100}%` }}
-                  title={`Active: ${progressStats.activeCount}`}
-                />
-                <div
-                  className="type-bar testing-bar"
-                  style={{ width: `${(progressStats.testingCount / progressStats.totalTasks) * 100}%` }}
-                  title={`Testing: ${progressStats.testingCount}`}
-                />
-              </>
-            ) : (
-              <div className="type-bar-empty">No tasks</div>
-            )}
-          </div>
-          <div className="type-labels">
-            <span className="type-label passive">P: {progressStats.passiveCount}</span>
-            <span className="type-label active">A: {progressStats.activeCount}</span>
-            <span className="type-label testing">T: {progressStats.testingCount}</span>
-          </div>
-        </div>
-      </div>
+      {ProgressSection}
 
       <IonList className="task-list-container">
-        <IonReorderGroup disabled={editingIds.size > 0} onIonReorderEnd={handleReorderEnd}>
-          {topLevelTasks.map((task) =>
-            isTopicTask(task) ? (
-              <TopicRow
-                key={task.id}
-                topic={task}
-                children={childrenByParent.get(task.id) ?? []}
-                expandedTopics={expandedTopics}
-                editing={editingIds.has(task.id)}
-                pendingDoneIds={pendingDoneIds}
-                onToggleDone={handleToggleDone}
-                onStartEdit={handleStartEdit}
-                onDelete={handleDelete}
-                onExpandChange={setExpandedTopics}
-                onSaveTopicGroup={handleSaveTopicGroup}
-                onCancelEdit={handleCancelEdit}
-                onReorderChildren={handleReorderChildren}
-              />
-            ) : (
-              <TaskRow
-                key={task.id}
-                task={task}
-                editing={editingIds.has(task.id)}
-                loading={pendingDoneIds.has(task.id)}
-                showReorder
-                onToggleDone={handleToggleDone}
-                onStartEdit={handleStartEdit}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onDelete={handleDelete}
-              />
-            )
-          )}
+        <IonReorderGroup
+          disabled={editingIds.size > 0}
+          onIonReorderEnd={handleReorderEnd}
+        >
+          {topLevelTasks.map((task) => renderTask(task, true))}
         </IonReorderGroup>
       </IonList>
 
@@ -1473,10 +1864,16 @@ if (view === "session") {
             setIsAddingTask(true);
           }}
           className="add-task-btn"
-          style={{ '--background': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+          style={
+            {
+              "--background": "#491B6D",
+              "--border-radius": "10px",
+            } as React.CSSProperties
+          }
         >
           + Task
         </IonButton>
+
         <IonButton
           expand="block"
           fill="outline"
@@ -1485,7 +1882,13 @@ if (view === "session") {
             setIsAddingTopic(true);
           }}
           className="add-topic-btn"
-          style={{ '--border-color': '#491B6D', '--color': '#491B6D', '--border-radius': '10px' } as React.CSSProperties}
+          style={
+            {
+              "--border-color": "#491B6D",
+              "--color": "#491B6D",
+              "--border-radius": "10px",
+            } as React.CSSProperties
+          }
         >
           + Topic
         </IonButton>
@@ -1495,4 +1898,3 @@ if (view === "session") {
 };
 
 export default TaskList;
-

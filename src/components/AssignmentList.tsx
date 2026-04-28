@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   IonList,
@@ -10,13 +10,18 @@ import {
   IonLabel,
   IonNote,
   IonBadge,
-  IonText,
-  IonButton
+  IonText
 } from "@ionic/react";
-import { trash, arrowUndo, checkmarkDone, checkmarkDoneOutline } from "ionicons/icons";
+import {
+  trash,
+  arrowUndo,
+  checkmarkDone,
+  checkmarkDoneOutline
+} from "ionicons/icons";
 import { db } from "../db/db";
 import type { Assignment } from "../db/db";
-import ScheduleAllAssignments from '../utils/ScheduleSessions';
+import ScheduleAllAssignments from "../utils/ScheduleSessions";
+import "./AssignmentList.css";
 
 type AssignmentWithMeta = Assignment & {
   subjectName: string;
@@ -27,36 +32,42 @@ type AssignmentWithMeta = Assignment & {
   isOverdue: boolean;
   isOld: boolean;
 };
-import "./AssignmentList.css";
 
 type SortMode = "deadline" | "subject-deadline";
 
 const AssignmentList: React.FC = () => {
   const [sortMode, setSortMode] = useState<SortMode>("deadline");
   const [showOldAssignments, setShowOldAssignments] = useState(false);
-  const lingisEvents = useLiveQuery( async () => await db.events.toArray())
-  const user = useLiveQuery( async () => (await db.users.toArray())[0])
-  const [now, setNow] = useState(new Date())
+
+  const slidingRefs = useRef<Map<number, HTMLIonItemSlidingElement>>(new Map());
+
+  const lingisEvents = useLiveQuery(async () => await db.events.toArray());
+  const user = useLiveQuery(async () => (await db.users.toArray())[0]);
+  const [now] = useState(new Date());
 
   const assignments = useLiveQuery(async () => {
     const asgns = await db.assignments.toArray();
     const tasks = await db.tasks.toArray();
     const subjects = await db.subjects.toArray();
 
-    return asgns.map((a) => {
-      const assignmentTasks = tasks.filter((t) => t.fk_assignment === a.id);
-      const completed = assignmentTasks.filter((t) => t.is_done).length;
-      const subject = subjects.find((s) => s.id === Number(a.fk_subject));
+    return asgns.map((assignment) => {
+      const assignmentTasks = tasks.filter(
+        (task) => task.fk_assignment === assignment.id
+      );
 
-      const isDone =
-      a.is_done //|| (assignmentTasks.length > 0) // && completed === assignmentTasks.length);
+      const completed = assignmentTasks.filter((task) => task.is_done).length;
+      const subject = subjects.find(
+        (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
+      );
 
-      const isOverdue = new Date(a.date).getTime() < new Date().getTime();
+      const isDone = assignment.is_done;
+      const isOverdue =
+        new Date(assignment.date).getTime() < new Date().getTime();
 
       return {
-        ...a,
-        subjectName: subject?.name ?? "No subject",
-        subjectColor: subject?.color ?? "#cccccc",
+        ...assignment,
+        subjectName: subject?.name ?? "",
+        subjectColor: subject?.color ?? "",
         completedCount: completed,
         totalCount: assignmentTasks.length,
         isDone,
@@ -65,122 +76,149 @@ const AssignmentList: React.FC = () => {
       };
     });
   }, []);
-  const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
 
-  const doneSessions = useLiveQuery(
-  async () => {
-    const sessions = await db.sessions.toArray();
-    return sessions.filter(s => s.is_done);
-  },
-  []
-) ?? [];
+  const timeForAssignments =
+    assignments?.reduce(
+      (total, assignment) => total + assignment.est_hours,
+      0
+    ) ?? 0;
 
-  console.log(doneSessions)
+  const doneSessions =
+    useLiveQuery(
+      async () => {
+        const sessions = await db.sessions.toArray();
+        return sessions.filter((session) => session.is_done);
+      },
+      []
+    ) ?? [];
+
+  const closeAllSlidingItems = () => {
+    slidingRefs.current.forEach((slidingItem) => {
+      slidingItem.close();
+    });
+  };
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      const clickedInsideSlidingItem = target.closest("ion-item-sliding");
+
+      if (clickedInsideSlidingItem) return;
+
+      closeAllSlidingItems();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, []);
 
   const completedMinutesByAssignment = useMemo(() => {
-  const map = new Map<number, number>();
+    const map = new Map<number, number>();
 
-  doneSessions.forEach((session) => {
-    const assignmentId = session.fk_assignment;
-    if (!assignmentId) return;
+    doneSessions.forEach((session) => {
+      const assignmentId = session.fk_assignment;
+      if (!assignmentId) return;
 
-    const start = new Date(session.start).getTime();
-    const end = new Date(session.end).getTime();
-    const minutes = (end - start) / 1000 / 60;
+      const start = new Date(session.start).getTime();
+      const end = new Date(session.end).getTime();
+      const minutes = (end - start) / 1000 / 60;
 
-    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
-  });
+      map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+    });
 
-  return map;
-}, [doneSessions]);
+    return map;
+  }, [doneSessions]);
 
   const recomendedSessions = useMemo(() => {
-    if (!lingisEvents || !user || !assignments) return []
+    if (!lingisEvents || !user || !assignments) return [];
 
-    const freeTimes = lingisEvents.filter(e => e.is_free)
-    
-    return ScheduleAllAssignments(
-      assignments,
-      freeTimes,
-      user
-    )
+    const freeTimes = lingisEvents.filter((event) => event.is_free);
 
-  }, [lingisEvents, timeForAssignments, now, user])
-  console.log(recomendedSessions)
+    return ScheduleAllAssignments(assignments, freeTimes, user);
+  }, [lingisEvents, timeForAssignments, now, user, assignments]);
 
   const plannedMinutesByAssignment = useMemo(() => {
-  const map = new Map<number, number>();
+    const map = new Map<number, number>();
 
-  recomendedSessions.forEach((session: any) => {
-    const assignmentId = session.fk_assignment ?? session.assignmentId;
-    if (!assignmentId) return;
+    recomendedSessions.forEach((session: any) => {
+      const assignmentId = session.fk_assignment ?? session.assignmentId;
+      if (!assignmentId) return;
 
-    const start = new Date(session.start).getTime();
-    const end = new Date(session.end).getTime();
-    const minutes = (end - start) / 1000 / 60;
+      const start = new Date(session.start).getTime();
+      const end = new Date(session.end).getTime();
+      const minutes = (end - start) / 1000 / 60;
 
-    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
-  });
+      map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+    });
 
-  doneSessions.forEach((session) => {
-    const assignmentId = session.fk_assignment;
-    if (!assignmentId) return;
+    doneSessions.forEach((session) => {
+      const assignmentId = session.fk_assignment;
+      if (!assignmentId) return;
 
-    const start = new Date(session.start).getTime();
-    const end = new Date(session.end).getTime();
-    const minutes = (end - start) / 1000 / 60;
+      const start = new Date(session.start).getTime();
+      const end = new Date(session.end).getTime();
+      const minutes = (end - start) / 1000 / 60;
 
-    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
-  });
+      map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+    });
 
-  return map;
-}, [recomendedSessions, doneSessions]);
+    return map;
+  }, [recomendedSessions, doneSessions]);
 
   const handleDoneButton = async (assignment: AssignmentWithMeta) => {
+    closeAllSlidingItems();
 
-  if ((assignment.isDone)  && (assignment.isOverdue)) {
-    const newDueDate = new Date();
-    newDueDate.setDate(newDueDate.getDate() + 7);
+    if (assignment.isDone && assignment.isOverdue) {
+      const newDueDate = new Date();
+      newDueDate.setDate(newDueDate.getDate() + 7);
+
+      await db.assignments.update(assignment.id!, {
+        date: newDueDate
+      });
+
+      await db.assignments.update(assignment.id!, {
+        is_done: false
+      });
+
+      return;
+    }
+
+    if (assignment.isOverdue) {
+      const newDueDate = new Date();
+      newDueDate.setDate(newDueDate.getDate() + 7);
+
+      await db.assignments.update(assignment.id!, {
+        date: newDueDate
+      });
+
+      return;
+    }
+
+    if (assignment.isDone) {
+      await db.assignments.update(assignment.id!, {
+        is_done: false
+      });
+
+      return;
+    }
 
     await db.assignments.update(assignment.id!, {
-      date: newDueDate
+      is_done: true
     });
 
-    await db.assignments.update(assignment.id!, {
-      is_done: false
+    await db.tasks.where("fk_assignment").equals(assignment.id!).modify({
+      is_done: true
     });
-
-    return;
-  }
-
-  if (assignment.isOverdue) {
-    const newDueDate = new Date();
-    newDueDate.setDate(newDueDate.getDate() + 7);
-
-    await db.assignments.update(assignment.id!, {
-      date: newDueDate
-    });
-
-    return;
-  }
-
-  if (assignment.isDone) {
-    await db.assignments.update(assignment.id!, {
-      is_done: false
-    });
-    return;
-  }
-
-  await db.assignments.update(assignment.id!, {
-    is_done: true
-  });
-
-  await db.tasks.where("fk_assignment").equals(assignment.id!).modify({
-    is_done: true
-  });
-};
+  };
 
   const deleteAssignment = async (id: number) => {
+    closeAllSlidingItems();
+
     await db.tasks.where("fk_assignment").equals(id).delete();
     await db.assignments.delete(id);
   };
@@ -188,13 +226,14 @@ const AssignmentList: React.FC = () => {
   const getTypeClass = (type: number) => {
     if (type === 0) return "exam";
     if (type === 1) return "lab";
-    return "other";
+    if (type === 2) return "other";
+    return "unset";
   };
 
   const getTimeLeft = (date: string | Date) => {
     const dueDate = new Date(date).getTime();
-    const now = new Date().getTime();
-    const diff = dueDate - now;
+    const currentTime = new Date().getTime();
+    const diff = dueDate - currentTime;
 
     if (isNaN(dueDate)) return "No due date";
     if (diff <= 0) return "Overdue";
@@ -209,6 +248,16 @@ const AssignmentList: React.FC = () => {
     return `${minutes} min left`;
   };
 
+  const formatHours = (minutes: number) => {
+    const hours = minutes / 60;
+
+    if (Number.isInteger(hours)) {
+      return `${hours}`;
+    }
+
+    return `${Number(hours.toFixed(1))}`;
+  };
+
   if (!assignments || assignments.length === 0) {
     return <p className="centered-text">No assignments added yet.</p>;
   }
@@ -218,6 +267,9 @@ const AssignmentList: React.FC = () => {
       if (sortMode === "deadline") {
         return new Date(a.date).getTime() - new Date(b.date).getTime();
       }
+
+      if (!a.subjectName && b.subjectName) return 1;
+      if (a.subjectName && !b.subjectName) return -1;
 
       const subjectCompare = a.subjectName.localeCompare(b.subjectName);
 
@@ -230,11 +282,11 @@ const AssignmentList: React.FC = () => {
   };
 
   const activeAssignments = sortAssignments(
-    assignments.filter((a) => !a.isOld)
+    assignments.filter((assignment) => !assignment.isOld)
   );
 
   const oldAssignments = sortAssignments(
-    assignments.filter((a) => a.isOld)
+    assignments.filter((assignment) => assignment.isOld)
   );
 
   const renderAssignment = (
@@ -246,28 +298,37 @@ const AssignmentList: React.FC = () => {
 
     const showSubjectHeader =
       sortMode === "subject-deadline" &&
+      assignment.subjectName &&
       (!previousAssignment ||
         previousAssignment.subjectName !== assignment.subjectName);
-        const plannedMinutes = plannedMinutesByAssignment.get(assignment.id!) ?? 0;
-        const doesNotHaveEnoughPlannedTime = plannedMinutes < assignment.est_hours;
-        const completedMinutes = completedMinutesByAssignment.get(assignment.id!) ?? 0;
-        const formatHours = (minutes: number) => {
-          return (minutes / 60).toFixed(1);
-        };
+
+    const plannedMinutes = plannedMinutesByAssignment.get(assignment.id!) ?? 0;
+    const completedMinutes =
+      completedMinutesByAssignment.get(assignment.id!) ?? 0;
+
+    const doesNotHaveEnoughPlannedTime =
+      plannedMinutes < assignment.est_hours;
 
     return (
       <div key={assignment.id}>
         {showSubjectHeader && (
           <div className="assignment-subject-header">
-            <span
-              className="assignment-subject-header-dot"
-              style={{ backgroundColor: assignment.subjectColor }}
-            />
             {assignment.subjectName}
           </div>
         )}
 
-        <IonItemSliding className="assignment-sliding-item">
+        <IonItemSliding
+          ref={(element) => {
+            if (!assignment.id) return;
+
+            if (element) {
+              slidingRefs.current.set(assignment.id, element);
+            } else {
+              slidingRefs.current.delete(assignment.id);
+            }
+          }}
+          className="assignment-sliding-item"
+        >
           <IonItem
             button
             detail={false}
@@ -276,18 +337,13 @@ const AssignmentList: React.FC = () => {
             )}`}
             routerLink={`/tabs/tab4/viewassignment/${assignment.id}`}
           >
-            <div slot="start" className="subject-color-dot-wrapper">
-              <div
-                className="subject-color-dot"
-                style={{ backgroundColor: assignment.subjectColor }}
-              />
-            </div>
-
             <IonLabel>
               <div className="assignment-header">
-                <IonText className="assignment-title">
-                  {assignment.title}
-                </IonText>
+                <div className="assignment-title-stack">
+                  <IonText className="assignment-title">
+                    {assignment.title}
+                  </IonText>
+                </div>
 
                 <IonBadge className="task-progress-badge">
                   <IonIcon
@@ -306,9 +362,38 @@ const AssignmentList: React.FC = () => {
                     {assignment.isDone ? "Done" : getTimeLeft(assignment.date)}
                   </small>
                 </div>
-                <IonNote color={doesNotHaveEnoughPlannedTime ? "danger" : "dark"}>
-                  {formatHours(completedMinutes)} / {formatHours(assignment.est_hours)} h
-                </IonNote>
+
+                <div className="assignment-bottom-chips">
+                  <IonNote
+                    className={
+                      doesNotHaveEnoughPlannedTime
+                        ? "assignment-time-note warning"
+                        : "assignment-time-note"
+                    }
+                  >
+                    <span className="time-label">Time</span>
+                    <span className="time-value">
+                      {formatHours(completedMinutes)} /{" "}
+                      {formatHours(assignment.est_hours)} h
+                    </span>
+                  </IonNote>
+
+                  {assignment.subjectName && (
+                    <IonNote
+                      className="assignment-module-note"
+                      style={
+                        {
+                          "--module-color":
+                            assignment.subjectColor || "#c7a8ff"
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span className="module-value">
+                        {assignment.subjectName}
+                      </span>
+                    </IonNote>
+                  )}
+                </div>
               </div>
             </IonLabel>
           </IonItem>
@@ -322,12 +407,19 @@ const AssignmentList: React.FC = () => {
                 <IonIcon icon={trash} />
               </div>
             </IonItemOption>
+
             <IonItemOption
               className="done-option"
               onClick={() => handleDoneButton(assignment)}
             >
               <div className="done-button">
-                <IonIcon icon={assignment.isDone || assignment.isOverdue ? arrowUndo : checkmarkDone} />
+                <IonIcon
+                  icon={
+                    assignment.isDone || assignment.isOverdue
+                      ? arrowUndo
+                      : checkmarkDone
+                  }
+                />
               </div>
             </IonItemOption>
           </IonItemOptions>
@@ -339,21 +431,25 @@ const AssignmentList: React.FC = () => {
   return (
     <>
       <div className="assignment-sort-buttons">
-        <IonButton
-          size="small"
-          fill={sortMode === "deadline" ? "solid" : "outline"}
+        <button
+          type="button"
+          className={`assignment-sort-pill ${
+            sortMode === "deadline" ? "active" : ""
+          }`}
           onClick={() => setSortMode("deadline")}
         >
-          Sort by deadline
-        </IonButton>
+          Deadline
+        </button>
 
-        <IonButton
-          size="small"
-          fill={sortMode === "subject-deadline" ? "solid" : "outline"}
+        <button
+          type="button"
+          className={`assignment-sort-pill ${
+            sortMode === "subject-deadline" ? "active" : ""
+          }`}
           onClick={() => setSortMode("subject-deadline")}
         >
-          Sort by subject + deadline
-        </IonButton>
+          Module + deadline
+        </button>
       </div>
 
       <IonList lines="none" className="assignment-list-container">
@@ -364,15 +460,17 @@ const AssignmentList: React.FC = () => {
 
       {oldAssignments.length > 0 && (
         <>
-          <IonButton
-            expand="block"
-            fill="outline"
+          <button
+            type="button"
+            className={`assignment-overdue-button ${
+              showOldAssignments ? "active" : ""
+            }`}
             onClick={() => setShowOldAssignments((prev) => !prev)}
           >
             {showOldAssignments
               ? "Hide overdue/done"
               : `Show overdue/done (${oldAssignments.length})`}
-          </IonButton>
+          </button>
 
           {showOldAssignments && (
             <IonList lines="none" className="assignment-list-container">

@@ -92,7 +92,7 @@ const Tab2: React.FC = () => {
     return currentAssignment ? (
       <IonContent className="ion-padding">
         <AssignmentCard assignment={currentAssignment} />
-        <TaskList assignmentId={currentAssignment.id} />
+        <TaskList assignmentId={currentAssignment.id} readOnly />
       </IonContent>
     ) : null;
   };

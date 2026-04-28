@@ -62,7 +62,6 @@
   --background: #f6f7fb;
 }
 
-
 /* Base Card Style */
 .assignment-card-item {
   margin-bottom: 12px;
@@ -209,6 +208,7 @@ ion-item-options {
   opacity: 0.6;
   text-decoration: line-through;
 }
+
 .task-item-editing {
   --background: rgba(255, 255, 255, 0.9) !important;
   background: rgba(255, 255, 255, 0.9) !important;
@@ -323,8 +323,13 @@ ion-item-options {
   --border-color: #491B6D !important;
   --color: #491B6D !important;
   --background: transparent !important;
-  border: 2px solid #491B6D !important;
+  --box-shadow: none !important;
   font-size: 13px;
+}
+
+.add-subtask-btn::part(native) {
+  border-radius: 10px !important;
+  box-shadow: none !important;
 }
 
 .edit-button-group {
@@ -633,8 +638,6 @@ ion-item-options {
   min-width: auto;
 }
 
-
-
 /* Accordion header proper positioning */
 ion-accordion .accordion-header {
   position: relative;
@@ -672,6 +675,7 @@ ion-input::part(native-input) {
 .delete-subtask-btn {
   --border-radius: 12px !important;
   border-radius: 12px !important;
+  border: none !important;
 }
 
 /* Remove line breaks from items */
@@ -846,15 +850,15 @@ ion-item {
   justify-content: center;
   margin-top: 2rem;
   font-size: 18px;
-  color: #6b46c1;
+  color: #491B6D;
 }
 
 .start-session-button {
   --background: transparent;
-  --border-color: #8b5cf6;
+  --border-color: #491B6D;
   --border-style: solid;
   --border-width: 2px;
-  --color: #6d28d9;
+  --color: #491B6D;
   --border-radius: 18px;
   width: 220px;
   margin: 2rem auto;
@@ -864,11 +868,11 @@ ion-item {
 
 .assignment-modal-toolbar {
   --background: rgba(248, 245, 255, 0.95);
-  --color: #6d28d9;
+  --color: #491B6D;
 }
 
 .assignment-modal-title {
-  color: #6d28d9;
+  color: #491B6D;
   font-weight: 600;
 }
 
@@ -879,7 +883,7 @@ ion-item {
 .close-x-button {
   --background: transparent;
   --box-shadow: none;
-  --color: #6d28d9;
+  --color: #491B6D;
   font-size: 24px;
   font-weight: 700;
 }
@@ -892,12 +896,12 @@ ion-item {
 }
 
 .assignment-item {
-  --background: rgba(139, 92, 246, 0.08);
-  --border-color: #8b5cf6;
+  --background: rgba(73, 27, 109, 0.08);
+  --border-color: #491B6D;
   --border-style: solid;
   --border-width: 2px;
   --border-radius: 16px;
-  --color: #6d28d9;
+  --color: #491B6D;
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -929,6 +933,7 @@ ion-item {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -936,4 +941,521 @@ ion-item {
 
 ion-item-sliding {
   overflow: visible !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FIXED TASK STATS / READ-ONLY PREVIEW STYLING
+   Matches assignment type colors and hides the empty progress bar.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.task-progress-section {
+  padding: 16px 14px !important;
+  margin: 10px 0 14px 0 !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(73, 27, 109, 0.14) !important;
+  box-shadow: 0 10px 24px rgba(73, 27, 109, 0.1) !important;
+  position: relative;
+  overflow: visible !important;
+  background: #eafaf1 !important;
+}
+
+.task-progress-section.exam {
+  background: #ffecec !important;
+}
+
+.task-progress-section.lab {
+  background: #eef4ff !important;
+}
+
+.task-progress-section.other {
+  background: #eafaf1 !important;
+}
+
+.task-progress-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.72),
+      transparent 36%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.38),
+      rgba(255, 255, 255, 0.06)
+    );
+}
+
+.task-progress-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.progress-percentage {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #491B6D !important;
+}
+
+.progress-text {
+  font-size: 13px !important;
+  color: #6f6677 !important;
+  font-weight: 700 !important;
+  text-align: right;
+}
+
+.task-progress-bar {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  --background: rgba(73, 27, 109, 0.14) !important;
+  --progress-background: #491B6D !important;
+}
+
+.task-type-distribution {
+  margin-top: 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px !important;
+}
+
+.type-bar-container {
+  display: flex;
+  height: 8px !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+  background: rgba(73, 27, 109, 0.1) !important;
+  gap: 0;
+}
+
+.type-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.passive-bar {
+  background: #33b5e5 !important;
+}
+
+.active-bar {
+  background: #ffb81c !important;
+}
+
+.testing-bar {
+  background: #ff6b6b !important;
+}
+
+.type-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #491B6D !important;
+}
+
+.type-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: help;
+  outline: none;
+}
+
+.type-full-name {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  background: #491B6D;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(73, 27, 109, 0.22);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 20;
+}
+
+.type-full-name::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #491B6D;
+}
+
+.type-label:hover .type-full-name,
+.type-label:focus .type-full-name,
+.type-label:active .type-full-name {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.empty-task-preview {
+  margin: 10px 0 14px 0;
+  padding: 18px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(73, 27, 109, 0.14);
+  box-shadow: 0 10px 24px rgba(73, 27, 109, 0.1);
+  text-align: center;
+  color: #491B6D;
+  position: relative;
+  overflow: hidden;
+  background: #eafaf1;
+}
+
+.empty-task-preview.exam {
+  background: #ffecec;
+}
+
+.empty-task-preview.lab {
+  background: #eef4ff;
+}
+
+.empty-task-preview.other {
+  background: #eafaf1;
+}
+
+.empty-task-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.72),
+      transparent 36%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.38),
+      rgba(255, 255, 255, 0.06)
+    );
+}
+
+.empty-task-preview > * {
+  position: relative;
+  z-index: 1;
+}
+
+.empty-task-preview h3 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.empty-task-preview p {
+  margin: 0;
+  color: #6f6677;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview-task-list .task-list-item,
+.preview-task-list .topic-list-item,
+.preview-task-list .topic-item-content,
+.preview-task-list .child-task-item {
+  box-shadow: 0 2px 8px rgba(73, 27, 109, 0.08) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAB4 FINAL OVERRIDES - ASSIGNMENT ADD BUTTON + ADD ASSIGNMENT MODAL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.assignment-add-fab {
+  --background: rgba(255, 255, 255, 0.2) !important;
+  --background-hover: rgba(243, 239, 255, 0.5) !important;
+  --background-activated: rgba(243, 239, 255, 0.64) !important;
+  --color: #491B6D !important;
+  --box-shadow: 0 10px 24px rgba(73, 27, 109, 0.2) !important;
+  border: 2px solid #491B6D !important;
+  backdrop-filter: blur(12px);
+}
+
+.assignment-add-fab::part(native) {
+  background: rgba(255, 255, 255, 0.26) !important;
+  color: #491B6D !important;
+  backdrop-filter: blur(12px);
+  border-radius: 50% !important;
+  border: none !important;
+}
+
+.assignment-add-fab ion-icon {
+  color: #491B6D !important;
+  font-weight: 900;
+}
+
+.assignment-form-modal::part(content) {
+  width: 90%;
+  max-width: 430px;
+  max-height: 78vh;
+  border: 2px solid #491B6D;
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+
+.assignment-form-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.assignment-form-header {
+  box-shadow: none;
+}
+
+.assignment-form-toolbar {
+  --background: white;
+  --color: #491B6D;
+  --min-height: 46px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.assignment-form-title {
+  color: #491B6D;
+  font-weight: 800;
+  font-size: 17px;
+  text-align: center;
+}
+
+.assignment-form-close {
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --box-shadow: none;
+  --color: #491B6D;
+  font-size: 22px;
+}
+
+.assignment-form-content {
+  background: white;
+  padding: 8px 16px 18px;
+  max-height: calc(78vh - 46px);
+  overflow-y: auto;
+}
+
+.assignment-form-status {
+  display: block;
+  margin: 6px 0 12px;
+  font-weight: 700;
+}
+
+.assignment-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 13px;
+}
+
+.assignment-form-group label,
+.assignment-edit-label {
+  margin: 0;
+  color: #491B6D;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assignment-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.assignment-form-input {
+  --background: #f9f6ff !important;
+  --color: #26202c;
+  --placeholder-color: #9b91a4;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  border: 1.5px solid rgba(73, 27, 109, 0.22) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+
+.assignment-form-input::part(container) {
+  border: none !important;
+  background: transparent !important;
+}
+
+.assignment-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.assignment-choice-button {
+  min-height: 42px;
+  border: 1.5px solid rgba(73, 27, 109, 0.22);
+  border-radius: 14px;
+  background: #f7f1ff;
+  color: #491B6D;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(73, 27, 109, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.assignment-choice-button.active {
+  background: #491B6D;
+  color: white;
+  border-color: #491B6D;
+  box-shadow: 0 8px 18px rgba(73, 27, 109, 0.2);
+}
+
+.assignment-choice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(73, 27, 109, 0.08);
+}
+
+.assignment-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 4px;
+}
+
+.assignment-form-primary {
+  --background: #491B6D;
+  --background-hover: #491B6D;
+  --background-activated: #491B6D;
+  --background-focused: #491B6D;
+  --color: white;
+  --border-radius: 14px;
+  font-weight: 900;
+  text-transform: none;
+}
+
+.assignment-form-secondary {
+  --border-color: #491B6D;
+  --color: #491B6D;
+  --border-radius: 14px;
+  font-weight: 900;
+  text-transform: none;
+}
+
+.assignment-edit-button-section {
+  margin: 12px 0;
+}
+
+.assignment-edit-content .assignment-choice-grid {
+  margin-top: 8px;
+}
+
+@media (min-width: 560px) {
+  .assignment-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EDIT ASSIGNMENT MODAL ROUNDING
+   Add className="edit-assignment-modal" to the IonModal if it does not apply.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.edit-assignment-modal::part(content),
+.assignment-edit-modal::part(content),
+.view-assignment-edit-modal::part(content) {
+  width: 90%;
+  max-width: 430px;
+  height: auto;
+  max-height: 78vh;
+  border: 2px solid #491B6D;
+  border-radius: 22px;
+  background: white;
+  overflow: hidden;
+}
+
+.edit-assignment-modal::part(backdrop),
+.assignment-edit-modal::part(backdrop),
+.view-assignment-edit-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EDIT ASSIGNMENT MODAL + EDIT BUTTON FIX
+   Main purple: #491B6D
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.edit-assignment-modal::part(content) {
+  width: 90%;
+  max-width: 430px;
+  height: auto;
+  max-height: 78vh;
+  border: 2px solid #491B6D;
+  border-radius: 22px !important;
+  background: white;
+  overflow: hidden;
+}
+
+.edit-assignment-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.edit-assignment-modal .assignment-edit-content {
+  background: white !important;
+  border-radius: 22px !important;
+  overflow: hidden;
+}
+
+/* Edit button inside the assignment card */
+.assignment-preview-actions ion-button {
+  --background: transparent !important;
+  --background-hover: rgba(73, 27, 109, 0.06) !important;
+  --background-activated: rgba(73, 27, 109, 0.1) !important;
+  --color: #491B6D !important;
+  --border-color: #491B6D !important;
+  --border-width: 2px !important;
+  --border-style: solid !important;
+  --border-radius: 14px !important;
+  --box-shadow: none !important;
+  color: #491B6D !important;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.assignment-preview-actions ion-button::part(native) {
+  border: 2px solid #491B6D !important;
+  border-radius: 14px !important;
+  color: #491B6D !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.assignment-preview-actions ion-icon {
+  color: #491B6D !important;
 }
