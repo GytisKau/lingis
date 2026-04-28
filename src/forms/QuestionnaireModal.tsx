@@ -64,8 +64,6 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user })
     .filter(([key]) => key !== "created_at")
     .every(([, val]) => val !== -1);
 
-  if (!user) return null;
-
   const handleChange = (field: keyof FormData, value: number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -76,7 +74,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user })
       return;
     }
 
-    if (!isFormValid || isSaving) return;
+    if (!isFormValid || isSaving || !user) return;
 
     setIsSaving(true);
     const now = new Date();

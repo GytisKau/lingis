@@ -123,50 +123,50 @@ const FreeTimeModal: React.FC<Props> = ({ trigger, freeTimes }) => {
 
       <IonContent className="ion-padding">
 
-  {draft.map((event, i) => (
-    <IonList key={i}>
-    <IonItemSliding >
+        <IonList >
+        {draft.map((event, i) => (
+          <IonItemSliding key={i}>
 
-      <IonItem>
+            <IonItem >
 
-        <div style={{ width: "100%" }}>
+              <div style={{ width: "100%" }}>
 
-          <IonInput
-            label="Start"
-            labelPlacement="stacked"
-            value={event.start}
-            type="datetime-local"
-            onIonChange={(e) =>
-              updateStart(i, e.detail.value as string)
-            }
-          />
+                <IonInput
+                  label="Start"
+                  labelPlacement="stacked"
+                  value={event.start}
+                  type="datetime-local"
+                  onIonChange={(e) =>
+                    updateStart(i, e.detail.value as string)
+                  }
+                />
 
-          <IonInput
-            label="End"
-            labelPlacement="stacked"
-            value={event.end}
-            type="datetime-local"
-            onIonChange={(e) =>
-              updateEnd(i, e.detail.value as string)
-            }
-          />
+                <IonInput
+                  label="End"
+                  labelPlacement="stacked"
+                  value={event.end}
+                  type="datetime-local"
+                  onIonChange={(e) =>
+                    updateEnd(i, e.detail.value as string)
+                  }
+                />
 
-        </div>
+              </div>
 
-      </IonItem>
+            </IonItem>
 
-      <IonItemOptions side="end">
-        <IonItemOption
-          color="danger"
-          onClick={() => removeEvent(i)}
-        >
-          <IonIcon slot="icon-only" icon={trash} />
-        </IonItemOption>
-      </IonItemOptions>
+            <IonItemOptions side="end">
+              <IonItemOption
+                color="danger"
+                onClick={() => removeEvent(i)}
+              >
+                <IonIcon slot="icon-only" icon={trash} />
+              </IonItemOption>
+            </IonItemOptions>
 
-    </IonItemSliding>
-    </IonList>
-  ))}
+          </IonItemSliding>
+        ))}
+        </IonList>
 
         <IonButton
           expand="block"

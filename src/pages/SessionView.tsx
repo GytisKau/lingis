@@ -15,7 +15,7 @@ import { db } from '../db/db'
 import { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import QuestionnaireModal from '../forms/QuestionnaireModal'
-import TimerDisplay from '../components/TimerDisplay'
+import { TimerDisplay } from '../components/TimerDisplay'
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
@@ -30,7 +30,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
   const user = users !== undefined ? users[0] : undefined
   const preferredMinutes = user?.preffered_session_time;
 
-  const [selectedMinutes, setSelectedMinutes] = useState<number>(25);
+  const [selectedMinutes, setSelectedMinutes] = useState<number>(20);
   const [userChangedMinutes, setUserChangedMinutes] = useState(false);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
 
       <IonContent className="ion-padding session-view-page">
         <div className="session-view-container">
-          <TimerDisplay minutes={selectedMinutes} />
+          <TimerDisplay time={selectedMinutes * 60} />
 
           <IonSegment
           className="session-segment"

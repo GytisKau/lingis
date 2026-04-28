@@ -21,9 +21,8 @@ const Tab4: React.FC = () => {
           <IonTitle>Assignments</IonTitle>
         </IonToolbar>
       </IonHeader>
-
-        <IonContent className="tab4-page">
-          <AssignmentList />
+      <IonContent className="tab4-page ion-padding">
+        <AssignmentList />
 
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
           <IonFabButton id="open-modal">

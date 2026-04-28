@@ -1,13 +1,10 @@
-.stats-container {
-  background: #f6f7fb;
-  color: #222;
-}
+
 
 /* Tabs */
 .top-tabs {
   display: flex;
   gap: 8px;
-  padding: 12px 16px 4px;
+  padding-bottom: 4px;
 }
 
 .tab-btn {
@@ -28,7 +25,7 @@
 /* Overview */
 .overview {
   text-align: center;
-  padding: 28px 16px;
+  padding: 28px 0;
 }
 
 .overview h1 {

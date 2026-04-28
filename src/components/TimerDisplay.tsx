@@ -1,15 +1,11 @@
-interface TimerDisplayProps {
-  minutes: number
-  seconds?: number
-}
+export const TimerDisplay = ({ time }: { time: number }) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
 
-const TimerDisplay: React.FC<TimerDisplayProps> = ({ minutes, seconds = 0 }) => {
   return (
     <h1 className="timer">
-      {String(minutes).padStart(2, "0")}:
-      {String(seconds).padStart(2, "0")}
+      {String(minutes).padStart(2, '0')}:
+      {String(seconds).padStart(2, '0')}
     </h1>
-  )
-}
-
-export default TimerDisplay
+  );
+};
