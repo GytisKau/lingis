@@ -1,7 +1,8 @@
 import { useRef, useState } from "react"
 import { db } from "../db/db"
-import { IonButton, IonInput, IonLabel, IonModal, IonIcon, IonText  } from "@ionic/react"
+import { IonButton, IonInput, IonLabel, IonModal, IonIcon, IonText, IonSelect, IonSelectOption  } from "@ionic/react"
 import { close } from "ionicons/icons"
+import { useLiveQuery } from "dexie-react-hooks";
 
 function formatDateTimeLocal(date: Date) {
   const d = new Date(date)
@@ -20,6 +21,8 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   const [timeEst, setTimeEst] = useState<number>(0)
   const [testType, setTestType] = useState<number>(0)
   const [status, setStatus] = useState("")
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const subjects = useLiveQuery(() => db.subjects.toArray(), []) ?? [];
 
   const modal = useRef<HTMLIonModalElement>(null);
 
@@ -34,6 +37,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
     setStartDate(new Date())
     setTimeEst(0)
     setTestType(0)
+    setSelectedSubjectId(null);
   }
 
   async function addAssignment() {
@@ -47,9 +51,11 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
       await db.assignments.add({
         title: title,
         date: dueDate,
+        is_done: false,
         start_date: startDate,
         est_hours: timeEst * 60,
-        assignment_type: testType
+        assignment_type: testType,
+        fk_subject: selectedSubjectId
       })
 
       modal.current?.dismiss();
@@ -124,6 +130,29 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
               onIonChange={(e) => setTimeEst(Number(e.detail.value))}
             />
           </div>
+
+          <div className="form-group">
+          <label>Subject optional</label>
+
+          <IonSelect
+            className="form-input"
+            interface="popover"
+            placeholder="No subject"
+            value={selectedSubjectId}
+            onIonChange={(e) => {
+              const value = e.detail.value;
+              setSelectedSubjectId(value === "none" ? null : Number(value));
+            }}
+          >
+            <IonSelectOption value="none">No subject</IonSelectOption>
+
+            {subjects.map((subject) => (
+              <IonSelectOption key={subject.id} value={subject.id}>
+                {subject.name}
+              </IonSelectOption>
+            ))}
+          </IonSelect>
+        </div>
 
           <div className="form-group">
             <label>Test type</label>
