@@ -24,42 +24,265 @@ function ScheduleAllAssignments(
   user: User
 ): RecommendedSession[] {
 
-  let availableSlots = [...freeTimeEvents]
+  const sessionMinutes = user.preffered_session_time
+  //const breakMinutes = breakTime(sessionMinutes)
+
+  let availableSlots = filterWorkHours(
+    [...freeTimeEvents],
+    user.work_hours_start,
+    user.work_hours_end
+  ).sort((a, b) => a.start.getTime() - b.start.getTime())
+
+  const now = new Date()
+  now.setSeconds(0, 0)
+
+  availableSlots = availableSlots.filter(slot => slot.end > now)
+
+  const plans = assignments
+    .filter(a => !a.is_done)
+    .map(a => ({
+      assignment: a,
+      sessionsNeeded: Math.ceil(a.est_hours / sessionMinutes),
+      sessionsScheduled: 0
+    }))
+    .sort((a, b) => a.assignment.date.getTime() - b.assignment.date.getTime())
+  
+  
   const allSessions: RecommendedSession[] = []
 
-  // 1. sort pagal deadline
-  const sortedAssignments = [...assignments].sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  )
+  let progress = true
 
-  for (const assignment of sortedAssignments) {
-    const availableAssignmentSlots = availableSlots.filter(slot => slot.end.getTime() > assignment.start_date.getTime())
-    const sessions = ScheduleSessions(
-      availableAssignmentSlots,
-      assignment.est_hours,
-      user.preffered_session_time,
-      breakTime(user.preffered_session_time),
-      user.work_hours_start,
-      user.work_hours_end
-    )
+  while (progress) {
+    progress = false
 
-    // PRISKIRIAM assignment
-    const sessionsWithAssignment = sessions.map(s => ({
-      ...s,
-      is_done: false,
-      fk_assignment: assignment.id
-    }))
+    for (const plan of plans) {
+      if (plan.sessionsScheduled >= plan.sessionsNeeded) continue
 
-    allSessions.push(...sessionsWithAssignment)
+      const remainingMinutes =
+        plan.assignment.est_hours -
+        plan.sessionsScheduled * sessionMinutes
 
-    // pašalinam panaudotą laiką
-    availableSlots = consumeSlots(availableSlots, sessions, user)
+      const currentSessionMinutes = Math.min(
+        sessionMinutes,
+        remainingMinutes
+      )
+
+      const session = findNextSessionForAssignment(
+        availableSlots,
+        plan.assignment,
+        currentSessionMinutes,
+        now,
+        plan.sessionsScheduled,
+        plan.sessionsNeeded
+      )
+
+      if (!session) continue
+
+      allSessions.push({
+        ...session,
+        fk_assignment: plan.assignment.id
+      })
+
+      plan.sessionsScheduled++
+
+      availableSlots = consumeSlots(availableSlots, [session], user)
+      progress = true
+    }
   }
 
-  return allSessions
+  return sortSessionsByDate(allSessions)
 }
 
+function findNextSessionForAssignment(
+  slots: LingisEvent[],
+  assignment: Assignment,
+  sessionMinutes: number,
+  now: Date,
+  sessionsScheduled: number,
+  sessionsNeeded: number
+): { start: Date, end: Date } | null {
 
+  const possibleSessions = countPossibleSessions(
+    slots,
+    assignment,
+    sessionMinutes,
+    now
+  )
+
+  const hasLotsOfExtraTime = possibleSessions >= sessionsNeeded * 2
+
+  if (!hasLotsOfExtraTime) {
+    return findEarliestSession(
+      slots,
+      assignment,
+      sessionMinutes,
+      now
+    )
+  }
+
+  const assignmentStart = new Date(Math.max(
+    assignment.start_date.getTime(),
+    now.getTime()
+  ))
+
+  const assignmentEnd = assignment.date
+
+  const targetTime =
+    sessionsNeeded <= 1
+      ? assignmentStart.getTime()
+      : assignmentStart.getTime() +
+        (assignmentEnd.getTime() - assignmentStart.getTime()) *
+        (sessionsScheduled / (sessionsNeeded - 1))
+
+  const targetDate = new Date(targetTime)
+
+  const session = findSessionAfterTarget(
+    slots,
+    assignment,
+    sessionMinutes,
+    now,
+    targetDate
+  )
+
+  if (session) return session
+
+  return findEarliestSession(
+    slots,
+    assignment,
+    sessionMinutes,
+    now
+  )
+}
+// function findNextSessionForAssignment(
+//   slots: LingisEvent[],
+//   assignment: Assignment,
+//   sessionMinutes: number,
+//   now: Date,
+//   sessionsScheduled: number,
+//   sessionsNeeded: number
+// ): { start: Date, end: Date } | null {
+
+//   return findEarliestSession(
+//     slots,
+//     assignment,
+//     sessionMinutes,
+//     now
+//   )
+// }
+function countPossibleSessions(
+  slots: LingisEvent[],
+  assignment: Assignment,
+  sessionMinutes: number,
+  now: Date
+): number {
+
+  const gap = breakTime(sessionMinutes)
+  const fullSessionTime = sessionMinutes + gap
+
+  let count = 0
+
+  for (const slot of slots) {
+    const windowStart = new Date(Math.max(
+      slot.start.getTime(),
+      assignment.start_date.getTime(),
+      now.getTime()
+    ))
+
+    const windowEnd = new Date(Math.min(
+      slot.end.getTime(),
+      assignment.date.getTime()
+    ))
+
+    const availableMinutes =
+      (windowEnd.getTime() - windowStart.getTime()) / 60000
+
+    if (availableMinutes < sessionMinutes) continue
+
+    count += Math.floor(
+      (availableMinutes + gap) / fullSessionTime
+    )
+  }
+
+  return count
+}
+
+function sortSessionsByDate(
+  sessions: RecommendedSession[]
+): RecommendedSession[] {
+  return sessions.sort(
+    (a, b) => a.start.getTime() - b.start.getTime()
+  )
+}
+
+function findSessionAfterTarget(
+  slots: LingisEvent[],
+  assignment: Assignment,
+  sessionMinutes: number,
+  now: Date,
+  targetDate: Date
+): { start: Date, end: Date } | null {
+
+  for (const slot of slots) {
+    const windowStart = new Date(Math.max(
+      slot.start.getTime(),
+      assignment.start_date.getTime(),
+      now.getTime(),
+      targetDate.getTime()
+    ))
+
+    const windowEnd = new Date(Math.min(
+      slot.end.getTime(),
+      assignment.date.getTime()
+    ))
+
+    const sessionEnd = new Date(
+      windowStart.getTime() + sessionMinutes * 60000
+    )
+
+    if (sessionEnd <= windowEnd) {
+      return {
+        start: windowStart,
+        end: sessionEnd
+      }
+    }
+  }
+
+  return null
+}
+
+function findEarliestSession(
+  slots: LingisEvent[],
+  assignment: Assignment,
+  sessionMinutes: number,
+  now: Date
+): { start: Date, end: Date } | null {
+
+  for (const slot of slots) {
+    const windowStart = new Date(Math.max(
+      slot.start.getTime(),
+      assignment.start_date.getTime(),
+      now.getTime()
+    ))
+
+    const windowEnd = new Date(Math.min(
+      slot.end.getTime(),
+      assignment.date.getTime()
+    ))
+
+    const sessionEnd = new Date(
+      windowStart.getTime() + sessionMinutes * 60000
+    )
+
+    if (sessionEnd <= windowEnd) {
+      return {
+        start: windowStart,
+        end: sessionEnd
+      }
+    }
+  }
+
+  return null
+}
 
 function ScheduleSessions(
   freeTimeEvents: LingisEvent[],

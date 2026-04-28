@@ -68,9 +68,31 @@ const AssignmentList: React.FC = () => {
   const timeForAssignments = assignments?.reduce((total, a) => total + a.est_hours, 0) ?? 0
 
   const doneSessions = useLiveQuery(
-  async () => await db.sessions.where("is_done").equals(1).toArray(),
+  async () => {
+    const sessions = await db.sessions.toArray();
+    return sessions.filter(s => s.is_done);
+  },
   []
 ) ?? [];
+
+  console.log(doneSessions)
+
+  const completedMinutesByAssignment = useMemo(() => {
+  const map = new Map<number, number>();
+
+  doneSessions.forEach((session) => {
+    const assignmentId = session.fk_assignment;
+    if (!assignmentId) return;
+
+    const start = new Date(session.start).getTime();
+    const end = new Date(session.end).getTime();
+    const minutes = (end - start) / 1000 / 60;
+
+    map.set(assignmentId, (map.get(assignmentId) ?? 0) + minutes);
+  });
+
+  return map;
+}, [doneSessions]);
 
   const recomendedSessions = useMemo(() => {
     if (!lingisEvents || !user || !assignments) return []
@@ -227,7 +249,11 @@ const AssignmentList: React.FC = () => {
       (!previousAssignment ||
         previousAssignment.subjectName !== assignment.subjectName);
         const plannedMinutes = plannedMinutesByAssignment.get(assignment.id!) ?? 0;
-    const doesNotHaveEnoughPlannedTime = plannedMinutes < assignment.est_hours;
+        const doesNotHaveEnoughPlannedTime = plannedMinutes < assignment.est_hours;
+        const completedMinutes = completedMinutesByAssignment.get(assignment.id!) ?? 0;
+        const formatHours = (minutes: number) => {
+          return (minutes / 60).toFixed(1);
+        };
 
     return (
       <div key={assignment.id}>
@@ -281,7 +307,7 @@ const AssignmentList: React.FC = () => {
                   </small>
                 </div>
                 <IonNote color={doesNotHaveEnoughPlannedTime ? "danger" : "dark"}>
-                  {assignment.est_hours / 60}h
+                  {formatHours(completedMinutes)} / {formatHours(assignment.est_hours)} h
                 </IonNote>
               </div>
             </IonLabel>

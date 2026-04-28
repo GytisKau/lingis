@@ -22,12 +22,26 @@ const Tab3: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
   const location = useLocation<{ openAssignmentPicker?: boolean }>();
 
-  const assignments = useLiveQuery(async () => {
+  const assignments =
+  useLiveQuery(async () => {
     const allAssignments = await db.assignments.toArray();
-    return allAssignments.map((ass) => ({
-      title: ass.title,
-      id: ass.id
-    }));
+    const today = new Date();
+
+    return allAssignments
+      .filter((ass) => {
+        const startDate = new Date(ass.start_date);
+        const deadline = new Date(ass.date);
+
+        return (
+          !ass.is_done &&
+          today >= startDate &&
+          today <= deadline
+        );
+      })
+      .map((ass) => ({
+        title: ass.title,
+        id: ass.id
+      }));
   }, []) ?? [];
 
   const username = useLiveQuery(async () => {
