@@ -78,14 +78,9 @@ const AddAssignmentModal: React.FC<AddAssignmentModal> = ({ trigger }) => {
   };
 
   return (
-    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues} className="add-modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Add Assignment</h2>
-          <IonButton fill="clear" onClick={() => modal.current?.dismiss()} className="close-btn">
-            <IonIcon icon={close} />
-          </IonButton>
-        </div>
+    <IonModal ref={modal} trigger={trigger} onDidDismiss={clearValues} className="add-modal" initialBreakpoint={0.75} breakpoints={[0, 0.75, 1]}>
+      <div className="ion-padding">
+        <h2>Add Assignment</h2>
 
         <div className="modal-body">
           {status && (

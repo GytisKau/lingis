@@ -42,42 +42,45 @@ import TabsLayout from './components/TabsLayout';
 import { AuthProvider } from './hooks/useAuth';
 import Welcome from './pages/Welcome';
 import RootRedirect from './components/RootRedirect';
+import { TimerProvider } from './context/TimerProvider';
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <AuthProvider>
-      <IonReactRouter>
-        <IonRouterOutlet animated={false}>
-          {/* Public */}
-          <Route path="/" component={RootRedirect} exact />
-          <Route path="/welcome" render={() => <Welcome/>} exact />
+      <TimerProvider>
+        <IonReactRouter>
+          <IonRouterOutlet animated={false}>
+            {/* Public */}
+            <Route path="/" component={RootRedirect} exact />
+            <Route path="/welcome" render={() => <Welcome/>} exact />
 
-          {/* Wizard requires login */}
-          <Route
-            path="/loginwizard"
-            render={() => (
-              <RequireLogin>
-                <LoginWizard />
-              </RequireLogin>
-            )}
-            exact
-          />
+            {/* Wizard requires login */}
+            <Route
+              path="/loginwizard"
+              render={() => (
+                <RequireLogin>
+                  <LoginWizard />
+                </RequireLogin>
+              )}
+              exact
+            />
 
-          {/* Main app requires login + wizard */}
-          <Route
-            path="/tabs"
-            render={() => (
-              <RequireLogin>
-                <RequireWizard>
-                  <TabsLayout />
-                </RequireWizard>
-              </RequireLogin>
-            )}
-          />
-        </IonRouterOutlet>
-      </IonReactRouter>
+            {/* Main app requires login + wizard */}
+            <Route
+              path="/tabs"
+              render={() => (
+                <RequireLogin>
+                  <RequireWizard>
+                    <TabsLayout />
+                  </RequireWizard>
+                </RequireLogin>
+              )}
+            />
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </TimerProvider>
     </AuthProvider>
   </IonApp>
 )

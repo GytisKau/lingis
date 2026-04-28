@@ -104,18 +104,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onSave, onCancel })
     setTitle('');
     setDifficulty(-1);
     setType(-1);
-    modalRef.current?.dismiss();
   };
 
   return (
-    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={onCancel} className="add-modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Add New Task</h2>
-          <IonButton fill="clear" onClick={handleCancel} className="close-btn">
-            <IonIcon icon={close} />
-          </IonButton>
-        </div>
+    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={handleCancel} className="add-modal" initialBreakpoint={0.75} breakpoints={[0, 0.75, 1]}>
+      <div className="ion-padding">
+        <h2>Add New Task</h2>
 
         <div className="modal-body">
           <div className="form-group">
@@ -209,18 +203,12 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({ isOpen, onSave, onCancel 
     blurActive();
     onCancel();
     setTitle('');
-    modalRef.current?.dismiss();
   };
 
   return (
-    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={onCancel} className="add-modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>Add New Topic</h2>
-          <IonButton fill="clear" onClick={handleCancel} className="close-btn">
-            <IonIcon icon={close} />
-          </IonButton>
-        </div>
+    <IonModal ref={modalRef} isOpen={isOpen} onDidDismiss={handleCancel} className="add-modal" initialBreakpoint={0.75} breakpoints={[0, 0.75, 1]}>
+      <div className="ion-padding">
+        <h2>Add New Topic</h2>
 
         <div className="modal-body">
           <div className="form-group">

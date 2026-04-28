@@ -105,7 +105,7 @@ ion-accordion ion-item,
 .topic-header-item,
 .topic-accordion ion-item {
   --background: transparent !important;
-  background: transparent !important;
+  /* background: transparent !important; */
   --inner-background: transparent !important;
 }
 
@@ -155,7 +155,7 @@ ion-list,
 ion-list-header,
 ion-item {
   --background: transparent !important;
-  background: transparent !important;
+  /* background: transparent !important; */
 }
 
 /* ============================
@@ -217,7 +217,6 @@ ion-tab-button[tab="tab3"] {
   height: 98px !important;
   min-width: 82px !important;
   min-height: 98px !important;
-  margin: 0 auto !important;
   padding: 0 !important;
 
   display: flex !important;

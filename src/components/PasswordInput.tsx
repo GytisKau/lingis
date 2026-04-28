@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { InputChangeEventDetail, IonInput } from '@ionic/react';
+import { InputChangeEventDetail, IonInput, IonInputPasswordToggle } from '@ionic/react';
 import { IonInputCustomEvent } from '@ionic/core';
 
 interface PasswordInputProps {
@@ -43,7 +43,9 @@ function PasswordInput({label, onIonInput}: PasswordInputProps) {
       helperText={password.length == 0 ? "Enter your password" : ""}
       onIonInput={(event) => validate(event)}
       onIonBlur={() => markTouched()}
-    ></IonInput>
+    >
+      <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
+    </IonInput>
   );
 }
 export default PasswordInput;

@@ -44,11 +44,10 @@ const Tab3: React.FC = () => {
       }));
   }, []) ?? [];
 
-  const username =
-    useLiveQuery(async () => {
-      const users = await db.users.toArray();
-      return users[0]?.username?.trim() || '';
-    }, []) ?? '';
+  const username = useLiveQuery(async () => {
+    const users = await db.users.toArray();
+    return users[0]?.username?.trim() || '';
+  }, []) ?? '';
 
   useEffect(() => {
     if (location.state?.openAssignmentPicker && assignments.length > 0) {
@@ -70,15 +69,9 @@ const Tab3: React.FC = () => {
       <IonContent className="tab3-page">
         <DailyLearningTip />
 
-        {assignments.length === 0 ? (
+        <TipsCarousel />
+        {assignments.length > 0 && (
           <>
-            <IonText className="empty-text">No assignments added yet</IonText>
-            <TipsCarousel />
-          </>
-        ) : (
-          <>
-            <TipsCarousel />
-
             <div className="start-session-wrap">
               <IonButton
                 id="assignment-picker"

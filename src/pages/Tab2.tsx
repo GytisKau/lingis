@@ -120,7 +120,7 @@ const Tab2: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="stats-container">
+      <IonContent className="ion-padding">
 
         {/* TABS */}
         <div className="top-tabs">
