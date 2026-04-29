@@ -1,13 +1,13 @@
 import { filterWorkHours } from "../components/Calendar"
 import { Assignment, LingisEvent, User } from "../db/db"
 
-export interface RecommendedSession{
+export interface RecommendedSession {
   start: Date,
   end: Date,
   fk_assignment: number;
 }
 
-function breakTime(sessionTime: number){
+function breakTime(sessionTime: number) {
   if (sessionTime == 5) return 2
   else if (sessionTime == 10) return 3
   else if (sessionTime == 20) return 5
@@ -25,7 +25,6 @@ function ScheduleAllAssignments(
 ): RecommendedSession[] {
 
   const sessionMinutes = user.preffered_session_time
-  //const breakMinutes = breakTime(sessionMinutes)
 
   let availableSlots = filterWorkHours(
     [...freeTimeEvents],
@@ -46,8 +45,7 @@ function ScheduleAllAssignments(
       sessionsScheduled: 0
     }))
     .sort((a, b) => a.assignment.date.getTime() - b.assignment.date.getTime())
-  
-  
+
   const allSessions: RecommendedSession[] = []
 
   let progress = true
@@ -73,7 +71,9 @@ function ScheduleAllAssignments(
         currentSessionMinutes,
         now,
         plan.sessionsScheduled,
-        plan.sessionsNeeded
+        plan.sessionsNeeded,
+        user,
+        allSessions
       )
 
       if (!session) continue
@@ -99,26 +99,10 @@ function findNextSessionForAssignment(
   sessionMinutes: number,
   now: Date,
   sessionsScheduled: number,
-  sessionsNeeded: number
+  sessionsNeeded: number,
+  user: User,
+  existingSessions: RecommendedSession[]
 ): { start: Date, end: Date } | null {
-
-  const possibleSessions = countPossibleSessions(
-    slots,
-    assignment,
-    sessionMinutes,
-    now
-  )
-
-  const hasLotsOfExtraTime = possibleSessions >= sessionsNeeded * 2
-
-  if (!hasLotsOfExtraTime) {
-    return findEarliestSession(
-      slots,
-      assignment,
-      sessionMinutes,
-      now
-    )
-  }
 
   const assignmentStart = new Date(Math.max(
     assignment.start_date.getTime(),
@@ -136,50 +120,42 @@ function findNextSessionForAssignment(
 
   const targetDate = new Date(targetTime)
 
-  const session = findSessionAfterTarget(
+  return findBestScoredSession(
     slots,
     assignment,
     sessionMinutes,
     now,
-    targetDate
-  )
-
-  if (session) return session
-
-  return findEarliestSession(
-    slots,
-    assignment,
-    sessionMinutes,
-    now
+    targetDate,
+    user,
+    existingSessions
   )
 }
-// function findNextSessionForAssignment(
-//   slots: LingisEvent[],
-//   assignment: Assignment,
-//   sessionMinutes: number,
-//   now: Date,
-//   sessionsScheduled: number,
-//   sessionsNeeded: number
-// ): { start: Date, end: Date } | null {
 
-//   return findEarliestSession(
-//     slots,
-//     assignment,
-//     sessionMinutes,
-//     now
-//   )
-// }
-function countPossibleSessions(
+function preferredChronotypeHour(chronotype: number): number {
+  if (chronotype === 0) return 9   // morning person
+  if (chronotype === 1) return 13  // noon person
+  if (chronotype === 2) return 18  // evening person
+  return 13
+}
+
+function hoursFromMidnight(date: Date): number {
+  return date.getHours() + date.getMinutes() / 60
+}
+
+function findBestScoredSession(
   slots: LingisEvent[],
   assignment: Assignment,
   sessionMinutes: number,
-  now: Date
-): number {
+  now: Date,
+  targetDate: Date,
+  user: User,
+  existingSessions: RecommendedSession[]
+): { start: Date, end: Date } | null {
 
-  const gap = breakTime(sessionMinutes)
-  const fullSessionTime = sessionMinutes + gap
+  let bestSession: { start: Date, end: Date } | null = null
+  let bestScore = Infinity
 
-  let count = 0
+  const preferredHour = preferredChronotypeHour(user.chronotype)
 
   for (const slot of slots) {
     const windowStart = new Date(Math.max(
@@ -193,17 +169,64 @@ function countPossibleSessions(
       assignment.date.getTime()
     ))
 
-    const availableMinutes =
-      (windowEnd.getTime() - windowStart.getTime()) / 60000
+    let cursor = new Date(windowStart)
 
-    if (availableMinutes < sessionMinutes) continue
+    while (true) {
+      const sessionEnd = new Date(
+        cursor.getTime() + sessionMinutes * 60000
+      )
 
-    count += Math.floor(
-      (availableMinutes + gap) / fullSessionTime
-    )
+      if (sessionEnd > windowEnd) break
+
+      const hour = hoursFromMidnight(cursor)
+
+      const chronotypeDistance =
+        Math.abs(hour - preferredHour)
+
+      const targetDayDistance =
+        Math.abs(
+          startOfDay(cursor).getTime() -
+          startOfDay(targetDate).getTime()
+        ) / 86400000
+
+      const sameDaySessions = existingSessions.filter(s =>
+        s.start.toDateString() === cursor.toDateString()
+      )
+
+      let clusterDistance = 0
+
+      if (sameDaySessions.length > 0) {
+        clusterDistance = Math.min(
+          ...sameDaySessions.map(s =>
+            Math.abs(cursor.getTime() - s.start.getTime()) / 3600000
+          )
+        )
+      }
+
+      const score =
+        chronotypeDistance * 10 +
+        targetDayDistance * 2 +
+        clusterDistance * 1
+
+      if (score < bestScore) {
+        bestScore = score
+        bestSession = {
+          start: new Date(cursor),
+          end: sessionEnd
+        }
+      }
+
+      cursor = new Date(cursor.getTime() + 15 * 60000)
+    }
   }
 
-  return count
+  return bestSession
+}
+
+function startOfDay(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
 function sortSessionsByDate(
@@ -214,139 +237,13 @@ function sortSessionsByDate(
   )
 }
 
-function findSessionAfterTarget(
-  slots: LingisEvent[],
-  assignment: Assignment,
-  sessionMinutes: number,
-  now: Date,
-  targetDate: Date
-): { start: Date, end: Date } | null {
-
-  for (const slot of slots) {
-    const windowStart = new Date(Math.max(
-      slot.start.getTime(),
-      assignment.start_date.getTime(),
-      now.getTime(),
-      targetDate.getTime()
-    ))
-
-    const windowEnd = new Date(Math.min(
-      slot.end.getTime(),
-      assignment.date.getTime()
-    ))
-
-    const sessionEnd = new Date(
-      windowStart.getTime() + sessionMinutes * 60000
-    )
-
-    if (sessionEnd <= windowEnd) {
-      return {
-        start: windowStart,
-        end: sessionEnd
-      }
-    }
-  }
-
-  return null
-}
-
-function findEarliestSession(
-  slots: LingisEvent[],
-  assignment: Assignment,
-  sessionMinutes: number,
-  now: Date
-): { start: Date, end: Date } | null {
-
-  for (const slot of slots) {
-    const windowStart = new Date(Math.max(
-      slot.start.getTime(),
-      assignment.start_date.getTime(),
-      now.getTime()
-    ))
-
-    const windowEnd = new Date(Math.min(
-      slot.end.getTime(),
-      assignment.date.getTime()
-    ))
-
-    const sessionEnd = new Date(
-      windowStart.getTime() + sessionMinutes * 60000
-    )
-
-    if (sessionEnd <= windowEnd) {
-      return {
-        start: windowStart,
-        end: sessionEnd
-      }
-    }
-  }
-
-  return null
-}
-
-function ScheduleSessions(
-  freeTimeEvents: LingisEvent[],
-  timeForAssignment: number,
-  timeForSession: number,
-  timeforBreak: number,
-  work_hours_start: number,
-  work_hours_end: number
-): {start: Date, end: Date}[] {
-
-  const fullSessionTime = timeForSession + timeforBreak
-  const sessionsNeeded = Math.ceil(timeForAssignment / timeForSession)
-
-  let sessionsLeft = sessionsNeeded
-  const sessions: RecommendedSession[] = []
-
-  const now = new Date()
-  now.setSeconds(0, 0)
-  freeTimeEvents = freeTimeEvents.filter(e => e.end >= now)
-
-  freeTimeEvents = filterWorkHours(freeTimeEvents, work_hours_start, work_hours_end)
-
-  freeTimeEvents.sort(
-    (a,b)=>a.start.getTime()-b.start.getTime()
-  )
-
-  for (const freeTimeEvent of freeTimeEvents) {
-
-    if (sessionsLeft <= 0) break
-
-    const windowStart = now > freeTimeEvent.start ? now : new Date(freeTimeEvent.start)
-    const windowEnd = new Date(freeTimeEvent.end)
-
-    let cursor = new Date(windowStart)
-
-    while (sessionsLeft > 0) {
-
-      const sessionEnd =
-        new Date(cursor.getTime() + timeForSession * 60000)
-
-      if (sessionEnd > windowEnd) break
-
-      sessions.push({
-        start: new Date(cursor),
-        end: sessionEnd,
-        fk_assignment: 1,
-      })
-
-      sessionsLeft--
-
-      if (sessionsLeft <= 0) break
-
-      cursor = new Date(
-        cursor.getTime() + fullSessionTime * 60000
-      )
-    }
-  }
-
-  return sessions
+function minutesBetween(start: Date, end: Date): number {
+  return (end.getTime() - start.getTime()) / 60000
 }
 
 function consumeSlots(
   slots: LingisEvent[],
-  sessions: {start: Date, end: Date}[],
+  sessions: { start: Date, end: Date }[],
   user: User
 ): LingisEvent[] {
 
