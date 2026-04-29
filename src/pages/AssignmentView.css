@@ -1,6 +1,7 @@
 /* ============================
    EXTRA BUTTONS
    ============================ */
+
 .add-tasks-button {
   position: absolute;
   bottom: 50px;
@@ -13,21 +14,26 @@
 /* ============================
    ASSIGNMENT VIEW PAGE
    ============================ */
-/* Extra bottom padding so last task isn't hidden behind tab bar */
-/* .assignment-view-page {
-  /* background: white;
-  /* --background: white;  /* Ionic content background */
-  /* min-height: 100vh; */
 
-  /* ============================
+/* Extra bottom padding so last task isn't hidden behind tab bar */
+/*
+.assignment-view-page {
+  background: white;
+  --background: white;
+  min-height: 100vh;
+}
+*/
+
+/* ============================
    TASK ROW EDITING
    ============================ */
+
 .task-row-editing-item {
-  background: var(--ion-background-color, #fff); /* solid background */
+  background: var(--ion-background-color, #fff);
   padding: 8px 16px;
   border-radius: 8px;
   margin: 4px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .task-row-editing {
@@ -37,7 +43,7 @@
 }
 
 .task-row-editing ion-input {
-  --background: transparent; /* or set to white if preferred */
+  --background: transparent;
 }
 
 /* Keep checkbox at far left */
@@ -78,7 +84,10 @@
   color: #491B6D !important;
 }
 
-/* Remove default red styling */
+/* ============================
+   SWIPE ACTION BUTTONS
+   ============================ */
+
 .delete-option {
   --background: transparent !important;
   background: transparent !important;
@@ -87,7 +96,6 @@
   justify-content: center;
 }
 
-/* Cute purple circle button */
 .delete-button {
   width: 36px;
   height: 36px;
@@ -98,18 +106,16 @@
   justify-content: center;
 
   border: 2px solid #491B6D;
-  background: rgba(73, 27, 109, 0.08); /* soft purple tint */
+  background: rgba(73, 27, 109, 0.08);
 
   transition: all 0.2s ease;
 }
 
-/* Trash icon styling */
 .delete-button ion-icon {
   color: #491B6D;
   font-size: 18px;
 }
 
-/* Tap effect */
 .delete-button:active {
   transform: scale(0.9);
   background: rgba(73, 27, 109, 0.15);
@@ -123,7 +129,6 @@
   justify-content: center;
 }
 
-/* Cute purple circle button */
 .done-button {
   width: 36px;
   height: 36px;
@@ -134,19 +139,142 @@
   justify-content: center;
 
   border: 2px solid #491B6D;
-  background: rgba(73, 27, 109, 0.08); /* soft purple tint */
+  background: rgba(73, 27, 109, 0.08);
 
   transition: all 0.2s ease;
 }
 
-/* Trash icon styling */
 .done-button ion-icon {
   color: #491B6D;
   font-size: 18px;
 }
 
-/* Tap effect */
 .done-button:active {
   transform: scale(0.9);
   background: rgba(73, 27, 109, 0.15);
+}
+
+/* ============================
+   EDIT ASSIGNMENT MODAL
+   ============================ */
+
+.edit-assignment-modal {
+  --width: 90%;
+  --max-width: 430px;
+  --height: auto;
+  --max-height: 82vh;
+  --border-radius: 24px;
+  --background: transparent;
+}
+
+.edit-assignment-modal::part(content) {
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  background: white !important;
+  border: 2px solid #491B6D !important;
+  box-shadow: 0 18px 42px rgba(73, 27, 109, 0.22);
+}
+
+.edit-assignment-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.edit-assignment-modal-shell {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-assignment-modal-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 58px 8px;
+  background: white;
+}
+
+.edit-assignment-modal-header h2 {
+  margin: 0;
+  color: #491B6D;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.edit-assignment-close-button {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.1);
+  color: #491B6D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.edit-assignment-close-button ion-icon {
+  color: #491B6D;
+  font-size: 21px;
+}
+
+.edit-assignment-modal .assignment-edit-content {
+  background: white !important;
+  padding: 8px 16px 18px !important;
+  overflow-y: auto;
+}
+
+/* ============================
+   EDIT BUTTON IN ASSIGNMENT CARD
+   Circular Ionic button
+   ============================ */
+/* Edit button in assignment card - same circle style as trash/done buttons */
+.assignment-card-edit-button {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+
+  border-radius: 50% !important;
+  border: 2px solid #491B6D !important;
+  background: rgba(73, 27, 109, 0.08) !important;
+  color: #491B6D !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  line-height: 1;
+}
+
+.assignment-card-edit-button ion-icon {
+  color: #491B6D !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.assignment-card-edit-button:active {
+  transform: scale(0.9);
+  background: rgba(73, 27, 109, 0.15) !important;
 }

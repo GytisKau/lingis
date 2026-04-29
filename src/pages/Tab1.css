@@ -1,3 +1,386 @@
 .fc-3K.ion-display-none {
   display: none !important;
 }
+
+.session-preview-time {
+  margin: 0 0 14px 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #f3efff;
+  border: 1px solid rgba(73, 27, 109, 0.14);
+  color: #491b6d;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(73, 27, 109, 0.08);
+}
+
+.session-preview-time ion-label {
+  color: #491b6d;
+  font-weight: 800;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FULLCALENDAR EVENT STYLING
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.fc-event {
+  border-width: 2px !important;
+  border-radius: 8px !important;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.fc-timegrid-event,
+.fc-daygrid-event {
+  box-shadow: 0 4px 10px rgba(73, 27, 109, 0.12);
+}
+
+.fc-event-title,
+.fc-event-time {
+  color: #491b6d !important;
+  font-weight: 700;
+}
+
+.fc-timegrid-event .fc-event-main,
+.fc-daygrid-event .fc-event-main {
+  color: #491b6d !important;
+}
+
+.fc-timegrid-event {
+  padding: 2px 4px;
+}
+
+.fc-daygrid-event {
+  padding: 2px 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FREE TIME MODAL - assignment picker style
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.free-time-picker-modal {
+  --width: min(92vw, 520px);
+  --height: min(82vh, 720px);
+  --max-height: min(82vh, 720px);
+  --border-radius: 18px;
+}
+
+.free-time-picker-modal::part(content) {
+  width: min(92vw, 520px);
+  max-width: 520px;
+  height: min(82vh, 720px);
+  max-height: min(82vh, 720px);
+  border: 2px solid #491b6d;
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+
+.free-time-picker-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.free-time-header {
+  box-shadow: none;
+}
+
+.free-time-toolbar {
+  --background: transparent;
+  --color: #491b6d;
+  --min-height: 42px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.free-time-title {
+  color: #491b6d;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 0;
+  text-align: center;
+}
+
+.close-x {
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --background-focused: transparent;
+  --box-shadow: none;
+  --color: #491b6d;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  text-transform: none;
+}
+
+.free-time-content {
+  --background: white;
+  --padding-top: 0;
+  --padding-bottom: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.free-time-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 12px;
+}
+
+.free-time-add-section {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 2px solid rgba(73, 27, 109, 0.16);
+  border-radius: 16px;
+  background: #f3efff;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.free-time-add-section h3,
+.free-time-list-header h3 {
+  margin: 0;
+  color: #491b6d;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.free-time-add-section p {
+  margin: 6px 0 12px;
+  color: #6f6677;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.free-time-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.free-time-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.free-time-fields span {
+  color: #491b6d;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* The visible input can be styled.
+   The opened native calendar/time picker popup is controlled by browser/OS. */
+.free-time-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  --background: rgba(255, 255, 255, 0.9);
+  --color: #26202c;
+  --padding-start: 10px;
+  --padding-end: 10px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+
+  border: 2px solid rgba(73, 27, 109, 0.3);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.free-time-input::part(container) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: none !important;
+  background: transparent !important;
+}
+
+.free-time-input::part(native) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.free-time-input input {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  color: #26202c !important;
+  font-size: 13px !important;
+}
+
+.free-time-input input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+  filter:
+    invert(17%)
+    sepia(29%)
+    saturate(2637%)
+    hue-rotate(254deg)
+    brightness(84%)
+    contrast(96%);
+}
+
+.free-time-input:focus-within {
+  border-color: #491b6d;
+  box-shadow: 0 0 0 3px rgba(73, 27, 109, 0.12);
+}
+
+.free-time-error {
+  margin: 10px 0 0;
+  color: #d64545;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.free-time-add-button {
+  margin-top: 12px;
+  --background: #491b6d;
+  --background-hover: #491b6d;
+  --background-activated: #491b6d;
+  --background-focused: #491b6d;
+  --color: white;
+  --border-radius: 12px;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.free-time-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.free-time-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.free-time-list-header span {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.12);
+  color: #491b6d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.free-time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.free-time-item {
+  position: relative;
+  border: 2px solid rgba(73, 27, 109, 0.12);
+  border-radius: 16px;
+  background: white;
+  padding: 12px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.free-time-delete-button {
+  width: 36px;
+  height: 36px;
+  margin-top: 10px;
+  margin-left: auto;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 77, 109, 0.12);
+  color: #ff4d6d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.free-time-empty {
+  border: 2px solid rgba(73, 27, 109, 0.12);
+  border-radius: 16px;
+  background: #f3efff;
+  padding: 16px;
+  text-align: center;
+}
+
+.free-time-empty h4 {
+  margin: 0 0 6px;
+  color: #491b6d;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.free-time-empty p {
+  margin: 0;
+  color: #6f6677;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Desktop: wider modal, two-column date/time fields */
+@media (min-width: 720px) {
+  .free-time-picker-modal {
+    --width: min(92vw, 620px);
+    --height: min(82vh, 720px);
+    --max-height: min(82vh, 720px);
+  }
+
+  .free-time-picker-modal::part(content) {
+    width: min(92vw, 620px);
+    max-width: 620px;
+    height: min(82vh, 720px);
+    max-height: min(82vh, 720px);
+  }
+
+  .free-time-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Small screens: stacked fields and safe modal size */
+@media (max-width: 719px) {
+  .free-time-picker-modal {
+    --width: 92vw;
+    --height: 84vh;
+    --max-height: 84vh;
+  }
+
+  .free-time-picker-modal::part(content) {
+    width: 92vw;
+    height: 84vh;
+    max-height: 84vh;
+  }
+
+  .free-time-fields {
+    grid-template-columns: 1fr;
+  }
+}

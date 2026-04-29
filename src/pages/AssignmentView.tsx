@@ -5,9 +5,9 @@ import {
   IonTitle,
   IonToolbar,
   IonIcon,
-  IonProgressBar,
   IonButtons,
-  IonButton
+  IonButton,
+  IonModal
 } from '@ionic/react';
 
 import { db } from '../db/db';
@@ -39,6 +39,7 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
               <IonIcon icon={arrowBack} />
             </IonButton>
           </IonButtons>
+
           <IonTitle>{assignment ? assignment.title : 'Loading...'}</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -47,21 +48,41 @@ const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
         {assignment && (
           <>
             <AssignmentCard assignment={assignment}>
-              <IonButton
-                fill="clear"
-                size="small"
-                onClick={() => setIsEditing((prev) => !prev)}
+              <button
+                type="button"
+                className="assignment-card-edit-button"
+                onClick={() => setIsEditing(true)}
+                aria-label="Edit assignment"
               >
-                <IonIcon icon={isEditing ? close : pencil} />
-              </IonButton>
+                <IonIcon icon={pencil} />
+              </button>
             </AssignmentCard>
 
-            {isEditing && (
-              <EditAssignmentForm
-                assignmentId={id}
-                onSaved={() => setIsEditing(false)}
-              />
-            )}
+            <IonModal
+              isOpen={isEditing}
+              onDidDismiss={() => setIsEditing(false)}
+              className="edit-assignment-modal"
+            >
+              <div className="edit-assignment-modal-shell">
+                <div className="edit-assignment-modal-header">
+                  <h2>Edit assignment</h2>
+
+                  <button
+                    type="button"
+                    className="edit-assignment-close-button"
+                    onClick={() => setIsEditing(false)}
+                    aria-label="Close edit assignment modal"
+                  >
+                    <IonIcon icon={close} />
+                  </button>
+                </div>
+
+                <EditAssignmentForm
+                  assignmentId={id}
+                  onSaved={() => setIsEditing(false)}
+                />
+              </div>
+            </IonModal>
 
             <TaskList assignmentId={id} />
           </>
