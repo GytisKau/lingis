@@ -24,7 +24,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!running) return;
 
     const interval = setInterval(() => {
-      setTime((t) => (t <= 1 ? 0 : t - 5));
+      setTime((t) => (t <= 1 ? 0 : t - 1));
     }, 1000);
 
     return () => clearInterval(interval);
