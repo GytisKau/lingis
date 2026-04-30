@@ -10,10 +10,11 @@ import {
   IonText,
   IonSpinner
 } from "@ionic/react";
-import { db, User } from "../db/db";
+import { db } from "../db/db";
 import { FeaturesInput, Recommendation } from "../utils/Recommendation";
 import { IonModalCustomEvent, OverlayEventDetail } from "@ionic/core/components";
 import "../pages/Tab3.css";
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface FormData {
   motivation: number;
@@ -51,14 +52,16 @@ interface Props {
   modal: React.RefObject<HTMLIonModalElement | null>;
   trigger: string;
   onClosed: (result: number) => void;
-  user?: User;
 }
 
-const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user }) => {
+const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed }) => {
   const [step, setStep] = useState<"questions" | "result">("questions");
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [recommendation, setRecommendation] = useState<number>();
+
+  const users = useLiveQuery(() => db.users.toArray())
+  const user = users !== undefined ? users[0] : undefined
 
   const isFormValid = Object.entries(formData)
     .filter(([key]) => key !== "created_at")

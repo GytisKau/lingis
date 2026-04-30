@@ -4,48 +4,45 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  useIonRouter,
 } from '@ionic/react';
 import './Session.css';
 import TaskList from '../components/TaskList';
 import { useState, useRef } from 'react';
-import { RouteComponentProps } from 'react-router';
+import { RouteComponentProps, useHistory } from 'react-router';
 import QuestionnaireModal from '../forms/QuestionnaireModal';
 import BreakTypeSelector from '../components/BreakTypeSelector';
-import { getBreakMinutesFromStudy } from '../data/breakSuggestions';
+import { BreakLength, getBreakMinutesFromStudy } from '../data/breakSuggestions';
 import { Timer } from '../components/Timer';
 import { useTimerContext } from '../context/TimerContext';
 
 interface SessionProps
-  extends RouteComponentProps<{ id: string }, any, { studyMinutes?: number }> {}
+  extends RouteComponentProps<{ id: string }> {}
 
-const Session: React.FC<SessionProps> = ({ match, location, history }) => {
-  const modal = useRef<HTMLIonModalElement>(null);
-
-  const { mode, switchToBreak, switchToStudy } = useTimerContext();
-
+const Session: React.FC<SessionProps> = ({ match }) => {
   const [mentalTestTrigger, setMentalTestTrigger] = useState<string | null>(null);
   const [breakResetKey, setBreakResetKey] = useState(0);
 
+  
+  const modal = useRef<HTMLIonModalElement>(null);
+  const { studyTime, breakTime, mode, switchToBreak, switchToStudy } = useTimerContext();
+  const router = useIonRouter();
+
   const id = Number(match.params.id);
 
-  const studyMinutes =
-    (location.state as { studyMinutes?: number } | undefined)?.studyMinutes ?? 20;
+  // const openMentalTest = () => {
+  //   const triggerId = `mental-test-${Date.now()}`;
+  //   setMentalTestTrigger(triggerId);
 
-  const breakMinutes = getBreakMinutesFromStudy(studyMinutes);
+  //   setTimeout(() => {
+  //     const btn = document.getElementById(triggerId) as HTMLButtonElement | null;
+  //     btn?.click();
+  //   }, 0);
+  // };
 
-  const openMentalTest = () => {
-    const triggerId = `mental-test-${Date.now()}`;
-    setMentalTestTrigger(triggerId);
-
-    setTimeout(() => {
-      const btn = document.getElementById(triggerId) as HTMLButtonElement | null;
-      btn?.click();
-    }, 0);
-  };
-
-  const closeMentalTestTrigger = () => {
-    setMentalTestTrigger(null);
-  };
+  // const closeMentalTestTrigger = () => {
+  //   setMentalTestTrigger(null);
+  // };
 
   const handleBreakStarted = () => {
     setBreakResetKey((prev) => prev + 1);
@@ -57,7 +54,7 @@ const Session: React.FC<SessionProps> = ({ match, location, history }) => {
   };
 
   const goHome = () => {
-    history.push('/tabs/tab3');
+    router.push('/tabs/tab3');
   };
 
   return (
@@ -72,23 +69,21 @@ const Session: React.FC<SessionProps> = ({ match, location, history }) => {
 
       <IonContent className="ion-padding session-page">
         <Timer
-          studyMinutes={studyMinutes}
-          breakMinutes={breakMinutes}
-          mode={mode}
           onSwitchToBreak={handleBreakStarted}
           onSwitchToStudy={handleStudyStarted}
-          onFinish={openMentalTest}
+          // onFinish={openMentalTest}
+          onFinish={() => {}}
           onGoHome={goHome}
         />
 
         {mode === 'break' && (
           <BreakTypeSelector
-            breakMinutes={breakMinutes}
+            breakMinutes={(breakTime / 60) as BreakLength}
             resetKey={breakResetKey}
           />
         )}
 
-        {mentalTestTrigger && (
+        {/* {mentalTestTrigger && (
           <>
             <button
               id={mentalTestTrigger}
@@ -102,7 +97,7 @@ const Session: React.FC<SessionProps> = ({ match, location, history }) => {
               onClosed={closeMentalTestTrigger}
             />
           </>
-        )}
+        )} */}
 
         {mode === 'study' && (
           <TaskList assignmentId={id} view="session" />

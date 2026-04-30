@@ -12,10 +12,11 @@ import {
 import './SessionView.css'
 import { useHistory, RouteComponentProps } from 'react-router'
 import { db } from '../db/db'
-import { useState, useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import QuestionnaireModal from '../forms/QuestionnaireModal'
 import { TimerDisplay } from '../components/TimerDisplay'
+import { useTimerContext } from '../context/TimerContext'
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
@@ -26,29 +27,15 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
 
   const assignment = useLiveQuery(() => db.assignments.get(id), [id])
 
-  const users = useLiveQuery(() => db.users.toArray())
-  const user = users !== undefined ? users[0] : undefined
-  const preferredMinutes = user?.preffered_session_time;
-
-  const [selectedMinutes, setSelectedMinutes] = useState<number>(20);
-  const [userChangedMinutes, setUserChangedMinutes] = useState(false);
-
-  useEffect(() => {
-    if (!userChangedMinutes && preferredMinutes !== undefined) {
-      const chosenMinutes = preferredMinutes === 120 ? 90 : preferredMinutes;
-      setSelectedMinutes(chosenMinutes);
-    }
-  }, [preferredMinutes, userChangedMinutes]);
+  const { studyTime, setStudyTime, switchToStudy } = useTimerContext();
 
   const startSession = () => {
-    history.push(`/tabs/tab3/session/${id}`, {
-      studyMinutes: selectedMinutes
-    })
+    switchToStudy()
+    history.push(`/tabs/tab3/session/${id}`)
   }
 
   const handleClose = (result: number) => {
-    console.log(result)
-    setSelectedMinutes(result)
+    setStudyTime(result * 60)
   }
 
   return (
@@ -61,32 +48,19 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
 
       <IonContent className="ion-padding session-view-page">
         <div className="session-view-container">
-          <TimerDisplay time={selectedMinutes * 60} />
+          <TimerDisplay time={studyTime} />
 
           <IonSegment
-          className="session-segment"
-          value={String(selectedMinutes)}
-          onIonChange={(e) => {
-            setUserChangedMinutes(true);
-            setSelectedMinutes(Number(e.detail.value));
-          }}
-          scrollable={true}
-        >
-            <IonSegmentButton value="10">
-              <IonLabel>10</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="20">
-              <IonLabel>20</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="30">
-              <IonLabel>30</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="60">
-              <IonLabel>60</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="90">
-              <IonLabel>90</IonLabel>
-            </IonSegmentButton>
+            className="session-segment"
+            value={studyTime/60}
+            onIonChange={(e) => setStudyTime(Number(e.detail.value) * 60)}
+            scrollable={true}
+          >
+            {[10, 20, 30, 60, 90].map(t => (
+              <IonSegmentButton value={t} key={t}>
+                <IonLabel>{t}</IonLabel>
+              </IonSegmentButton>
+            ))}
           </IonSegment>
 
           <div className="session-buttons">
@@ -105,7 +79,6 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
             <QuestionnaireModal
               modal={modal}
               trigger="mental-test"
-              user={user}
               onClosed={handleClose}
             />
           </div>

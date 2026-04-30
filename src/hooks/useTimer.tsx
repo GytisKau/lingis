@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useTimer(initialSeconds: number, mode: 'study' | 'break', onFinish: () => void) {
+function useTimer(initialSeconds: number, mode: 'study' | 'break', onFinish: () => void) {
   const [time, setTime] = useState(initialSeconds);
   const [running, setRunning] = useState(true);
 
