@@ -46,7 +46,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding session-view-page">
+      <IonContent className="ion-padding session-view-page" forceOverscroll={false}>
         <div className="session-view-container">
           <TimerDisplay time={studyTime} />
 

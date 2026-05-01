@@ -528,7 +528,12 @@ const Tab5: React.FC = () => {
 
   return (
     <IonPage>
-      <IonContent fullscreen className="profile-page">
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Assignments</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="profile-page" forceOverscroll={false}>
         <div className="profile-shell">
           <section className="profile-hero">
             <div className="profile-avatar-wrap">

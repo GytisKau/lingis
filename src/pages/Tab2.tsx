@@ -120,7 +120,7 @@ const Tab2: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding" forceOverscroll={false}>
 
         {/* TABS */}
         <div className="top-tabs">

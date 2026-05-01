@@ -22,7 +22,7 @@ const Tab4: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="tab4-page ion-padding">
+      <IonContent className="tab4-page ion-padding" forceOverscroll={false}>
         <AssignmentList />
 
         <IonFab slot="fixed" vertical="bottom" horizontal="end">

@@ -254,18 +254,13 @@ const Tab1: React.FC = () => {
 
   return (
     <>
-      <IonPage id="main-content">
+      <IonPage>
         <IonHeader>
           <IonToolbar>
             <IonTitle>Calendar</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent fullscreen>
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">Calendar</IonTitle>
-            </IonToolbar>
-          </IonHeader>
+        <IonContent forceOverscroll={false}>
           
           <Calendar
             weekendsVisible={true}

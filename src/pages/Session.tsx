@@ -62,7 +62,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding session-page">
+      <IonContent className="ion-padding session-page" forceOverscroll={false}>
         <Timer
           onSwitchToBreak={handleBreakStarted}
           onSwitchToStudy={handleStudyStarted}

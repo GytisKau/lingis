@@ -66,7 +66,7 @@ const Tab3: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="tab3-page">
+      <IonContent className="tab3-page" forceOverscroll={false}>
         <DailyLearningTip />
 
         <TipsCarousel />
