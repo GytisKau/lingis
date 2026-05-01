@@ -61,14 +61,14 @@ ion-toolbar {
 ion-title {
   color: #491B6D !important;
   font-weight: 600 !important;
-  padding-left: 20px !important;
+  /* padding-left: 20px !important; */
   padding-top: 8px !important;
   padding-bottom: 6px !important;
   font-family: 'Poppins', sans-serif !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
-  text-align: left !important;
-  font-size: 20px !important;
+  /* text-align: left !important; */
+  /* font-size: 20px !important; */
 }
 
 ion-back-button {

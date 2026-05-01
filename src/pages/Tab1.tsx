@@ -1,4 +1,4 @@
-import { IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonLabel, IonPage, IonSpinner, IonTitle, IonToolbar, useIonModal } from '@ionic/react';
+import { IonContent, IonFab, IonFabButton, IonFabList, IonIcon, IonLabel, IonPage, IonSpinner, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput } from '@fullcalendar/react'

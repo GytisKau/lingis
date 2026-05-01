@@ -1,14 +1,8 @@
 import {
   IonContent,
-  IonHeader,
   IonPage,
-  IonTitle,
-  IonToolbar,
   IonIcon,
-  IonButtons,
-  IonButton,
   IonModal,
-  IonBackButton
 } from '@ionic/react';
 
 import { db } from '../db/db';

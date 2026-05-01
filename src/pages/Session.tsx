@@ -23,7 +23,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
   
   const modal = useRef<HTMLIonModalElement>(null);
   const router = useIonRouter()
-  const { breakTime, mode, setStudyTime, switchToBreak, switchToStudy } = useTimerContext();
+  const { breakTime, mode, pause, setStudyTime, switchToBreak, switchToStudy } = useTimerContext();
 
   const id = Number(match.params.id);
 
@@ -37,6 +37,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
   };
 
   const handleFinishStudying = () => {
+    pause()
     router.push('/tabs/tab3');
   }
 
