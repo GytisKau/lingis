@@ -10,10 +10,10 @@ import {
   IonText,
   IonSpinner
 } from "@ionic/react";
-import { db, User } from "../db/db";
+import { db } from "../db/db";
 import { FeaturesInput, Recommendation } from "../utils/Recommendation";
-import { IonModalCustomEvent, OverlayEventDetail } from "@ionic/core/components";
 import "../pages/Tab3.css";
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface FormData {
   motivation: number;
@@ -49,16 +49,19 @@ const QUESTIONS: { label: string; key: keyof FormData; options: number[] }[] = [
 
 interface Props {
   modal: React.RefObject<HTMLIonModalElement | null>;
-  trigger: string;
-  onClosed: (result: number) => void;
-  user?: User;
+  trigger?: string;
+  onClosed?: () => void;
+  onCalculated?: (calculatedMinutes: number) => void;
 }
 
-const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user }) => {
+const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalculated }) => {
   const [step, setStep] = useState<"questions" | "result">("questions");
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [recommendation, setRecommendation] = useState<number>();
+
+  const users = useLiveQuery(() => db.users.toArray())
+  const user = users !== undefined ? users[0] : undefined
 
   const isFormValid = Object.entries(formData)
     .filter(([key]) => key !== "created_at")
@@ -70,7 +73,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user })
 
   const handleConfirm = async () => {
     if (step === "result") {
-      modal.current?.dismiss(recommendation, "done");
+      modal.current?.dismiss();
       return;
     }
 
@@ -108,6 +111,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user })
       };
 
       const result = await Recommendation(input, "practice");
+      result.minutes && onCalculated?.(result.minutes)
       setRecommendation(result.minutes);
       setStep("result");
     } catch (error) {
@@ -117,14 +121,12 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, user })
     }
   };
 
-  const resetForm = (event: IonModalCustomEvent<OverlayEventDetail>) => {
+  const resetForm = () => {
     setStep("questions");
     setFormData(INITIAL_DATA);
     setRecommendation(undefined);
 
-    if (event.detail.role === "done") {
-      onClosed(event.detail.data);
-    }
+    onClosed?.()
   };
 
   return (

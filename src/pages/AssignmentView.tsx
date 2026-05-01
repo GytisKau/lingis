@@ -1,49 +1,32 @@
 import {
   IonContent,
-  IonHeader,
   IonPage,
-  IonTitle,
-  IonToolbar,
   IonIcon,
-  IonButtons,
-  IonButton,
-  IonModal
+  IonModal,
 } from '@ionic/react';
 
 import { db } from '../db/db';
 import { RouteComponentProps } from 'react-router';
-import { useHistory } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import TaskList from '../components/TaskList';
 import './AssignmentView.css';
-import { close, pencil, arrowBack } from 'ionicons/icons';
+import { close, pencil } from 'ionicons/icons';
 import { useState } from 'react';
 import EditAssignmentForm from '../forms/EditAssignmentForm';
 import AssignmentCard from '../components/AssignmentCard';
+import { Header } from '../components/Header';
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
 const AssignmentsView: React.FC<AssignmentViewProps> = ({ match }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const history = useHistory();
 
   const id = Number(match.params.id);
   const assignment = useLiveQuery(() => db.assignments.get(id), [id]);
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonButton onClick={() => history.goBack()}>
-              <IonIcon icon={arrowBack} />
-            </IonButton>
-          </IonButtons>
-
-          <IonTitle>{assignment ? assignment.title : 'Loading...'}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
+      <Header title={assignment ? assignment.title : ''} backButton/>
       <IonContent className="ion-padding">
         {assignment && (
           <>

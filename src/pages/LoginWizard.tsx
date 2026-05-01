@@ -210,7 +210,7 @@ const LoginWizard: React.FC = () => {
 
   return (
     <IonPage>
-      <IonContent fullscreen className='ion-padding'>
+      <IonContent fullscreen className='ion-padding' forceOverscroll={false}>
 
           <div style={{width: "100%"}} className='ion-text-center'>
           <img src="/logo.svg" alt="Logo" className="ion-margin-bottom" width={100} height={100}/>

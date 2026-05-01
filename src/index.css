@@ -56,28 +56,19 @@ ion-toolbar {
   background: transparent !important;
   --border-style: none !important;
   box-shadow: none !important;
-  min-height: 56px !important;
-}
-
-/* Remove default borders */
-ion-header::after,
-.header-md::after,
-.header-ios::after,
-ion-toolbar::after {
-  display: none !important;
 }
 
 ion-title {
   color: #491B6D !important;
   font-weight: 600 !important;
-  padding-left: 20px !important;
+  /* padding-left: 20px !important; */
   padding-top: 8px !important;
   padding-bottom: 6px !important;
   font-family: 'Poppins', sans-serif !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
-  text-align: left !important;
-  font-size: 20px !important;
+  /* text-align: left !important; */
+  /* font-size: 20px !important; */
 }
 
 ion-back-button {
@@ -155,7 +146,6 @@ ion-list,
 ion-list-header,
 ion-item {
   --background: transparent !important;
-  /* background: transparent !important; */
 }
 
 /* ============================
@@ -400,24 +390,4 @@ ion-toolbar {
   --border-style: none !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-.header-ios,
-.header-md {
-  border-bottom: none !important;
-  box-shadow: none !important;
-}
-
-ion-header::after,
-ion-toolbar::after,
-.header-ios::after,
-.header-md::after {
-  display: none !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-
-ion-header ion-toolbar:first-of-type {
-  --min-height: auto;
-  border-bottom: none !important;
 }

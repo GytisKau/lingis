@@ -1,4 +1,4 @@
-import { IonContent, IonFab, IonFabButton, IonFabList, IonHeader, IonIcon, IonLabel, IonPage, IonSpinner, IonTitle, IonToolbar, useIonModal } from '@ionic/react';
+import { IonContent, IonFab, IonFabButton, IonFabList, IonIcon, IonLabel, IonPage, IonSpinner, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
 import { EventInput } from '@fullcalendar/react'
@@ -12,6 +12,7 @@ import FreeTimeModal from '../components/FreeTimeModal';
 import AssignmentCard from '../components/AssignmentCard';
 import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';
+import { Header } from '../components/Header';
 
 const getAssignmentTypeColor = (type?: number | null) => {
   if (type === 0) return "#ffcfcf"; // exam
@@ -254,19 +255,9 @@ const Tab1: React.FC = () => {
 
   return (
     <>
-      <IonPage id="main-content">
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Calendar</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent fullscreen>
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">Calendar</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          
+      <IonPage>
+        <Header title='Calendar'/>
+        <IonContent forceOverscroll={false}>
           <Calendar
             weekendsVisible={true}
             events={calendarEvents}

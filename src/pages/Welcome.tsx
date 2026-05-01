@@ -13,7 +13,7 @@ const Welcome: React.FC = () => {
   const { clearErrors } = useAuth()
   return (
     <IonPage>
-      <IonContent className="ion-padding" fullscreen>
+      <IonContent className="ion-padding" fullscreen forceOverscroll={false}>
         <div style={{ textAlign: "center", marginTop: "2em" }}>
           <img src="/logo.svg" alt="Logo" className="register-logo" />
           <IonText>
