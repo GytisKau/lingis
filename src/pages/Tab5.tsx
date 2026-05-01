@@ -40,6 +40,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { useAuth } from "../hooks/useAuth";
 import "./Tab5.css";
+import { Header } from "../components/Header";
 
 interface ProfileForm {
   email: string;
@@ -528,11 +529,7 @@ const Tab5: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Assignments</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      <Header title="Profile"/>
       <IonContent className="profile-page" forceOverscroll={false}>
         <div className="profile-shell">
           <section className="profile-hero">

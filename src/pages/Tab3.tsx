@@ -17,6 +17,7 @@ import './Tab3.css';
 import TipsCarousel from '../components/TipsCarousel';
 import DailyLearningTip from '../components/DailyLearningTip';
 import { useLocation } from 'react-router';
+import { Header } from '../components/Header';
 
 const Tab3: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
@@ -60,12 +61,7 @@ const Tab3: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>{username ? `Hello, ${username}` : 'Hello'}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
+      <Header title={username ? `Hello, ${username}` : 'Hello'}/>
       <IonContent className="tab3-page" forceOverscroll={false}>
         <DailyLearningTip />
 

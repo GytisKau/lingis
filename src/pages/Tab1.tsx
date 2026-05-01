@@ -12,6 +12,7 @@ import FreeTimeModal from '../components/FreeTimeModal';
 import AssignmentCard from '../components/AssignmentCard';
 import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';
+import { Header } from '../components/Header';
 
 const getAssignmentTypeColor = (type?: number | null) => {
   if (type === 0) return "#ffcfcf"; // exam
@@ -255,13 +256,8 @@ const Tab1: React.FC = () => {
   return (
     <>
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Calendar</IonTitle>
-          </IonToolbar>
-        </IonHeader>
+        <Header title='Calendar'/>
         <IonContent forceOverscroll={false}>
-          
           <Calendar
             weekendsVisible={true}
             events={calendarEvents}

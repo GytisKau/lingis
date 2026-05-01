@@ -20,6 +20,7 @@ import './Tab2.css';
 
 import AssignmentCard from '../components/AssignmentCard';
 import TaskList from '../components/TaskList';
+import { Header } from '../components/Header';
 
 interface AssignmentStats {
   id: number;
@@ -114,12 +115,7 @@ const Tab2: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Statistics</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
+      <Header title='Statistics'/>
       <IonContent className="ion-padding" forceOverscroll={false}>
 
         {/* TABS */}

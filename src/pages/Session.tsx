@@ -54,8 +54,8 @@ const Session: React.FC<SessionProps> = ({ match }) => {
 
   return (
     <IonPage>
-      <IonHeader className="session-header">
-        <IonToolbar className="session-toolbar">
+      <IonHeader>
+        <IonToolbar>
           <IonTitle>
             {mode === 'study' ? 'Study time' : 'Break time'}
           </IonTitle>

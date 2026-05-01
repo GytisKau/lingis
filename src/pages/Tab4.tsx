@@ -12,16 +12,12 @@ import './Tab4.css';
 import AddAssignmentModal from '../forms/AddAssignmentModal';
 import AssignmentList from '../components/AssignmentList';
 import { add } from 'ionicons/icons';
+import { Header } from '../components/Header';
 
 const Tab4: React.FC = () => {
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Assignments</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
+      <Header title="Assignments"/>
       <IonContent className="tab4-page ion-padding" forceOverscroll={false}>
         <AssignmentList />
 
