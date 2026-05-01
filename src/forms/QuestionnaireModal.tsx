@@ -138,7 +138,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
     >
       <IonHeader className="questionnaire-header">
         <IonToolbar className="questionnaire-toolbar">
-          <IonTitle className="questionnaire-title">Questionnaire</IonTitle>
+          <h2 className="questionnaire-title">Questionnaire</h2>
 
           <IonButtons slot="end">
             <IonButton

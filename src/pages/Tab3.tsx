@@ -84,9 +84,9 @@ const Tab3: React.FC = () => {
             >
               <IonHeader>
                 <IonToolbar className="assignment-toolbar">
-                  <IonTitle className="assignment-title">
+                  <h2 className="assignment-title">
                     Pick the assignment
-                  </IonTitle>
+                  </h2>
 
                   <IonButtons slot="end">
                     <IonButton

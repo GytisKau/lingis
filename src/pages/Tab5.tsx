@@ -11,7 +11,6 @@ import {
   IonPage,
   IonSelect,
   IonSelectOption,
-  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import {
@@ -658,7 +657,7 @@ const Tab5: React.FC = () => {
         <IonModal ref={usernameModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">Edit username</IonTitle>
+              <h2 className="profile-modal-title">Edit username</h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -697,7 +696,7 @@ const Tab5: React.FC = () => {
         <IonModal ref={changeEmailModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">Change email</IonTitle>
+              <h2 className="profile-modal-title">Change email</h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -758,9 +757,9 @@ const Tab5: React.FC = () => {
         <IonModal ref={studyProfileModal} className="profile-settings-modal wide">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">
+              <h2 className="profile-modal-title">
                 Study profile
-              </IonTitle>
+              </h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -819,9 +818,9 @@ const Tab5: React.FC = () => {
         <IonModal ref={studyTimesModal} className="profile-settings-modal wide">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">
+              <h2 className="profile-modal-title">
                 Preferred session lengths
-              </IonTitle>
+              </h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -872,7 +871,7 @@ const Tab5: React.FC = () => {
         <IonModal ref={workHoursModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">Work hours</IonTitle>
+              <h2 className="profile-modal-title">Work hours</h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -946,7 +945,7 @@ const Tab5: React.FC = () => {
         <IonModal ref={modulesModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">Manage modules</IonTitle>
+              <h2 className="profile-modal-title">Manage modules</h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -1041,9 +1040,9 @@ const Tab5: React.FC = () => {
         <IonModal ref={assignmentTypesModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <IonTitle className="profile-modal-title">
+              <h2 className="profile-modal-title">
                 Assignment type names
-              </IonTitle>
+              </h2>
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"

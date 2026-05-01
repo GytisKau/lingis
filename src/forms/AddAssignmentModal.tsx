@@ -138,7 +138,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     >
       <IonHeader className="assignment-form-header">
         <IonToolbar className="assignment-form-toolbar">
-          <IonTitle className="assignment-form-title">Add assignment</IonTitle>
+          <h2 className="assignment-form-title">Add assignment</h2>
 
           <IonButtons slot="end">
             <IonButton

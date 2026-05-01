@@ -198,7 +198,7 @@ const FreeTimeModal: React.FC<Props> = ({ trigger, freeTimes }) => {
     >
       <IonHeader className="free-time-header">
         <IonToolbar className="free-time-toolbar">
-          <IonTitle className="free-time-title">Edit free time</IonTitle>
+          <h2 className="free-time-title">Edit free time</h2>
 
           <IonButtons slot="end">
             <IonButton className="close-x" onClick={closeModal}>
