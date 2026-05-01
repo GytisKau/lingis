@@ -8,21 +8,20 @@ import { eventBus } from '../utils/eventBus';
 interface TimerProps {
   onSwitchToBreak: () => void;
   onSwitchToStudy: () => void;
-  onFinish: () => void;
-  onGoHome: () => void;
+  onFinishStudying: () => void;
+  onGoStudy: () => void;
 }
 
 export function Timer(props: TimerProps) {
   const [showStudyAlert, setShowStudyAlert] = useState(false);
   const [showBreakAlert, setShowBreakAlert] = useState(false);
   
-  const {time, running, mode, start, pause, setStudyTime} = useTimerContext()
+  const {time, running, mode, start, pause, setTime} = useTimerContext()
 
   useEffect(() => {
     const handleFinish = (data: { mode: string }) => {
       if (data.mode === 'study') {
         setShowStudyAlert(true);
-        props.onFinish();
       } else {
         setShowBreakAlert(true);
       }
@@ -30,8 +29,7 @@ export function Timer(props: TimerProps) {
 
     eventBus.on('TimerFinished', handleFinish);
     return () => eventBus.off('TimerFinished', handleFinish);
-  }, []);
-
+  });
 
   return (
     <>
@@ -43,7 +41,7 @@ export function Timer(props: TimerProps) {
         onStart={start}
         onPause={pause}
         onSwitch={ mode === 'study' ? props.onSwitchToBreak : props.onSwitchToStudy }
-        onFinish={props.onGoHome}
+        onFinish={props.onFinishStudying}
       />
 
       <TimerAlerts
@@ -51,19 +49,16 @@ export function Timer(props: TimerProps) {
         showBreakAlert={showBreakAlert}
         onCloseStudy={() => setShowStudyAlert(false)}
         onCloseBreak={() => setShowBreakAlert(false)}
-        onExtendStudy={(m: number) => {
-          setStudyTime(m * 60);
-          setShowStudyAlert(false);
+        onExtendStudy={(minutes: number) => {
+          setTime(minutes * 60);
+          start()
         }}
-        onExtendBreak={(m: number) => {
-          setStudyTime(m * 60);
-          setShowBreakAlert(false);
+        onExtendBreak={(minutes: number) => {
+          setTime(minutes * 60);
+          start()
         }}
-        onGoBreak={() => {
-          setShowStudyAlert(false);
-          props.onSwitchToBreak();
-        }}
-        onGoHome={props.onGoHome}
+        onGoBreak={props.onSwitchToBreak}
+        onGoStudy={props.onGoStudy}
       />
     </>
   );

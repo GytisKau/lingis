@@ -28,6 +28,11 @@ interface TimerContextType {
    * @param t Study time in seconds
    */
   setStudyTime: (t: number) => void;
+  /**
+   * Sets the Timer time
+   * @param t Study time in seconds
+   */
+  setTime: (t: number) => void;
 }
 
 export const TimerContext = createContext<TimerContextType | null>(null);

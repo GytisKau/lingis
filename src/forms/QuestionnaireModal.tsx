@@ -12,7 +12,6 @@ import {
 } from "@ionic/react";
 import { db } from "../db/db";
 import { FeaturesInput, Recommendation } from "../utils/Recommendation";
-import { IonModalCustomEvent, OverlayEventDetail } from "@ionic/core/components";
 import "../pages/Tab3.css";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -50,11 +49,12 @@ const QUESTIONS: { label: string; key: keyof FormData; options: number[] }[] = [
 
 interface Props {
   modal: React.RefObject<HTMLIonModalElement | null>;
-  trigger: string;
-  onClosed: (result: number) => void;
+  trigger?: string;
+  onClosed?: () => void;
+  onCalculated?: (calculatedMinutes: number) => void;
 }
 
-const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed }) => {
+const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalculated }) => {
   const [step, setStep] = useState<"questions" | "result">("questions");
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
@@ -73,7 +73,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed }) => {
 
   const handleConfirm = async () => {
     if (step === "result") {
-      modal.current?.dismiss(recommendation, "done");
+      modal.current?.dismiss();
       return;
     }
 
@@ -111,6 +111,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed }) => {
       };
 
       const result = await Recommendation(input, "practice");
+      result.minutes && onCalculated?.(result.minutes)
       setRecommendation(result.minutes);
       setStep("result");
     } catch (error) {
@@ -120,14 +121,12 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed }) => {
     }
   };
 
-  const resetForm = (event: IonModalCustomEvent<OverlayEventDetail>) => {
+  const resetForm = () => {
     setStep("questions");
     setFormData(INITIAL_DATA);
     setRecommendation(undefined);
 
-    if (event.detail.role === "done") {
-      onClosed(event.detail.data);
-    }
+    onClosed?.()
   };
 
   return (

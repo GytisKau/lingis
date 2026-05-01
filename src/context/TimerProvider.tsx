@@ -24,7 +24,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!running) return;
 
     const interval = setInterval(() => {
-      setTime((t) => (t <= 1 ? 0 : t - 1));
+      setTime((t) => (t <= 1 ? 0 : t - 60));
     }, 1000);
 
     return () => clearInterval(interval);
@@ -68,7 +68,8 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         pause,
         switchToStudy,
         switchToBreak,
-        setStudyTime
+        setStudyTime,
+        setTime
       }}
     >
       {children}
