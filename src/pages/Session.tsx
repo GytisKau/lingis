@@ -15,6 +15,9 @@ import BreakTypeSelector from '../components/BreakTypeSelector';
 import { BreakLength } from '../data/breakSuggestions';
 import { Timer } from '../components/Timer';
 import { useTimerContext } from '../context/TimerContext';
+import { db } from '../db/db';
+
+const MIN_SESSION_MINUTES = 1;
 
 interface SessionProps extends RouteComponentProps<{ id: string }> {}
 
@@ -23,21 +26,50 @@ const Session: React.FC<SessionProps> = ({ match }) => {
   
   const modal = useRef<HTMLIonModalElement>(null);
   const router = useIonRouter()
-  const { breakTime, mode, pause, setStudyTime, switchToBreak, switchToStudy } = useTimerContext();
+  const { breakTime, mode, startedAt, pause, setStudyTime, switchToBreak, switchToStudy } = useTimerContext();
 
   const id = Number(match.params.id);
 
-  const handleBreakStarted = () => {
+  const saveStudySession = async () => {
+    if(startedAt == undefined){
+      console.error("Failed to save session: Session start time is unknown.");
+      return;
+    }
+    const end = new Date();
+    const sessionMinutes =
+      (end.getTime() - startedAt.getTime()) / 1000 / 60;
+
+    if (sessionMinutes < MIN_SESSION_MINUTES) {
+      console.log("Session too short, not saved:", sessionMinutes);
+      return;
+    }
+
+    try {
+      await db.sessions.add({
+        start: startedAt,
+        end,
+        is_done: true,
+        fk_assignment: id
+      });
+    } catch (error) {
+      console.error("Failed to save session:", error);
+    }
+  };
+
+  const handleSwitchToBreak = () => {
     setBreakResetKey((prev) => prev + 1);
+    saveStudySession()
     switchToBreak();
   };
 
-  const handleStudyStarted = () => {
-    switchToStudy();
+  const handleSwitchToStudy = () => {
+    pause()
+    modal.current?.present()
   };
 
   const handleFinishStudying = () => {
     pause()
+    saveStudySession()
     router.push('/tabs/tab3');
   }
 
@@ -65,8 +97,8 @@ const Session: React.FC<SessionProps> = ({ match }) => {
 
       <IonContent className="ion-padding session-page" forceOverscroll={false}>
         <Timer
-          onSwitchToBreak={handleBreakStarted}
-          onSwitchToStudy={handleStudyStarted}
+          onSwitchToBreak={handleSwitchToBreak}
+          onSwitchToStudy={handleSwitchToStudy}
           onFinishStudying={handleFinishStudying}
           onGoStudy={handleGoStudy}
         />
