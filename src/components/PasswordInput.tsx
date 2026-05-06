@@ -1,51 +1,86 @@
 import { useState } from 'react';
-import { InputChangeEventDetail, IonInput, IonInputPasswordToggle } from '@ionic/react';
+import {
+  InputChangeEventDetail,
+  IonInput,
+  IonInputPasswordToggle
+} from '@ionic/react';
 import { IonInputCustomEvent } from '@ionic/core';
 
 interface PasswordInputProps {
-  label?: string
-  onIonInput?: (event: IonInputCustomEvent<InputChangeEventDetail>, isValid?: boolean) => void;
+  label?: string;
+  onValidate?: (
+    value: string,
+    checks?: PasswordChecks
+  ) => void;
+  validate?: boolean
 }
 
-function PasswordInput({label, onIonInput}: PasswordInputProps) {
+export interface PasswordChecks {
+  lowercase: boolean;
+  uppercase: boolean;
+  number: boolean;
+  symbol: boolean;
+  length: boolean;
+}
+
+export function ChecksValid(checks?: PasswordChecks){
+  if(checks != undefined)
+    return Object.values(checks).every(Boolean);
+  return undefined
+}
+
+function PasswordInput({ label, onValidate, validate }: PasswordInputProps) {
   const [isTouched, setIsTouched] = useState(false);
-  const [isValid, setIsValid] = useState<boolean>();
   const [password, setPassword] = useState<string>("");
+  const [checks, setChecks] = useState<PasswordChecks>();
 
-  const validate = (event: IonInputCustomEvent<InputChangeEventDetail>) => {
-    const value = event.detail.value ?? ""
-    setPassword(value)
+  const handleInput = (event: IonInputCustomEvent<InputChangeEventDetail>) => {
+    isTouched && validateInput(event.detail.value ?? undefined)
+  }
 
-    setIsValid(undefined);
 
-    if (value === ''){
-      if (onIonInput) onIonInput(event, isValid)
-      return;
-    }
+  const validateInput = (input? : string) => {
+    const value = input ?? "";
 
-    setIsValid(value.length >= 6)
-    if (onIonInput) onIonInput(event, value.length >= 6)
+    setPassword(value);
+
+    const localChecks = value.length > 0 && validate == true ? {
+      lowercase: /[a-ząčęėįšųū]/.test(value),
+      uppercase: /[A-ZĄČĘĖĮŠŲŪ]/.test(value),
+      number: /[0-9]/.test(value),
+      symbol: /[\^\$\*\.\[\]\{\}\(\)\?\"\!\@\#\%\&\/\\\,\>\<\'\:\;\|\_\~]/.test(value),
+      length: value.length >= 6,
+    } : undefined;
+
+    setChecks(localChecks);
+    onValidate?.(value, localChecks)
+    return;
   };
 
-  const markTouched = () => {
+  const handleBlur = (event: IonInputCustomEvent<FocusEvent>) => {
     setIsTouched(true);
+    validateInput(event.target.value as string ?? undefined)
   };
 
   return (
-    <IonInput
-      className={`${(isValid === false) && 'ion-invalid'} ${isTouched && 'ion-touched'}`}
-      debounce={100}
-      type="password"
-      fill="outline"
-      label={label ?? "Password"}
-      labelPlacement="floating"
-      errorText={"Minimum 6 characters"}
-      helperText={password.length == 0 ? "Enter your password" : ""}
-      onIonInput={(event) => validate(event)}
-      onIonBlur={() => markTouched()}
-    >
-      <IonInputPasswordToggle slot="end"></IonInputPasswordToggle>
-    </IonInput>
+    <>
+      <IonInput
+        className={`${ChecksValid(checks) === false ? 'ion-invalid' : ''} ${isTouched && 'ion-touched'}`}
+        debounce={200}
+        type="password"
+        fill="outline"
+        label={label ?? "Password"}
+        labelPlacement="floating"
+        helperText={password.length === 0 ? "Enter your password" : ""}
+        errorText='Invalid password'
+        onIonInput={handleInput}
+        onIonBlur={handleBlur}
+        clearOnEdit={false}
+      >
+        <IonInputPasswordToggle slot="end" />
+      </IonInput>
+    </>
   );
 }
+
 export default PasswordInput;

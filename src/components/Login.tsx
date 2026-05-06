@@ -46,7 +46,7 @@ const Login: React.FC = () => {
         <EmailInput onIonInput={(e, isValid) => setEmail(isValid ? e.detail.value ?? "" : "")}/>
 
         { !resetMode && (
-          <PasswordInput onIonInput={(e, isValid) => setPassword(isValid ? e.detail.value ?? "" : "")}/>
+          <PasswordInput onValidate={(value) => setPassword(value)}/>
         )}
 
         {loginError != null && (

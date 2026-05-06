@@ -14,12 +14,14 @@ interface TimerContextType {
   running: boolean;
   /** Study or Break */
   mode: TimerMode;
+  /** Study start time */
+  startedAt: Date | undefined;
 
   /** Starts or unpauses the timer */
   start: () => void;
   /** Pauses the timer */
   pause: () => void;
-  /** Switches the mode to study and starts the timer from studyTime */
+  /** Switches the mode to study, starts the timer from studyTime and sets startedAt to now*/
   switchToStudy: () => void;
   /** Switches the mode to break and starts the timer from breakTime */
   switchToBreak: () => void;
