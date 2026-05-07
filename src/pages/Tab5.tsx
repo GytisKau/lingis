@@ -9,6 +9,7 @@ import {
   IonItem,
   IonModal,
   IonPage,
+  IonPopover,
   IonSelect,
   IonSelectOption,
   IonToolbar,
@@ -16,16 +17,13 @@ import {
 import {
   addOutline,
   bookOutline,
-  briefcaseOutline,
   chevronForwardOutline,
   close,
   cubeOutline,
   documentTextOutline,
-  eyeOffOutline,
-  eyeOutline,
+  helpCircleOutline,
   logOutOutline,
   lockClosedOutline,
-  mailOutline,
   moonOutline,
   notificationsOutline,
   personOutline,
@@ -63,6 +61,13 @@ type AssignmentTypeNames = {
   2: string;
 };
 
+type InfoPopoverState = {
+  isOpen: boolean;
+  event?: Event;
+  title: string;
+  content: React.ReactNode;
+};
+
 const ASSIGNMENT_TYPE_NAMES_KEY = "assignmentTypeNames";
 
 const defaultForm: ProfileForm = {
@@ -75,7 +80,7 @@ const defaultForm: ProfileForm = {
   avg_sleep_hours: 8,
   preffered_session_time: 30,
   work_hours_start: 8,
-  work_hours_end: 17,
+  work_hours_end: 20,
   effectiveness_rating: 2,
   study_field: 0,
   chronotype: 0,
@@ -157,6 +162,10 @@ const formatMinutes = (value: number | undefined) => {
 const formatHours = (start?: number, end?: number) => {
   if (start == null || end == null) return "Not set";
   return `${start}:00 - ${end}:00`;
+};
+
+const getValidStudyingEndOptions = (start: number) => {
+  return hourOptions.filter((option) => option.value > start);
 };
 
 const getInitials = (username?: string, email?: string) => {
@@ -269,7 +278,6 @@ const Tab5: React.FC = () => {
   const { user, logout, resetPassword, resetPasswordError } = useAuth();
 
   const usernameModal = useRef<HTMLIonModalElement>(null);
-  const changeEmailModal = useRef<HTMLIonModalElement>(null);
   const studyProfileModal = useRef<HTMLIonModalElement>(null);
   const studyTimesModal = useRef<HTMLIonModalElement>(null);
   const workHoursModal = useRef<HTMLIonModalElement>(null);
@@ -280,16 +288,19 @@ const Tab5: React.FC = () => {
   const [status, setStatus] = useState("");
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
-  const [newEmail, setNewEmail] = useState("");
-  const [emailPassword, setEmailPassword] = useState("");
-  const [showEmailPassword, setShowEmailPassword] = useState(false);
-
   const [subjectInput, setSubjectInput] = useState("");
   const [subjectColor, setSubjectColor] = useState("#b899ff");
   const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
 
   const [assignmentTypeNames, setAssignmentTypeNames] =
     useState<AssignmentTypeNames>(getAssignmentTypeNames);
+
+  const [infoPopover, setInfoPopover] = useState<InfoPopoverState>({
+    isOpen: false,
+    event: undefined,
+    title: "",
+    content: null,
+  });
 
   const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
   const currentUser = users[0];
@@ -339,7 +350,7 @@ const Tab5: React.FC = () => {
       field: labelFor(form.study_field, studyFields),
       chronotype: labelFor(form.chronotype, chronotypes),
       session: formatMinutes(form.preffered_session_time),
-      workHours: formatHours(form.work_hours_start, form.work_hours_end),
+      studyingHours: formatHours(form.work_hours_start, form.work_hours_end),
     }),
     [form]
   );
@@ -395,9 +406,23 @@ const Tab5: React.FC = () => {
     if (saved) studyTimesModal.current?.dismiss();
   };
 
+  const handleStudyingStartChange = (value: number) => {
+    const nextStart = value;
+    const nextEnd =
+      form.work_hours_end <= nextStart
+        ? Math.min(nextStart + 1, 24)
+        : form.work_hours_end;
+
+    setForm({
+      ...form,
+      work_hours_start: nextStart,
+      work_hours_end: nextEnd,
+    });
+  };
+
   const handleSaveWorkHours = async () => {
     if (form.work_hours_end <= form.work_hours_start) {
-      setStatus("Work end must be after work start.");
+      setStatus("Studying end must be after studying start.");
       return;
     }
 
@@ -422,26 +447,6 @@ const Tab5: React.FC = () => {
     } else {
       setStatus(resetPasswordError?.message ?? "Could not send reset email.");
     }
-  };
-
-  const handleChangeEmailPlaceholder = () => {
-    if (!newEmail.trim()) {
-      setStatus("Enter a new email first.");
-      return;
-    }
-
-    if (!emailPassword.trim()) {
-      setStatus("Enter your current password first.");
-      return;
-    }
-
-    setStatus(
-      "Email change is not connected yet. It needs password confirmation and email verification."
-    );
-    changeEmailModal.current?.dismiss();
-    setNewEmail("");
-    setEmailPassword("");
-    setShowEmailPassword(false);
   };
 
   const clearSubjectForm = () => {
@@ -526,9 +531,50 @@ const Tab5: React.FC = () => {
     setStatus("Assignment type names reset.");
   };
 
+  const openInfoPopover = (
+    event: React.MouseEvent<HTMLElement>,
+    title: string,
+    content: React.ReactNode
+  ) => {
+    event.stopPropagation();
+
+    setInfoPopover({
+      isOpen: true,
+      event: event.nativeEvent,
+      title,
+      content,
+    });
+  };
+
+  const closeInfoPopover = () => {
+    setInfoPopover({
+      isOpen: false,
+      event: undefined,
+      title: "",
+      content: null,
+    });
+  };
+
+  const ModalInfoButton = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <button
+      type="button"
+      className="profile-modal-info-button"
+      onClick={(event) => openInfoPopover(event, title, children)}
+      aria-label={`More information about ${title}`}
+    >
+      <IonIcon icon={helpCircleOutline} />
+    </button>
+  );
+
   return (
     <IonPage>
-      <Header title="Profile"/>
+      <Header title="Profile" />
       <IonContent className="profile-page" forceOverscroll={false}>
         <div className="profile-shell">
           <section className="profile-hero">
@@ -550,13 +596,6 @@ const Tab5: React.FC = () => {
               label="Username"
               value={profileName}
               onClick={() => usernameModal.current?.present()}
-            />
-
-            <SettingsRow
-              icon={mailOutline}
-              label="Change email"
-              value="Requires verification"
-              onClick={() => changeEmailModal.current?.present()}
             />
 
             <SettingsRow
@@ -598,9 +637,9 @@ const Tab5: React.FC = () => {
                 value={studySummary.session}
               />
               <SummaryTile
-                icon={briefcaseOutline}
-                label="Work hours"
-                value={studySummary.workHours}
+                icon={bookOutline}
+                label="Studying hours"
+                value={studySummary.studyingHours}
               />
             </div>
 
@@ -619,9 +658,9 @@ const Tab5: React.FC = () => {
             />
 
             <SettingsRow
-              icon={briefcaseOutline}
-              label="Preferred work hours"
-              value={studySummary.workHours}
+              icon={bookOutline}
+              label="Preferred studying hours"
+              value={studySummary.studyingHours}
               onClick={() => workHoursModal.current?.present()}
             />
           </SettingsCard>
@@ -630,7 +669,9 @@ const Tab5: React.FC = () => {
             <SettingsRow
               icon={bookOutline}
               label="Manage modules"
-              value={`${subjects.length} module${subjects.length === 1 ? "" : "s"}`}
+              value={`${subjects.length} module${
+                subjects.length === 1 ? "" : "s"
+              }`}
               onClick={() => modulesModal.current?.present()}
             />
 
@@ -672,6 +713,7 @@ const Tab5: React.FC = () => {
 
           <div className="profile-modal-content">
             <p className="profile-modal-label">Username</p>
+
             <IonItem className="profile-input-item">
               <IonInput
                 value={form.username}
@@ -692,75 +734,38 @@ const Tab5: React.FC = () => {
           </div>
         </IonModal>
 
-        {/* CHANGE EMAIL MODAL */}
-        <IonModal ref={changeEmailModal} className="profile-settings-modal">
-          <IonHeader>
-            <IonToolbar className="profile-modal-toolbar">
-              <h2 className="profile-modal-title">Change email</h2>
-              <IonButtons slot="end">
-                <IonButton
-                  fill="clear"
-                  className="profile-modal-close"
-                  onClick={() => changeEmailModal.current?.dismiss()}
-                >
-                  <IonIcon icon={close} />
-                </IonButton>
-              </IonButtons>
-            </IonToolbar>
-          </IonHeader>
-
-          <div className="profile-modal-content">
-            <p className="profile-modal-helper-text">
-              Changing email needs password confirmation and email verification.
-              This screen is ready, but the Firebase logic still needs to be
-              connected.
-            </p>
-
-            <p className="profile-modal-label">New email</p>
-            <IonItem className="profile-input-item">
-              <IonInput
-                type="email"
-                value={newEmail}
-                placeholder="new@email.com"
-                onIonInput={(e) => setNewEmail(e.detail.value ?? "")}
-              />
-            </IonItem>
-
-            <p className="profile-modal-label">Current password</p>
-            <IonItem className="profile-input-item password-item">
-              <IonInput
-                type={showEmailPassword ? "text" : "password"}
-                value={emailPassword}
-                placeholder="Enter password"
-                onIonInput={(e) => setEmailPassword(e.detail.value ?? "")}
-              />
-              <IonButton
-                fill="clear"
-                className="show-password-button"
-                onClick={() => setShowEmailPassword((prev) => !prev)}
-              >
-                <IonIcon icon={showEmailPassword ? eyeOffOutline : eyeOutline} />
-              </IonButton>
-            </IonItem>
-
-            <IonButton
-              expand="block"
-              className="profile-primary-button"
-              onClick={handleChangeEmailPlaceholder}
-            >
-              Continue
-            </IonButton>
-          </div>
-        </IonModal>
-
         {/* STUDY PROFILE MODAL */}
         <IonModal ref={studyProfileModal} className="profile-settings-modal wide">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <h2 className="profile-modal-title">
-                Study profile
-              </h2>
+              <h2 className="profile-modal-title">Study profile</h2>
               <IonButtons slot="end">
+                <ModalInfoButton title="Study profile">
+                  <p>
+                    These preferences help the planner understand your normal
+                    study rhythm, not just your deadlines.
+                  </p>
+
+                  <ul>
+                    <li>
+                      <strong>Study field</strong> gives the app a rough idea of
+                      the kind of work you usually do.
+                    </li>
+                    <li>
+                      <strong>Chronotype</strong> helps match study sessions to
+                      the part of the day when you usually focus best.
+                    </li>
+                    <li>
+                      <strong>Effectiveness</strong> is your own feeling about
+                      how well your current study habits work.
+                    </li>
+                    <li>
+                      <strong>Sleep hours</strong> help the planner avoid
+                      creating a schedule that is too intense.
+                    </li>
+                  </ul>
+                </ModalInfoButton>
+
                 <IonButton
                   fill="clear"
                   className="profile-modal-close"
@@ -774,6 +779,9 @@ const Tab5: React.FC = () => {
 
           <div className="profile-modal-content scrollable">
             <p className="profile-modal-label">Study field</p>
+            <p className="profile-field-helper">
+              The general area your studies belong to.
+            </p>
             <ChoiceButtons
               value={form.study_field}
               options={studyFields}
@@ -781,6 +789,9 @@ const Tab5: React.FC = () => {
             />
 
             <p className="profile-modal-label">Chronotype</p>
+            <p className="profile-field-helper">
+              When you usually feel most focused.
+            </p>
             <ChoiceButtons
               value={form.chronotype}
               options={chronotypes}
@@ -788,6 +799,9 @@ const Tab5: React.FC = () => {
             />
 
             <p className="profile-modal-label">Effectiveness</p>
+            <p className="profile-field-helper">
+              How well your current study habits feel to you.
+            </p>
             <ChoiceButtons
               value={form.effectiveness_rating}
               options={effectivenessOptions}
@@ -797,6 +811,9 @@ const Tab5: React.FC = () => {
             />
 
             <p className="profile-modal-label">Average sleep hours</p>
+            <p className="profile-field-helper">
+              Your usual sleep amount on a normal day.
+            </p>
             <ChoiceButtons
               value={form.avg_sleep_hours}
               options={sleepOptions}
@@ -821,7 +838,39 @@ const Tab5: React.FC = () => {
               <h2 className="profile-modal-title">
                 Preferred session lengths
               </h2>
+
               <IonButtons slot="end">
+                <ModalInfoButton title="Preferred session lengths">
+                  <p>
+                    These times help the planner estimate how long different
+                    kinds of study work usually take for you.
+                  </p>
+
+                  <ul>
+                    <li>
+                      <strong>Theory</strong> is learning or understanding new
+                      material.
+                    </li>
+                    <li>
+                      <strong>Practice</strong> is applying material through
+                      tasks, exercises, or examples.
+                    </li>
+                    <li>
+                      <strong>Passive</strong> is lower-intensity studying, like
+                      reading, watching, reviewing notes, or looking through
+                      slides.
+                    </li>
+                    <li>
+                      <strong>Active</strong> is higher-effort studying, like
+                      solving, writing, explaining, or creating from memory.
+                    </li>
+                    <li>
+                      <strong>Session</strong> is your general preferred study
+                      block length.
+                    </li>
+                  </ul>
+                </ModalInfoButton>
+
                 <IonButton
                   fill="clear"
                   className="profile-modal-close"
@@ -835,14 +884,36 @@ const Tab5: React.FC = () => {
 
           <div className="profile-modal-content scrollable">
             {[
-              { label: "Theory", key: "avg_theory_time" },
-              { label: "Practice", key: "avg_practice_time" },
-              { label: "Passive", key: "avg_passive_time" },
-              { label: "Active", key: "avg_active_time" },
-              { label: "Session", key: "preffered_session_time" },
+              {
+                label: "Theory",
+                key: "avg_theory_time",
+                helper: "Time for understanding new material.",
+              },
+              {
+                label: "Practice",
+                key: "avg_practice_time",
+                helper: "Time for applying material through tasks.",
+              },
+              {
+                label: "Passive",
+                key: "avg_passive_time",
+                helper: "Reading, watching, reviewing, or going through notes.",
+              },
+              {
+                label: "Active",
+                key: "avg_active_time",
+                helper: "Solving, writing, explaining, or working from memory.",
+              },
+              {
+                label: "Session",
+                key: "preffered_session_time",
+                helper: "Your preferred general study block length.",
+              },
             ].map((item) => (
               <div key={item.key}>
                 <p className="profile-modal-label">{item.label}</p>
+                <p className="profile-field-helper">{item.helper}</p>
+
                 <ChoiceButtons
                   value={Number(form[item.key as keyof ProfileForm] ?? 0)}
                   options={timeOptions}
@@ -867,12 +938,34 @@ const Tab5: React.FC = () => {
           </div>
         </IonModal>
 
-        {/* WORK HOURS MODAL */}
+        {/* STUDYING HOURS MODAL */}
         <IonModal ref={workHoursModal} className="profile-settings-modal">
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
-              <h2 className="profile-modal-title">Work hours</h2>
+              <h2 className="profile-modal-title">Studying hours</h2>
+
               <IonButtons slot="end">
+                <ModalInfoButton title="Preferred studying hours">
+                  <p>
+                    This tells the planner the time range where study sessions
+                    should usually be placed.
+                  </p>
+
+                  <ul>
+                    <li>
+                      Pick the hours when you are usually available and able to
+                      focus.
+                    </li>
+                    <li>
+                      The planner will try to schedule work inside this range.
+                    </li>
+                    <li>
+                      More exact availability can still be added through free
+                      time in the calendar.
+                    </li>
+                  </ul>
+                </ModalInfoButton>
+
                 <IonButton
                   fill="clear"
                   className="profile-modal-close"
@@ -885,16 +978,17 @@ const Tab5: React.FC = () => {
           </IonHeader>
 
           <div className="profile-modal-content">
-            <p className="profile-modal-label">Work start</p>
+            <p className="profile-modal-label">Studying start</p>
+            <p className="profile-field-helper">
+              The earliest time you prefer to study.
+            </p>
+
             <IonItem className="profile-input-item profile-select-item">
               <IonSelect
                 interface="popover"
                 value={String(form.work_hours_start)}
                 onIonChange={(e) =>
-                  setForm({
-                    ...form,
-                    work_hours_start: Number(e.detail.value),
-                  })
+                  handleStudyingStartChange(Number(e.detail.value))
                 }
               >
                 {hourOptions.slice(0, 24).map((option) => (
@@ -908,7 +1002,11 @@ const Tab5: React.FC = () => {
               </IonSelect>
             </IonItem>
 
-            <p className="profile-modal-label">Work end</p>
+            <p className="profile-modal-label">Studying end</p>
+            <p className="profile-field-helper">
+              The latest time you prefer to study.
+            </p>
+
             <IonItem className="profile-input-item profile-select-item">
               <IonSelect
                 interface="popover"
@@ -920,14 +1018,16 @@ const Tab5: React.FC = () => {
                   })
                 }
               >
-                {hourOptions.slice(1, 25).map((option) => (
-                  <IonSelectOption
-                    key={`end-${option.value}`}
-                    value={String(option.value)}
-                  >
-                    {option.label}
-                  </IonSelectOption>
-                ))}
+                {getValidStudyingEndOptions(form.work_hours_start).map(
+                  (option) => (
+                    <IonSelectOption
+                      key={`end-${option.value}`}
+                      value={String(option.value)}
+                    >
+                      {option.label}
+                    </IonSelectOption>
+                  )
+                )}
               </IonSelect>
             </IonItem>
 
@@ -936,7 +1036,7 @@ const Tab5: React.FC = () => {
               className="profile-primary-button"
               onClick={handleSaveWorkHours}
             >
-              Save work hours
+              Save studying hours
             </IonButton>
           </div>
         </IonModal>
@@ -946,7 +1046,21 @@ const Tab5: React.FC = () => {
           <IonHeader>
             <IonToolbar className="profile-modal-toolbar">
               <h2 className="profile-modal-title">Manage modules</h2>
+
               <IonButtons slot="end">
+                <ModalInfoButton title="Modules">
+                  <p>
+                    Modules are your subjects or courses. They help group
+                    assignments and make the planner easier to read.
+                  </p>
+
+                  <ul>
+                    <li>Add a module for each subject or course.</li>
+                    <li>Pick a colour so it is easier to recognize later.</li>
+                    <li>Deleting a module only removes the module label.</li>
+                  </ul>
+                </ModalInfoButton>
+
                 <IonButton
                   fill="clear"
                   className="profile-modal-close"
@@ -959,6 +1073,11 @@ const Tab5: React.FC = () => {
           </IonHeader>
 
           <div className="profile-modal-content scrollable">
+            <p className="profile-modal-label">Module name</p>
+            <p className="profile-field-helper">
+              A subject, course, or class you want to group assignments under.
+            </p>
+
             <div className="profile-module-editor">
               <input
                 type="color"
@@ -1043,6 +1162,7 @@ const Tab5: React.FC = () => {
               <h2 className="profile-modal-title">
                 Assignment type names
               </h2>
+
               <IonButtons slot="end">
                 <IonButton
                   fill="clear"
@@ -1056,9 +1176,14 @@ const Tab5: React.FC = () => {
           </IonHeader>
 
           <div className="profile-modal-content">
+            <p className="profile-field-helper">
+              Rename these types to match the assignment categories you use most.
+            </p>
+
             {[0, 1, 2].map((type) => (
               <div key={type}>
                 <p className="profile-modal-label">Type {type + 1} name</p>
+
                 <IonItem className="profile-input-item">
                   <IonInput
                     value={assignmentTypeNames[type as 0 | 1 | 2]}
@@ -1092,6 +1217,19 @@ const Tab5: React.FC = () => {
             </IonButton>
           </div>
         </IonModal>
+
+        <IonPopover
+          isOpen={infoPopover.isOpen}
+          event={infoPopover.event}
+          onDidDismiss={closeInfoPopover}
+          className="profile-info-popover"
+          showBackdrop={false}
+        >
+          <div className="profile-info-cloud">
+            <h3>{infoPopover.title}</h3>
+            <div>{infoPopover.content}</div>
+          </div>
+        </IonPopover>
 
         <IonAlert
           isOpen={deleteAlertOpen}

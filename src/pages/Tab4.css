@@ -1459,3 +1459,12 @@ ion-item-sliding {
 .assignment-preview-actions ion-icon {
   color: #491B6D !important;
 }
+
+.assignment-empty-modules {
+  margin-top: 4px;
+  color: rgba(73, 27, 109, 0.62);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+  text-align: center;
+}

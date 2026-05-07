@@ -1,16 +1,31 @@
 import {
-  IonContent, IonPage, IonButton, IonChip, IonLabel, IonIcon,
-  IonInput, IonItem, IonSelect, IonSelectOption,
-  useIonRouter
-} from '@ionic/react';
-import './LoginWizard.css';
-import { closeOutline } from "ionicons/icons";
-import { db, type Subject } from '../db/db';
-import { useState, useEffect } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { useAuth } from '../hooks/useAuth';
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonInput,
+  IonItem,
+  IonPage,
+  IonPopover,
+  IonSelect,
+  IonSelectOption,
+  useIonRouter,
+} from "@ionic/react";
+import {
+  arrowBackOutline,
+  bookOutline,
+  checkmarkOutline,
+  helpCircleOutline,
+  moonOutline,
+  schoolOutline,
+  timeOutline,
+} from "ionicons/icons";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../db/db";
+import { useAuth } from "../hooks/useAuth";
+import "./LoginWizard.css";
 
-interface FormData {
+interface WizardForm {
   email: string;
   username: string;
   avg_theory_time: number;
@@ -26,7 +41,14 @@ interface FormData {
   chronotype: number;
 }
 
-const defaultForm: FormData = {
+type InfoPopoverState = {
+  isOpen: boolean;
+  event?: Event;
+  title: string;
+  content: React.ReactNode;
+};
+
+const defaultForm: WizardForm = {
   email: "",
   username: "",
   avg_theory_time: 0,
@@ -36,413 +58,636 @@ const defaultForm: FormData = {
   avg_sleep_hours: 8,
   preffered_session_time: 30,
   work_hours_start: 8,
-  work_hours_end: 17,
+  work_hours_end: 20,
   effectiveness_rating: 2,
   study_field: 0,
   chronotype: 0,
 };
 
-type FieldError = {
-  type: keyof FormData;
-  error: string;
+const studyFields = [
+  { label: "STEM", value: 0 },
+  { label: "Social", value: 1 },
+  { label: "Arts", value: 2 },
+  { label: "Finance", value: 3 },
+];
+
+const chronotypes = [
+  { label: "Morning", value: 0 },
+  { label: "Noon", value: 1 },
+  { label: "Evening", value: 2 },
+];
+
+const effectivenessOptions = [
+  { label: "Terrible", value: 0 },
+  { label: "Not good", value: 1 },
+  { label: "Okay", value: 2 },
+  { label: "Good", value: 3 },
+  { label: "Excellent", value: 4 },
+];
+
+const sleepOptions = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((value) => ({
+  label: `${value}h`,
+  value,
+}));
+
+const timeOptions = [
+  { label: "<5 min", value: 5 },
+  { label: "10 min", value: 10 },
+  { label: "20 min", value: 20 },
+  { label: "30 min", value: 30 },
+  { label: "60 min", value: 60 },
+  { label: "90 min", value: 90 },
+];
+
+const hourOptions = Array.from({ length: 25 }, (_, value) => ({
+  label: `${value}:00`,
+  value,
+}));
+
+const getValidStudyingEndOptions = (start: number) => {
+  return hourOptions.filter((option) => option.value > start);
+};
+
+interface ChoiceButtonsProps {
+  value: number;
+  options: { label: string; value: number }[];
+  onChange: (value: number) => void;
+  compact?: boolean;
+}
+
+const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
+  value,
+  options,
+  onChange,
+  compact = false,
+}) => (
+  <div className={`wizard-choice-grid ${compact ? "compact" : ""}`}>
+    {options.map((option) => (
+      <button
+        key={`${option.label}-${option.value}`}
+        type="button"
+        className={`wizard-choice-button ${
+          value === option.value ? "active" : ""
+        }`}
+        onClick={() => onChange(option.value)}
+      >
+        {option.label}
+      </button>
+    ))}
+  </div>
+);
+
+const getFallbackUsername = (email?: string | null) => {
+  if (!email) return "Student";
+
+  const name = email.split("@")[0]?.trim();
+
+  if (!name) return "Student";
+
+  return name;
 };
 
 const LoginWizard: React.FC = () => {
   const router = useIonRouter();
   const { user, finishWizard } = useAuth();
-  const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
 
-  const [subjectInput, setSubjectInput] = useState("");
-  const [subjectColor, setSubjectColor] = useState("#8b5cf6");
-  const [status, setStatus] = useState("");
-  const [form, setForm] = useState<FormData>(defaultForm);
+  const contentRef = useRef<HTMLIonContentElement | null>(null);
+
+  const [form, setForm] = useState<WizardForm>(defaultForm);
   const [step, setStep] = useState(0);
+  const [status, setStatus] = useState("");
+
+  const [infoPopover, setInfoPopover] = useState<InfoPopoverState>({
+    isOpen: false,
+    event: undefined,
+    title: "",
+    content: null,
+  });
 
   const users = useLiveQuery(async () => await db.users.toArray(), []) ?? [];
   const currentUser = users[0];
 
-  const subjects = useLiveQuery(
-    async () => {
-      if (!currentUser?.id) return [];
-      return await db.subjects
-        .where("fk_user")
-        .equals(currentUser.id)
-        .toArray();
-    },
-    [currentUser?.id]
-  ) ?? [];
-
-  useEffect(() => {
-  if (users.length > 0) {
-    setForm({
-      ...defaultForm,
-      ...users[0],
-      email: users[0].email ?? ""
-    });
-  }
-}, [users]);
-
   const totalSteps = 4;
 
-  const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
-  const back = () => setStep(s => Math.max(s - 1, 0));
+  useEffect(() => {
+    contentRef.current?.scrollToTop(250);
+  }, [step]);
 
-  const saveSubject = async () => {
-  const name = subjectInput.trim();
+  useEffect(() => {
+    if (currentUser) {
+      setForm({
+        ...defaultForm,
+        ...currentUser,
+        email: currentUser.email ?? user?.email ?? "",
+      });
+    } else {
+      setForm({
+        ...defaultForm,
+        email: user?.email ?? "",
+      });
+    }
+  }, [currentUser, user?.email]);
 
-  if (!name) return;
+  const progressPercent = useMemo(
+    () => Math.round(((step + 1) / totalSteps) * 100),
+    [step]
+  );
 
-  if (!currentUser?.id) {
-    setStatus("Save user first before adding subjects");
-    return;
-  }
-
-  if (editingSubjectId !== null) {
-    await db.subjects.update(editingSubjectId, {
-      name,
-      color: subjectColor
-    });
-  } else {
-    await db.subjects.add({
-      name,
-      color: subjectColor,
-      fk_user: currentUser.id
-    });
-  }
-
-  setSubjectInput("");
-  setSubjectColor("#8b5cf6");
-  setEditingSubjectId(null);
-};
-
-  const deleteSubject = async (subjectId: number) => {
-    await db.subjects.delete(subjectId);
-  };
-
-  const handleConfirm = async () => {
+  const saveWizardUser = async (shouldValidateUsername: boolean) => {
     if (!user?.email) {
-      setStatus("Firebase user error");
-      return;
+      setStatus("Firebase user error.");
+      return false;
     }
 
-    if (form.username.trim() === "") {
-      setStatus("Username is required");
-      return;
+    const username = form.username.trim();
+
+    if (shouldValidateUsername && !username) {
+      setStatus("Please add a username or use Skip for now.");
+      return false;
+    }
+
+    if (form.work_hours_end <= form.work_hours_start) {
+      setStatus("Studying end must be after studying start.");
+      return false;
     }
 
     const userData = {
-    ...form,
-    email: user.email
+      ...form,
+      email: user.email,
+      username: username || getFallbackUsername(user.email),
+    };
+
+    if (currentUser?.id) {
+      await db.users.update(currentUser.id, userData);
+    } else {
+      await db.users.add(userData);
+    }
+
+    return true;
   };
 
-    if (users.length === 0) {
-      await db.users.add(userData);
-    } else {
-      await db.users.update(users[0].id!, userData);
-    }
+  const finish = async (shouldValidateUsername: boolean) => {
+    const saved = await saveWizardUser(shouldValidateUsername);
+
+    if (!saved) return;
 
     finishWizard();
     router.push("/tabs/tab1", "root", "replace");
   };
 
-  const timeOptions = [
-    { label: "<5 min", value: 5 },
-    { label: "10 min", value: 10 },
-    { label: "20 min", value: 20 },
-    { label: "30 min", value: 30 },
-    { label: "60 min", value: 60 },
-    { label: "90 min", value: 90 },
-    { label: ">90 min", value: 90 }
-  ];
-  
-  // TODO: Add proper validation
-  // const validateStep = () => {
-  //   const errors: FieldError[] = [];
+  const next = () => {
+    setStatus("");
+    setStep((currentStep) => Math.min(currentStep + 1, totalSteps - 1));
+  };
 
-  //   switch (step) {
-  //     case 0:
-  //       if (form.username.trim() === "")
-  //         errors.push({ type: "username", error: "Enter username" });
-  //       break;
-        
-  //     case 1:
-  //       if (form.study_field < 0 || form.study_field > 3)
-  //         errors.push({ type: "study_field", error: "Select study field" });
-        
-  //       if (form.chronotype < 0 || form.chronotype > 3)
-  //         errors.push({ type: "chronotype", error: "Incorrect chronotype" });
+  const back = () => {
+    setStatus("");
+    setStep((currentStep) => Math.max(currentStep - 1, 0));
+  };
 
-  //       if (form.effectiveness_rating < 0 || form.effectiveness_rating > 4)
-  //         errors.push({ type: "effectiveness_rating", error: "Select effectiveness" });
+  const skip = () => {
+    setStatus("");
+    finish(false);
+  };
 
-  //       if (form.avg_sleep_hours < 3 || form.avg_sleep_hours > 13)
-  //         errors.push({ type: "avg_sleep_hours", error: "3-13 hours required" });
-  //       break;
+  const handleStudyingStartChange = (value: number) => {
+    const nextStart = value;
+    const nextEnd =
+      form.work_hours_end <= nextStart
+        ? Math.min(nextStart + 1, 24)
+        : form.work_hours_end;
 
-  //     case 2:
-  //       if (form.avg_theory_time <= 0)
-  //         errors.push({ type: "avg_theory_time", error: "Required" });
+    setForm({
+      ...form,
+      work_hours_start: nextStart,
+      work_hours_end: nextEnd,
+    });
+  };
 
-  //       if (form.avg_practice_time <= 0)
-  //         errors.push({ type: "avg_practice_time", error: "Required" });
+  const openInfoPopover = (
+    event: React.MouseEvent<HTMLElement>,
+    title: string,
+    content: React.ReactNode
+  ) => {
+    event.stopPropagation();
 
-  //       if (form.avg_passive_time <= 0)
-  //         errors.push({ type: "avg_passive_time", error: "Required" });
+    setInfoPopover({
+      isOpen: true,
+      event: event.nativeEvent,
+      title,
+      content,
+    });
+  };
 
-  //       if (form.avg_active_time <= 0)
-  //         errors.push({ type: "avg_active_time", error: "Required" });
+  const closeInfoPopover = () => {
+    setInfoPopover({
+      isOpen: false,
+      event: undefined,
+      title: "",
+      content: null,
+    });
+  };
 
-  //       if (form.preffered_session_time <= 0)
-  //         errors.push({ type: "preffered_session_time", error: "Required" });
-  //       break;
-
-  //     case 3:
-  //       if (form.work_hours_end <= form.work_hours_start)
-  //         errors.push({ type: "work_hours_end", error: "Must be after start" });
-  //       break;
-  //   }
-
-  //   return {
-  //     isValid: errors.length === 0,
-  //     errors
-  //   };
-  // };
+  const WizardInfoButton = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <button
+      type="button"
+      className="wizard-info-button"
+      onClick={(event) => openInfoPopover(event, title, children)}
+      aria-label={`More information about ${title}`}
+    >
+      <IonIcon icon={helpCircleOutline} />
+    </button>
+  );
 
   return (
     <IonPage>
-      <IonContent fullscreen className='ion-padding' forceOverscroll={false}>
+      <IonContent
+        ref={contentRef}
+        fullscreen
+        forceOverscroll={false}
+        className="wizard-page"
+      >
+        <div className="wizard-shell">
+          <section className="wizard-hero">
+            <img src="/logo.svg" alt="Logo" className="wizard-logo" />
 
-          <div style={{width: "100%"}} className='ion-text-center'>
-          <img src="/logo.svg" alt="Logo" className="ion-margin-bottom" width={100} height={100}/>
-          </div>
+            <h1>Set up your study space</h1>
+            <p>
+              A few preferences help Lingis plan better. You can skip this and
+              edit everything later in Profile settings.
+            </p>
+          </section>
 
-          {status.length > 0 && (
-            <div className="status-message">{status}</div>
-          )}
+          {status && <div className="wizard-status">{status}</div>}
 
-            {/* STEP 0 */}
-            {step === 0 && (
-              <>
-                <h2 className='ion-text-center'>Enter Username</h2>
-                <p className="auth-label">Username</p>
-                <IonItem className="auth-item">
-                  <IonInput
-                    errorText={"Username required"}
-                    type="text"
-                    placeholder="Enter username"
-                    value={form?.username}
-                    onIonChange={e => setForm({ ...form, username: e.detail.value ?? "" })}
-                  />
-                </IonItem>
-              </>
-            )}
-
-            {/* STEP 1 */}
-            {step === 1 && (
-              <>
-                <h2 className='ion-text-center'>Fill all personal info</h2>
-                <p className="auth-label">Study field</p>
-                <IonItem className="auth-item">
-                  <IonSelect
-                    interface="popover"
-                    interfaceOptions={{ cssClass: "custom-select-popover" }}
-                    placeholder="Select..."
-                    onIonChange={e => setForm({ ...form, study_field: Number(e.detail.value) })}
-                    value={String(form.study_field)}
-                  >
-                    <IonSelectOption value="0">STEM</IonSelectOption>
-                    <IonSelectOption value="1">Social</IonSelectOption>
-                    <IonSelectOption value="2">Arts</IonSelectOption>
-                    <IonSelectOption value="3">Finance</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-
-                <p className="auth-label">Chronotype</p>
-                <IonItem className="auth-item">
-                  <IonSelect
-                    interface="popover"
-                    interfaceOptions={{ cssClass: "custom-select-popover" }}
-                    placeholder="Select..."
-                    onIonChange={e => setForm({ ...form, chronotype: Number(e.detail.value) })}
-                    value={String(form.chronotype)}
-                  >
-                    <IonSelectOption value="0">Morning</IonSelectOption>
-                    <IonSelectOption value="1">Noon</IonSelectOption>
-                    <IonSelectOption value="2">Evening</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-
-                <p className="auth-label">Effectiveness</p>
-                <IonItem className="auth-item">
-                  <IonSelect
-                    interface="popover"
-                    interfaceOptions={{cssClass: "custom-select-popover" }}
-                    placeholder="Select..."
-                    onIonChange={e => setForm({ ...form, effectiveness_rating: Number(e.detail.value) })}
-                    value={String(form.effectiveness_rating)}
-                    >
-                    <IonSelectOption value="0">Terrible</IonSelectOption>
-                    <IonSelectOption value="1">Not good</IonSelectOption>
-                    <IonSelectOption value="2">Okay</IonSelectOption>
-                    <IonSelectOption value="3">Good</IonSelectOption>
-                    <IonSelectOption value="4">Excellent</IonSelectOption>
-                  </IonSelect>
-                </IonItem>
-
-                <p className="auth-label">Sleep hours</p>
-                <IonItem className="auth-item">
-                  <IonInput
-                    type="number"
-                    value={form.avg_sleep_hours}
-                    onIonChange={e => setForm({ ...form, avg_sleep_hours: Number(e.detail.value) })}
-                    min={3}
-                    max={13}  
-                  />
-                </IonItem>
-
-                <p className="auth-label">Semester subjects</p>
-              <IonItem className="auth-item" lines="none">
-  <div style={{ display: "flex", alignItems: "center", width: "100%", gap: "12px" }}>
-    
-    <input
-      type="color"
-      value={subjectColor}
-      onChange={(e) => setSubjectColor(e.target.value)}
-      style={{
-        width: "40px",
-        height: "40px",
-        border: "none",
-        borderRadius: "10px",
-        padding: "0",
-        background: "none",
-        cursor: "pointer"
-      }}
-    />
-
-    <IonInput
-      placeholder="Write a subject..."
-      value={subjectInput}
-      onIonInput={(e) => setSubjectInput(String(e.detail.value ?? ""))}
-      style={{
-        flex: 1
-      }}
-    />
-
-  </div>
-</IonItem>
-
-              <IonButton
-                expand="block"
-                className="purple-button"
-                onClick={saveSubject}
-              >
-                {editingSubjectId !== null ? "Save changes" : "Add subject"}
-              </IonButton>
-
-              <div className="subject-chip-container">
-                {subjects.map((subject) => (
-                  <IonChip
-                    key={subject.id}
-                    onClick={() => {
-                      setEditingSubjectId(subject.id);
-                      setSubjectInput(subject.name);
-                      setSubjectColor(subject.color);
-                    }}
-                    style={{
-                      "--background": subject.color,
-                      "--color": "#ffffff",
-                      cursor: "pointer"
-                    } as React.CSSProperties}
-                  >
-                    <IonLabel>{subject.name}</IonLabel>
-
-                    <IonIcon
-                      icon={closeOutline}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSubject(subject.id);
-                      }}
-                    />
-                  </IonChip>
-                ))}
+          <section className="wizard-settings-card">
+            <div className="wizard-card-heading">
+              <div className="wizard-card-icon">
+                <IonIcon
+                  icon={
+                    step === 0
+                      ? schoolOutline
+                      : step === 1
+                        ? moonOutline
+                        : step === 2
+                          ? timeOutline
+                          : bookOutline
+                  }
+                />
               </div>
-              </>
-            )}
 
-            {/* STEP 2 */}
-            {step === 2 && (
-              <>
-                <h2 className='ion-text-center'>Select all study times</h2>
-                {["Theory", "Practice", "Passive", "Active", "Session"].map((q, i) => (
-                  <div key={i}>
-                    <p className="auth-label">{q}</p>
-                    <IonItem className="auth-item">
-                      <IonSelect
-                        interface="popover"
-                        interfaceOptions={{ cssClass: "custom-select-popover" }}
-                        placeholder="Select..."
-                        value={
-                          i === 0 ? form.avg_theory_time :
-                          i === 1 ? form.avg_practice_time :
-                          i === 2 ? form.avg_passive_time :
-                          i === 3 ? form.avg_active_time :
-                            form.preffered_session_time
+              <div className="wizard-heading-text">
+                <span>Step {step + 1} of {totalSteps}</span>
+                <h2>
+                  {step === 0 && "Account"}
+                  {step === 1 && "Study profile"}
+                  {step === 2 && "Session lengths"}
+                  {step === 3 && "Studying hours"}
+                </h2>
+              </div>
+
+              {step === 1 && (
+                <WizardInfoButton title="Study profile">
+                  <p>
+                    These questions help the planner understand your usual
+                    energy and study habits. They do not need to be perfect.
+                  </p>
+
+                  <ul>
+                    <li>
+                      <strong>Study field</strong> gives the app a broad idea of
+                      what kind of work you usually do.
+                    </li>
+                    <li>
+                      <strong>Chronotype</strong> helps the app understand when
+                      you normally focus best.
+                    </li>
+                    <li>
+                      <strong>Effectiveness</strong> is your own feeling about
+                      your current study routine.
+                    </li>
+                    <li>
+                      <strong>Sleep hours</strong> help the planner avoid
+                      building a schedule that is too intense.
+                    </li>
+                  </ul>
+                </WizardInfoButton>
+              )}
+
+              {step === 2 && (
+                <WizardInfoButton title="Session lengths">
+                  <p>
+                    These times help the planner estimate how long different
+                    kinds of study work usually take for you.
+                  </p>
+
+                  <ul>
+                    <li>
+                      <strong>Theory</strong> is learning or understanding new
+                      material.
+                    </li>
+                    <li>
+                      <strong>Practice</strong> is applying material through
+                      exercises, examples, or tasks.
+                    </li>
+                    <li>
+                      <strong>Passive</strong> is reading, watching, reviewing
+                      notes, or looking through slides.
+                    </li>
+                    <li>
+                      <strong>Active</strong> is solving, writing, explaining,
+                      or creating from memory.
+                    </li>
+                    <li>
+                      <strong>Session</strong> is your preferred general study
+                      block length.
+                    </li>
+                  </ul>
+                </WizardInfoButton>
+              )}
+
+              {step === 3 && (
+                <WizardInfoButton title="Studying hours">
+                  <p>
+                    These hours tell the planner when it should usually place
+                    your study sessions.
+                  </p>
+
+                  <ul>
+                    <li>
+                      Pick the range when you are normally available to study.
+                    </li>
+                    <li>
+                      The planner will try to schedule sessions inside this
+                      range.
+                    </li>
+                    <li>
+                      You can still add more exact free time in the calendar
+                      later.
+                    </li>
+                  </ul>
+                </WizardInfoButton>
+              )}
+            </div>
+
+            <div className="wizard-progress-track">
+              <div
+                className="wizard-progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="wizard-card-body">
+              {step === 0 && (
+                <>
+                  <p className="wizard-modal-label">Username</p>
+                  <p className="wizard-field-helper">
+                    Pick the name you want shown in your profile.
+                  </p>
+
+                  <IonItem className="wizard-input-item">
+                    <IonInput
+                      type="text"
+                      placeholder="Enter username"
+                      value={form.username}
+                      onIonInput={(e) =>
+                        setForm({
+                          ...form,
+                          username: e.detail.value ?? "",
+                        })
+                      }
+                    />
+                  </IonItem>
+                </>
+              )}
+
+              {step === 1 && (
+                <>
+                  <p className="wizard-modal-label">Study field</p>
+                  <p className="wizard-field-helper">
+                    The general area your studies belong to.
+                  </p>
+                  <ChoiceButtons
+                    value={form.study_field}
+                    options={studyFields}
+                    onChange={(value) =>
+                      setForm({ ...form, study_field: value })
+                    }
+                  />
+
+                  <p className="wizard-modal-label">Chronotype</p>
+                  <p className="wizard-field-helper">
+                    When you usually feel most focused.
+                  </p>
+                  <ChoiceButtons
+                    value={form.chronotype}
+                    options={chronotypes}
+                    onChange={(value) =>
+                      setForm({ ...form, chronotype: value })
+                    }
+                  />
+
+                  <p className="wizard-modal-label">Effectiveness</p>
+                  <p className="wizard-field-helper">
+                    How well your current study habits feel to you.
+                  </p>
+                  <ChoiceButtons
+                    value={form.effectiveness_rating}
+                    options={effectivenessOptions}
+                    onChange={(value) =>
+                      setForm({
+                        ...form,
+                        effectiveness_rating: value,
+                      })
+                    }
+                  />
+
+                  <p className="wizard-modal-label">Average sleep hours</p>
+                  <p className="wizard-field-helper">
+                    Your usual sleep amount on a normal day.
+                  </p>
+                  <ChoiceButtons
+                    value={form.avg_sleep_hours}
+                    options={sleepOptions}
+                    compact
+                    onChange={(value) =>
+                      setForm({ ...form, avg_sleep_hours: value })
+                    }
+                  />
+                </>
+              )}
+
+              {step === 2 && (
+                <>
+                  {[
+                    {
+                      label: "Theory",
+                      key: "avg_theory_time",
+                      helper: "Time for understanding new material.",
+                    },
+                    {
+                      label: "Practice",
+                      key: "avg_practice_time",
+                      helper: "Time for applying material through tasks.",
+                    },
+                    {
+                      label: "Passive",
+                      key: "avg_passive_time",
+                      helper:
+                        "Reading, watching, reviewing, or going through notes.",
+                    },
+                    {
+                      label: "Active",
+                      key: "avg_active_time",
+                      helper:
+                        "Solving, writing, explaining, or working from memory.",
+                    },
+                    {
+                      label: "Session",
+                      key: "preffered_session_time",
+                      helper: "Your preferred general study block length.",
+                    },
+                  ].map((item) => (
+                    <div key={item.key}>
+                      <p className="wizard-modal-label">{item.label}</p>
+                      <p className="wizard-field-helper">{item.helper}</p>
+
+                      <ChoiceButtons
+                        value={Number(form[item.key as keyof WizardForm] ?? 0)}
+                        options={timeOptions}
+                        compact
+                        onChange={(value) =>
+                          setForm({
+                            ...form,
+                            [item.key]: value,
+                          } as WizardForm)
                         }
-                        onIonChange={e => {
-                          const val = e.detail.value;
-                          const keys = [
-                            "avg_theory_time",
-                            "avg_practice_time",
-                            "avg_passive_time",
-                            "avg_active_time",
-                            "preffered_session_time"
-                          ];
-                          setForm({ ...form, [keys[i]]: Number(val) });
-                        }}
-                      >
-                        {timeOptions.map(opt => (
-                          <IonSelectOption key={opt.value} value={opt.value}>
-                            {opt.label}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <p className="wizard-modal-label">Studying start</p>
+                  <p className="wizard-field-helper">
+                    The earliest time you prefer to study.
+                  </p>
+
+                  <IonItem className="wizard-input-item wizard-select-item">
+                    <IonSelect
+                      interface="popover"
+                      value={String(form.work_hours_start)}
+                      onIonChange={(e) =>
+                        handleStudyingStartChange(Number(e.detail.value))
+                      }
+                    >
+                      {hourOptions.slice(0, 24).map((option) => (
+                        <IonSelectOption
+                          key={`start-${option.value}`}
+                          value={String(option.value)}
+                        >
+                          {option.label}
+                        </IonSelectOption>
+                      ))}
+                    </IonSelect>
+                  </IonItem>
+
+                  <p className="wizard-modal-label">Studying end</p>
+                  <p className="wizard-field-helper">
+                    The latest time you prefer to study.
+                  </p>
+
+                  <IonItem className="wizard-input-item wizard-select-item">
+                    <IonSelect
+                      interface="popover"
+                      value={String(form.work_hours_end)}
+                      onIonChange={(e) =>
+                        setForm({
+                          ...form,
+                          work_hours_end: Number(e.detail.value),
+                        })
+                      }
+                    >
+                      {getValidStudyingEndOptions(form.work_hours_start).map(
+                        (option) => (
+                          <IonSelectOption
+                            key={`end-${option.value}`}
+                            value={String(option.value)}
+                          >
+                            {option.label}
                           </IonSelectOption>
-                        ))}
-                      </IonSelect>
-                    </IonItem>
-                  </div>
-                ))}
-              </>
+                        )
+                      )}
+                    </IonSelect>
+                  </IonItem>
+
+                  <p className="wizard-helper-text">
+                    This tells the planner when you prefer to study. You can
+                    update this in Profile settings later.
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+
+          <div className="wizard-actions">
+            {step > 0 && (
+              <IonButton
+                fill="outline"
+                className="wizard-secondary-button"
+                onClick={back}
+              >
+                <IonIcon slot="start" icon={arrowBackOutline} />
+                Back
+              </IonButton>
             )}
 
-            {/* STEP 3 */}
-            {step === 3 && (
-              <>
-                <h2 className='ion-text-center'>Check working hours</h2>
-                <p className="auth-label">Work start</p>
-                <IonItem className="auth-item">
-                  <IonInput
-                    type="number"
-                    placeholder="From"
-                    value={form.work_hours_start}
-                    onIonChange={e => setForm({ ...form, work_hours_start: Number(e.detail.value) })}
-                  />
-                </IonItem>
+            <IonButton
+              fill="clear"
+              className="wizard-skip-button"
+              onClick={skip}
+            >
+              Skip for now
+            </IonButton>
 
-                <p className="auth-label">Work end</p>
-                <IonItem className="auth-item">
-                  <IonInput
-                    type="number"
-                    value={form.work_hours_end}
-                    onIonChange={e => setForm({ ...form, work_hours_end: Number(e.detail.value) })}
-                  />
-                </IonItem>
-              </>
+            {step < totalSteps - 1 && (
+              <IonButton className="wizard-primary-button" onClick={next}>
+                Next
+              </IonButton>
             )}
-          <div className="button-container">
-            {step > 0 && <IonButton onClick={back}>Back</IonButton>}
-            {step < totalSteps - 1 && <IonButton onClick={next}>Next</IonButton>}
+
             {step === totalSteps - 1 && (
-              <IonButton onClick={handleConfirm}>Confirm</IonButton>
+              <IonButton
+                className="wizard-primary-button"
+                onClick={() => finish(true)}
+              >
+                <IonIcon slot="start" icon={checkmarkOutline} />
+                Finish
+              </IonButton>
             )}
           </div>
+        </div>
+
+        <IonPopover
+          isOpen={infoPopover.isOpen}
+          event={infoPopover.event}
+          onDidDismiss={closeInfoPopover}
+          className="wizard-info-popover"
+          showBackdrop={false}
+        >
+          <div className="wizard-info-cloud">
+            <h3>{infoPopover.title}</h3>
+            <div>{infoPopover.content}</div>
+          </div>
+        </IonPopover>
       </IonContent>
     </IonPage>
   );
