@@ -275,7 +275,7 @@ const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
 );
 
 const Tab5: React.FC = () => {
-  const { user, logout, deleteAccount, resetPassword, resetPasswordError } = useAuth();
+  const { user, logout, updateAccount, deleteAccount, resetPassword, resetPasswordError } = useAuth();
 
   const usernameModal = useRef<HTMLIonModalElement>(null);
   const studyProfileModal = useRef<HTMLIonModalElement>(null);
@@ -372,6 +372,8 @@ const Tab5: React.FC = () => {
     } else {
       await db.users.add(nextForm);
     }
+
+    updateAccount(nextForm.username.trim())
 
     setForm(nextForm);
     setStatus("Saved.");
