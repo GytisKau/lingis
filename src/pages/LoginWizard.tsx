@@ -149,7 +149,7 @@ const getFallbackUsername = (email?: string | null) => {
 
 const LoginWizard: React.FC = () => {
   const router = useIonRouter();
-  const { user, finishWizard } = useAuth();
+  const { user, updateAccount, finishWizard } = useAuth();
 
   const contentRef = useRef<HTMLIonContentElement | null>(null);
 
@@ -222,6 +222,8 @@ const LoginWizard: React.FC = () => {
     } else {
       await db.users.add(userData);
     }
+
+    updateAccount(username)
 
     return true;
   };

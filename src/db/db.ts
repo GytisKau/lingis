@@ -87,12 +87,12 @@ const db = new Dexie("LingisDatabase") as Dexie & {
 // Schema declaration:
 db.version(1).stores({
   users: "++id",
-  questionnaires: "++id, motivation, mental_tiredness, physical_tiredness, mental_energy, emotional, physical, sleep_quality, created_at, fk_user",
-  events: "++id, start, end, is_free",
-  assignments: "++id, title, date, start_date, est_hours, assignment_type, fk_subject",
-  sessions: "++id, start, end, is_done, fk_assignment",
-  tasks: "++id, title, difficulty_rating, is_done, task_type, fk_assignment, toggle_order, parent_task_id",
-  subjects: '++id, name, color, fk_user'
+  questionnaires: "++id, fk_user",
+  events: "++id",
+  assignments: "++id, fk_subject",
+  sessions: "++id, fk_assignment",
+  tasks: "++id, fk_assignment, parent_task_id",
+  subjects: '++id, fk_user'
 })
 
 export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject }

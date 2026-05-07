@@ -226,7 +226,7 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
   >
     <IonIcon icon={icon} />
     <span className="profile-row-label">{label}</span>
-    {value && <span className="profile-row-value">{value}</span>}
+    <span className="profile-row-value">{value && value}</span>
     <IonIcon className="profile-row-chevron" icon={chevronForwardOutline} />
   </button>
 );
@@ -275,7 +275,7 @@ const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
 );
 
 const Tab5: React.FC = () => {
-  const { user, logout, resetPassword, resetPasswordError } = useAuth();
+  const { user, logout, updateAccount, deleteAccount, resetPassword, resetPasswordError } = useAuth();
 
   const usernameModal = useRef<HTMLIonModalElement>(null);
   const studyProfileModal = useRef<HTMLIonModalElement>(null);
@@ -372,6 +372,8 @@ const Tab5: React.FC = () => {
     } else {
       await db.users.add(nextForm);
     }
+
+    updateAccount(nextForm.username.trim())
 
     setForm(nextForm);
     setStatus("Saved.");
@@ -1235,11 +1237,16 @@ const Tab5: React.FC = () => {
           isOpen={deleteAlertOpen}
           onDidDismiss={() => setDeleteAlertOpen(false)}
           header="Delete account"
-          message="The delete account button is prepared visually, but full deletion still needs Firebase account deletion and local data cleanup. It is not connected yet."
+          message="This action is permanent. Your account and associated data will be deleted."
           buttons={[
             {
-              text: "Close",
+              text: "Cancel",
               role: "cancel",
+            },
+            {
+              text: "Delete",
+              role: "destructive",
+              handler: () => deleteAccount()
             },
           ]}
         />

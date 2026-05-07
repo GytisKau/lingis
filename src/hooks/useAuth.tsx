@@ -6,9 +6,12 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   User,
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
+  deleteUser,
+  updateProfile
 } from "firebase/auth"
 import { logEvent, setUserId } from "firebase/analytics";
+import { db } from "../db/db";
 
 interface AuthError {
   type: "email" | "password" | "other";
@@ -26,6 +29,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<boolean>
   register: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
+  updateAccount: (displayName: string) => Promise<boolean>
+  deleteAccount: () => Promise<boolean>
   finishWizard: () => void
   clearErrors: () => void
 }
@@ -163,6 +168,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const updateAccount = async (displayName: string) => {
+    if (!user) return false
+
+    try {
+      await updateProfile(user, {
+        displayName
+      })
+
+      await user.reload()
+
+      setUser(auth.currentUser)
+
+      logEvent(analytics, "profile_update", {
+        field: "display_name"
+      })
+
+      return true
+    } catch (err: any) {
+      console.error("Failed to update profile:", err)
+
+      logEvent(analytics, "profile_update_error", {
+        error_code: err.code
+      })
+
+      return false
+    }
+  }
+
   const logout = async () => {
     if (user) {
       logEvent(analytics, "logout", {
@@ -171,6 +204,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     await signOut(auth)
+  }
+
+  const deleteAccount = async (): Promise<boolean> => {
+    if (!user) return false
+
+    try {
+      await deleteUser(user)
+      clearErrors()
+      localStorage.clear()
+      
+      db.delete().then(function() {
+          console.log('Database successfully deleted');
+      }).catch(function (err) {
+          console.error('Could not delete database:', err);
+      })
+
+      logEvent(analytics, "delete_account")
+      location.reload()
+
+      return true
+    } catch (err: any) {
+      console.error("Failed to delete account:", err)
+
+      logEvent(analytics, "delete_account_error", {
+        error_code: err.code
+      })
+
+      return false
+    }
   }
 
   const finishWizard = () => {
@@ -198,6 +260,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        updateAccount,
+        deleteAccount,
         finishWizard,
         clearErrors
       }}
