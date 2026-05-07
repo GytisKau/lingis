@@ -589,3 +589,266 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PROFILE TEXT CLIPPING FIX
+   Fixes descenders on letters like g, p, j, y.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.profile-settings-row {
+  line-height: 1.35;
+  overflow: visible;
+}
+
+.profile-row-label {
+  line-height: 1.35;
+  padding-block: 2px;
+}
+
+.profile-row-value {
+  line-height: 1.35;
+  padding-block: 2px;
+}
+
+.profile-summary-tile span,
+.profile-summary-tile strong {
+  line-height: 1.35;
+  padding-block: 2px;
+}
+
+.profile-hero p {
+  line-height: 1.45;
+  padding-bottom: 2px;
+}
+
+.profile-status {
+  line-height: 1.4;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.profile-modal-label {
+  line-height: 1.35;
+  padding-block: 2px;
+}
+
+.profile-modal-helper-text {
+  line-height: 1.5;
+  padding-bottom: 2px;
+}
+
+.profile-choice-button {
+  line-height: 1.35;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.profile-empty-state p,
+.profile-empty-mini p {
+  line-height: 1.45;
+  padding-bottom: 2px;
+}
+
+.profile-module-main {
+  line-height: 1.35;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.profile-module-main span:last-child {
+  line-height: 1.35;
+  padding-block: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PROFILE INFO CLOUD / POPOVER
+   Purple: #491B6D
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.profile-info-trigger {
+  width: 100%;
+  margin: 4px 0 14px;
+  padding: 9px 11px;
+  border: 1.5px solid rgba(73, 27, 109, 0.16);
+  border-radius: 999px;
+  background: rgba(247, 241, 255, 0.82);
+  color: #491B6D;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(73, 27, 109, 0.06);
+}
+
+.profile-info-trigger ion-icon {
+  color: #491B6D;
+  font-size: 18px;
+}
+
+.profile-info-trigger:active {
+  transform: scale(0.98);
+  background: rgba(243, 239, 255, 0.95);
+}
+
+.profile-info-popover::part(content) {
+  width: min(86vw, 330px);
+  border-radius: 22px;
+  border: 1.5px solid rgba(73, 27, 109, 0.18);
+  background: rgba(249, 246, 255, 0.98);
+  box-shadow: 0 18px 38px rgba(73, 27, 109, 0.2);
+  overflow: visible;
+}
+
+.profile-info-cloud {
+  position: relative;
+  padding: 15px 16px 16px;
+  color: #491B6D;
+}
+
+.profile-info-cloud::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 32px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  background: rgba(249, 246, 255, 0.98);
+  border-left: 1.5px solid rgba(73, 27, 109, 0.18);
+  border-top: 1.5px solid rgba(73, 27, 109, 0.18);
+}
+
+.profile-info-cloud h3 {
+  margin: 0 0 8px;
+  color: #491B6D;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.profile-info-cloud p {
+  margin: 0 0 10px;
+  color: rgba(73, 27, 109, 0.78);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.profile-info-cloud ul {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(73, 27, 109, 0.78);
+}
+
+.profile-info-cloud li {
+  margin: 7px 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.profile-info-cloud strong {
+  color: #491B6D;
+  font-weight: 900;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PROFILE SHORT HELPERS + INFO CLOUD
+   Purple: #491B6D
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.profile-field-helper {
+  margin: -3px 0 9px;
+  color: rgba(73, 27, 109, 0.62);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+  padding-bottom: 2px;
+}
+
+.profile-modal-info-button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.08);
+  color: #491B6D;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  margin: 0 2px 0 0;
+  padding: 0;
+}
+
+.profile-modal-info-button ion-icon {
+  color: #491B6D;
+  font-size: 21px;
+}
+
+.profile-modal-info-button:active {
+  transform: scale(0.94);
+  background: rgba(73, 27, 109, 0.14);
+}
+
+.profile-info-popover::part(content) {
+  width: min(86vw, 340px);
+  border-radius: 22px;
+  border: 1.5px solid rgba(73, 27, 109, 0.18);
+  background: rgba(249, 246, 255, 0.98);
+  box-shadow: 0 18px 38px rgba(73, 27, 109, 0.2);
+  overflow: visible;
+}
+
+.profile-info-cloud {
+  position: relative;
+  padding: 15px 16px 16px;
+  color: #491B6D;
+}
+
+.profile-info-cloud::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 32px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  background: rgba(249, 246, 255, 0.98);
+  border-left: 1.5px solid rgba(73, 27, 109, 0.18);
+  border-top: 1.5px solid rgba(73, 27, 109, 0.18);
+}
+
+.profile-info-cloud h3 {
+  margin: 0 0 8px;
+  color: #491B6D;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.profile-info-cloud p {
+  margin: 0 0 10px;
+  color: rgba(73, 27, 109, 0.78);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.profile-info-cloud ul {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(73, 27, 109, 0.78);
+}
+
+.profile-info-cloud li {
+  margin: 7px 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.profile-info-cloud strong {
+  color: #491B6D;
+  font-weight: 900;
+}

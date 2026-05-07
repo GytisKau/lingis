@@ -8,17 +8,10 @@ import {
   IonInput,
   IonModal,
   IonText,
-  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { close } from "ionicons/icons";
 import { useLiveQuery } from "dexie-react-hooks";
-
-function formatDateTimeLocal(date: Date) {
-  const d = new Date(date);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
-}
 
 interface AddAssignmentModalProps {
   trigger: string;
@@ -52,14 +45,49 @@ const getAssignmentTypeNames = (): AssignmentTypeNames => {
   }
 };
 
+function getTodayDateString() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  return today.toISOString().slice(0, 10);
+}
+
+function isCompleteDateString(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function dateStringToLocalDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function isDateStringBefore(value: string, compareTo: string) {
+  if (!isCompleteDateString(value) || !isCompleteDateString(compareTo)) {
+    return false;
+  }
+
+  return dateStringToLocalDate(value) < dateStringToLocalDate(compareTo);
+}
+
+function isDateStringAfter(value: string, compareTo: string) {
+  if (!isCompleteDateString(value) || !isCompleteDateString(compareTo)) {
+    return false;
+  }
+
+  return dateStringToLocalDate(value) > dateStringToLocalDate(compareTo);
+}
+
 const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
+  const todayDate = getTodayDateString();
+
   const [title, setTitle] = useState("");
-  const [dueDate, setDueDate] = useState<Date>(new Date());
-  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState(todayDate);
+  const [startDate, setStartDate] = useState(todayDate);
   const [timeEst, setTimeEst] = useState<number>(0);
   const [testType, setTestType] = useState<number>(-1);
   const [status, setStatus] = useState("");
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
+    null
+  );
   const [assignmentTypeNames, setAssignmentTypeNames] =
     useState<AssignmentTypeNames>(getAssignmentTypeNames);
 
@@ -81,27 +109,110 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
   }, []);
 
   function clearValues() {
+    const freshToday = getTodayDateString();
+
     setStatus("");
     setTitle("");
-    setDueDate(new Date());
-    setStartDate(new Date());
+    setDueDate(freshToday);
+    setStartDate(freshToday);
     setTimeEst(0);
     setTestType(-1);
     setSelectedSubjectId(null);
   }
 
+  function handleDueDateChange(value?: string | null) {
+    const nextValue = value ?? "";
+    setDueDate(nextValue);
+
+    if (!nextValue) {
+      setStatus("Please choose a due date.");
+      return;
+    }
+
+    if (!isCompleteDateString(nextValue)) {
+      setStatus("");
+      return;
+    }
+
+    if (isDateStringBefore(nextValue, todayDate)) {
+      setStatus("Due date cannot be in the past.");
+      return;
+    }
+
+    if (
+      isCompleteDateString(startDate) &&
+      isDateStringAfter(startDate, nextValue)
+    ) {
+      setStartDate(nextValue);
+    }
+
+    setStatus("");
+  }
+
+  function handleStartDateChange(value?: string | null) {
+    const nextValue = value ?? "";
+    setStartDate(nextValue);
+
+    if (!nextValue) {
+      setStatus("Please choose a study from date.");
+      return;
+    }
+
+    if (!isCompleteDateString(nextValue)) {
+      setStatus("");
+      return;
+    }
+
+    if (isDateStringBefore(nextValue, todayDate)) {
+      setStatus("Study from date cannot be in the past.");
+      return;
+    }
+
+    if (isCompleteDateString(dueDate) && isDateStringAfter(nextValue, dueDate)) {
+      setStatus("Study from date cannot be after the due date.");
+      return;
+    }
+
+    setStatus("");
+  }
+
   async function addAssignment() {
-    if (!title.trim() || timeEst <= 0 || !dueDate) {
+    if (!title.trim() || timeEst <= 0) {
       setStatus("Please add a title and time estimate.");
+      return false;
+    }
+
+    if (!isCompleteDateString(dueDate)) {
+      setStatus("Please choose a valid due date.");
+      return false;
+    }
+
+    if (!isCompleteDateString(startDate)) {
+      setStatus("Please choose a valid study from date.");
+      return false;
+    }
+
+    if (isDateStringBefore(dueDate, todayDate)) {
+      setStatus("Due date cannot be in the past.");
+      return false;
+    }
+
+    if (isDateStringBefore(startDate, todayDate)) {
+      setStatus("Study from date cannot be in the past.");
+      return false;
+    }
+
+    if (isDateStringAfter(startDate, dueDate)) {
+      setStatus("Study from date cannot be after the due date.");
       return false;
     }
 
     try {
       await db.assignments.add({
         title: title.trim(),
-        date: dueDate,
+        date: dateStringToLocalDate(dueDate),
         is_done: false,
-        start_date: startDate,
+        start_date: dateStringToLocalDate(startDate),
         est_hours: timeEst * 60,
         assignment_type: testType,
         fk_subject: selectedSubjectId,
@@ -113,21 +224,19 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     }
   }
 
-  const subjectChoices = [
-    { id: null as number | null, name: "No module", color: "#e6d8ff" },
-    ...subjects.map((subject) => ({
-      id: subject.id ?? null,
-      name: subject.name,
-      color: subject.color,
-    })),
-  ];
-
   const typeChoices = [
     { value: -1, label: "No type" },
     { value: 0, label: assignmentTypeNames[0] },
     { value: 1, label: assignmentTypeNames[1] },
     { value: 2, label: assignmentTypeNames[2] },
   ];
+
+  const formHasInvalidDates =
+    !isCompleteDateString(dueDate) ||
+    !isCompleteDateString(startDate) ||
+    isDateStringBefore(dueDate, todayDate) ||
+    isDateStringBefore(startDate, todayDate) ||
+    isDateStringAfter(startDate, dueDate);
 
   return (
     <IonModal
@@ -176,8 +285,10 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
             <IonInput
               className="assignment-form-input"
               type="date"
-              value={formatDateTimeLocal(dueDate).slice(0, 10)}
-              onIonChange={(e) => setDueDate(new Date(e.detail.value!))}
+              min={todayDate}
+              value={dueDate}
+              onIonInput={(e) => handleDueDateChange(e.detail.value)}
+              onIonChange={(e) => handleDueDateChange(e.detail.value)}
             />
           </div>
 
@@ -186,8 +297,11 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
             <IonInput
               className="assignment-form-input"
               type="date"
-              value={formatDateTimeLocal(startDate).slice(0, 10)}
-              onIonChange={(e) => setStartDate(new Date(e.detail.value!))}
+              min={todayDate}
+              max={isCompleteDateString(dueDate) ? dueDate : undefined}
+              value={startDate}
+              onIonInput={(e) => handleStartDateChange(e.detail.value)}
+              onIonChange={(e) => handleStartDateChange(e.detail.value)}
             />
           </div>
         </div>
@@ -205,24 +319,45 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
 
         <div className="assignment-form-group">
           <label>Module</label>
-          <div className="assignment-choice-grid">
-            {subjectChoices.map((subject) => (
+
+          {subjects.length === 0 ? (
+            <div className="assignment-empty-modules">
+              Add modules in Profile.
+            </div>
+          ) : (
+            <div className="assignment-choice-grid">
               <button
-                key={subject.id ?? "none"}
                 type="button"
                 className={`assignment-choice-button ${
-                  selectedSubjectId === subject.id ? "active" : ""
+                  selectedSubjectId === null ? "active" : ""
                 }`}
-                onClick={() => setSelectedSubjectId(subject.id)}
+                onClick={() => setSelectedSubjectId(null)}
               >
                 <span
                   className="assignment-choice-dot"
-                  style={{ background: subject.color }}
+                  style={{ background: "#e6d8ff" }}
                 />
-                {subject.name}
+                Other
               </button>
-            ))}
-          </div>
+
+              {subjects.map((subject) => (
+                <button
+                  key={subject.id ?? subject.name}
+                  type="button"
+                  className={`assignment-choice-button ${
+                    selectedSubjectId === subject.id ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedSubjectId(subject.id ?? null)}
+                >
+                  <span
+                    className="assignment-choice-dot"
+                    style={{ background: subject.color }}
+                  />
+                  {subject.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="assignment-form-group">
@@ -246,7 +381,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
         <div className="assignment-form-actions">
           <IonButton
             expand="block"
-            disabled={!title.trim() || timeEst <= 0}
+            disabled={!title.trim() || timeEst <= 0 || formHasInvalidDates}
             onClick={addAssignment}
             className="assignment-form-primary"
           >

@@ -30,14 +30,15 @@ type AssignmentWithMeta = Assignment & {
   totalCount: number;
   isDone: boolean;
   isOverdue: boolean;
-  isOld: boolean;
+  isDeleted: boolean;
+  deleted_at?: Date | string | null;
 };
 
 type SortMode = "deadline" | "subject-deadline";
 
 const AssignmentList: React.FC = () => {
   const [sortMode, setSortMode] = useState<SortMode>("deadline");
-  const [showOldAssignments, setShowOldAssignments] = useState(false);
+  const [showOverdueAssignments, setShowOverdueAssignments] = useState(false);
 
   const slidingRefs = useRef<Map<number, HTMLIonItemSlidingElement>>(new Map());
 
@@ -50,7 +51,7 @@ const AssignmentList: React.FC = () => {
     const tasks = await db.tasks.toArray();
     const subjects = await db.subjects.toArray();
 
-    return asgns.map((assignment) => {
+    return asgns.map((assignment: any) => {
       const assignmentTasks = tasks.filter(
         (task) => task.fk_assignment === assignment.id
       );
@@ -60,8 +61,12 @@ const AssignmentList: React.FC = () => {
         (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
       );
 
-      const isDone = assignment.is_done;
+      const isDone = Boolean(assignment.is_done);
+      const isDeleted = Boolean(assignment.is_deleted || assignment.deleted_at);
+
       const isOverdue =
+        !isDone &&
+        !isDeleted &&
         new Date(assignment.date).getTime() < new Date().getTime();
 
       return {
@@ -72,13 +77,19 @@ const AssignmentList: React.FC = () => {
         totalCount: assignmentTasks.length,
         isDone,
         isOverdue,
-        isOld: isDone || isOverdue
-      };
+        isDeleted,
+        deleted_at: assignment.deleted_at ?? null
+      } as AssignmentWithMeta;
     });
   }, []);
 
+  const visibleAssignments =
+    assignments?.filter(
+      (assignment) => !assignment.isDone && !assignment.isDeleted
+    ) ?? [];
+
   const timeForAssignments =
-    assignments?.reduce(
+    visibleAssignments.reduce(
       (total, assignment) => total + assignment.est_hours,
       0
     ) ?? 0;
@@ -135,12 +146,12 @@ const AssignmentList: React.FC = () => {
   }, [doneSessions]);
 
   const recomendedSessions = useMemo(() => {
-    if (!lingisEvents || !user || !assignments) return [];
+    if (!lingisEvents || !user || !visibleAssignments) return [];
 
     const freeTimes = lingisEvents.filter((event) => event.is_free);
 
-    return ScheduleAllAssignments(assignments, freeTimes, user);
-  }, [lingisEvents, timeForAssignments, now, user, assignments]);
+    return ScheduleAllAssignments(visibleAssignments, freeTimes, user);
+  }, [lingisEvents, timeForAssignments, now, user, visibleAssignments]);
 
   const plannedMinutesByAssignment = useMemo(() => {
     const map = new Map<number, number>();
@@ -173,21 +184,6 @@ const AssignmentList: React.FC = () => {
   const handleDoneButton = async (assignment: AssignmentWithMeta) => {
     closeAllSlidingItems();
 
-    if (assignment.isDone && assignment.isOverdue) {
-      const newDueDate = new Date();
-      newDueDate.setDate(newDueDate.getDate() + 7);
-
-      await db.assignments.update(assignment.id!, {
-        date: newDueDate
-      });
-
-      await db.assignments.update(assignment.id!, {
-        is_done: false
-      });
-
-      return;
-    }
-
     if (assignment.isOverdue) {
       const newDueDate = new Date();
       newDueDate.setDate(newDueDate.getDate() + 7);
@@ -199,17 +195,10 @@ const AssignmentList: React.FC = () => {
       return;
     }
 
-    if (assignment.isDone) {
-      await db.assignments.update(assignment.id!, {
-        is_done: false
-      });
-
-      return;
-    }
-
     await db.assignments.update(assignment.id!, {
-      is_done: true
-    });
+      is_done: true,
+      done_at: new Date()
+    } as any);
 
     await db.tasks.where("fk_assignment").equals(assignment.id!).modify({
       is_done: true
@@ -219,8 +208,10 @@ const AssignmentList: React.FC = () => {
   const deleteAssignment = async (id: number) => {
     closeAllSlidingItems();
 
-    await db.tasks.where("fk_assignment").equals(id).delete();
-    await db.assignments.delete(id);
+    await db.assignments.update(id, {
+      is_deleted: true,
+      deleted_at: new Date()
+    } as any);
   };
 
   const getTypeClass = (type: number) => {
@@ -262,7 +253,7 @@ const AssignmentList: React.FC = () => {
     return <p className="centered-text">No assignments added yet.</p>;
   }
 
-  const sortAssignments = (list: typeof assignments) => {
+  const sortAssignments = (list: typeof visibleAssignments) => {
     return [...list].sort((a, b) => {
       if (sortMode === "deadline") {
         return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -282,17 +273,17 @@ const AssignmentList: React.FC = () => {
   };
 
   const activeAssignments = sortAssignments(
-    assignments.filter((assignment) => !assignment.isOld)
+    visibleAssignments.filter((assignment) => !assignment.isOverdue)
   );
 
-  const oldAssignments = sortAssignments(
-    assignments.filter((assignment) => assignment.isOld)
+  const overdueAssignments = sortAssignments(
+    visibleAssignments.filter((assignment) => assignment.isOverdue)
   );
 
   const renderAssignment = (
-    assignment: typeof assignments[number],
+    assignment: typeof visibleAssignments[number],
     index: number,
-    list: typeof assignments
+    list: typeof visibleAssignments
   ) => {
     const previousAssignment = list[index - 1];
 
@@ -358,9 +349,7 @@ const AssignmentList: React.FC = () => {
 
               <div className="assignment-footer">
                 <div className="due-date">
-                  <small>
-                    {assignment.isDone ? "Done" : getTimeLeft(assignment.date)}
-                  </small>
+                  <small>{getTimeLeft(assignment.date)}</small>
                 </div>
 
                 <div className="assignment-bottom-chips">
@@ -414,11 +403,7 @@ const AssignmentList: React.FC = () => {
             >
               <div className="done-button">
                 <IonIcon
-                  icon={
-                    assignment.isDone || assignment.isOverdue
-                      ? arrowUndo
-                      : checkmarkDone
-                  }
+                  icon={assignment.isOverdue ? arrowUndo : checkmarkDone}
                 />
               </div>
             </IonItemOption>
@@ -452,30 +437,34 @@ const AssignmentList: React.FC = () => {
         </button>
       </div>
 
-      <IonList lines="none" className="assignment-list-container">
-        {activeAssignments.map((assignment, index) =>
-          renderAssignment(assignment, index, activeAssignments)
-        )}
-      </IonList>
+      {activeAssignments.length > 0 ? (
+        <IonList lines="none" className="assignment-list-container">
+          {activeAssignments.map((assignment, index) =>
+            renderAssignment(assignment, index, activeAssignments)
+          )}
+        </IonList>
+      ) : (
+        <p className="centered-text">No active assignments.</p>
+      )}
 
-      {oldAssignments.length > 0 && (
+      {overdueAssignments.length > 0 && (
         <>
           <button
             type="button"
             className={`assignment-overdue-button ${
-              showOldAssignments ? "active" : ""
+              showOverdueAssignments ? "active" : ""
             }`}
-            onClick={() => setShowOldAssignments((prev) => !prev)}
+            onClick={() => setShowOverdueAssignments((prev) => !prev)}
           >
-            {showOldAssignments
-              ? "Hide overdue/done"
-              : `Show overdue/done (${oldAssignments.length})`}
+            {showOverdueAssignments
+              ? "Hide overdue"
+              : `Show overdue (${overdueAssignments.length})`}
           </button>
 
-          {showOldAssignments && (
+          {showOverdueAssignments && (
             <IonList lines="none" className="assignment-list-container">
-              {oldAssignments.map((assignment, index) =>
-                renderAssignment(assignment, index, oldAssignments)
+              {overdueAssignments.map((assignment, index) =>
+                renderAssignment(assignment, index, overdueAssignments)
               )}
             </IonList>
           )}

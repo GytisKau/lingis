@@ -281,14 +281,19 @@
 }
 
 .assignment-time-note.warning {
-  --color: #491B6D;
-  color: #491B6D !important;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1.5px solid rgba(73, 27, 109, 0.18);
+  --color: #7a1f2b;
+  color: #7a1f2b !important;
+  background: rgba(255, 214, 220, 0.72);
+  border: 1.5px solid rgba(122, 31, 43, 0.28);
+  box-shadow: 0 5px 12px rgba(122, 31, 43, 0.09);
+}
+
+.assignment-time-note.warning .time-label {
+  color: rgba(122, 31, 43, 0.62);
 }
 
 .assignment-time-note.warning .time-value {
-  color: #6b3d00;
+  color: #7a1f2b;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
