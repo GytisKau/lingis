@@ -8,19 +8,31 @@ export const TimerControls = ({
   onSwitch,
   onFinish
 }: any) => {
+  const isPaused = !running;
+
   return (
     <div className="timer-buttons">
-      {!running ? (
-        <IonButton fill="outline" onClick={onStart}>Start</IonButton>
-      ) : (
-        <IonButton fill="outline" onClick={onPause}>Pause</IonButton>
-      )}
+      <IonButton
+        fill="outline"
+        className={`timer-button ${isPaused ? 'pause-active' : ''}`}
+        onClick={running ? onPause : onStart}
+      >
+        {running ? 'Pause' : 'Continue'}
+      </IonButton>
 
-      <IonButton fill="outline" onClick={onSwitch}>
+      <IonButton
+        fill="outline"
+        className="timer-button"
+        onClick={onSwitch}
+      >
         {mode === 'study' ? 'Go to break' : 'Go to study'}
       </IonButton>
 
-      <IonButton fill="outline" onClick={onFinish}>
+      <IonButton
+        fill="outline"
+        className="timer-button"
+        onClick={onFinish}
+      >
         Finish study
       </IonButton>
     </div>
