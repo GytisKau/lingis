@@ -61,18 +61,31 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!running) return;
 
     const interval = setInterval(() => {
-      setTime((t) => (t <= 1 ? 0 : t - 1));
+      setTime((t) => (t <= 1 ? 0 : t - 60));
     }, 1000);
 
     return () => clearInterval(interval);
   }, [running]);
 
+  const emitNotification = (title: string, body: string) => {
+    if (document.visibilityState == 'hidden' && Notification.permission === "granted"){
+      new Notification(title, {
+        body: body,
+        badge: "/logo.svg",
+        icon: "/logo.svg",
+        tag: "Done"
+      })
+    }
+  }
+
   useEffect(() => {
     if (time === 0 && running) {
       if (mode === 'study') {
         eventBus.emit('TimerFinished', { mode: 'study' });
+        emitNotification("Study session finished!", "Extend session?")
       } else {
         eventBus.emit('TimerFinished', { mode: 'break' });
+        emitNotification("Break finished!", "Extend break?")
       }
       setRunning(false)
     }
