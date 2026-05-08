@@ -68,7 +68,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [running]);
 
   const emitNotification = (title: string, body: string) => {
-    if (document.visibilityState == 'hidden'){
+    if (document.visibilityState == 'hidden' && Notification.permission === "granted"){
       new Notification(title, {
         body: body,
         badge: "/logo.svg",
