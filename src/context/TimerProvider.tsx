@@ -85,6 +85,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTime(0);
     setRunning(false);
     endAtRef.current = null;
+    document.title = "Lingis"
 
     if (mode === 'study') {
       eventBus.emit('TimerFinished', { mode: 'study' });
@@ -96,7 +97,10 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const syncTimeWithClock = () => {
-    if (!endAtRef.current) return;
+    if (!endAtRef.current){
+      document.title = "Lingis"
+      return;
+    }
 
     const remainingSeconds = Math.max(
       0,
@@ -104,6 +108,11 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setTime(remainingSeconds);
+
+    const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+    const seconds = String(remainingSeconds % 60).padStart(2, '0');
+
+    document.title = running ? `${minutes}:${seconds} - Lingis` : "Lingis";
 
     if (remainingSeconds <= 0) {
       finishTimer();
@@ -119,7 +128,6 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log("Visible change")
         syncTimeWithClock();
       }
     };
