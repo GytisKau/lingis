@@ -13,7 +13,6 @@ import { db, LingisEvent } from "../db/db";
 interface Props {
   controller: CalendarController;
   events: EventInput[];
-  weekendsVisible: boolean;
   editing: boolean;
   adding: boolean;
   work_hours_start: number;
@@ -22,7 +21,7 @@ interface Props {
   onSelectSession: (start: Date, end: Date, assignment_id: number) => void;
 }
 
-const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
+const Calendar: React.FC<Props> = ({controller, events, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
 
   const handleSelect = async (selectInfo: DateSelectInfo) => {
 
@@ -37,6 +36,8 @@ const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing
   }
 
   const handleEventClick = async (info: EventClickInfo) => {
+    if ( info.view.type == "dayGridMonth") return;
+    
     const event = info.event
 
     if (event.extendedProps.type == "assignment"){
@@ -61,6 +62,7 @@ const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing
         disableScroll();
         return true;
       }}
+      scrollTime={`${work_hours_start}:00`}
       unselectAuto={false}
       unselect={enableScroll}
       selectable={editing}
@@ -69,9 +71,6 @@ const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing
       selectLongPressDelay={300}
       selectMinDistance={5}
       firstDay={1}
-      // eventClass={(arg) => clsx(
-      //   arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session'
-      // )}
       eventClass={(arg) => {
         if (arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session') {
           return 'ion-display-none';
@@ -98,9 +97,13 @@ const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing
         startTime: `${work_hours_start}:00`,
         endTime: `${work_hours_end}:00`
       }}
-      weekends={weekendsVisible}
       events={events}
       select={handleSelect}
+      dateClick={(info) => {
+        if (info.view.type == "dayGridMonth"){
+          info.view.calendar.changeView('timeGridDay', info.date)
+        }
+      }}
     />
   )
 }

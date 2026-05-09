@@ -45,10 +45,13 @@ const getAssignmentTypeNames = (): AssignmentTypeNames => {
   }
 };
 
-function getTodayDateString() {
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  return today.toISOString().slice(0, 10);
+function getDateString(daysOffset = 0) {
+  const date = new Date();
+
+  date.setDate(date.getDate() + daysOffset);
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+
+  return date.toISOString().slice(0, 10);
 }
 
 function isCompleteDateString(value: string) {
@@ -77,12 +80,13 @@ function isDateStringAfter(value: string, compareTo: string) {
 }
 
 const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
-  const todayDate = getTodayDateString();
+  const todayDate = getDateString();
+  const tomorowDate = getDateString(1);
 
   const [title, setTitle] = useState("");
-  const [dueDate, setDueDate] = useState(todayDate);
+  const [dueDate, setDueDate] = useState(tomorowDate);
   const [startDate, setStartDate] = useState(todayDate);
-  const [timeEst, setTimeEst] = useState<number>(0);
+  const [timeEst, setTimeEst] = useState<number>(1);
   const [testType, setTestType] = useState<number>(-1);
   const [status, setStatus] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
@@ -109,11 +113,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
   }, []);
 
   function clearValues() {
-    const freshToday = getTodayDateString();
+    const freshToday = getDateString();
+    const freshTomorow = getDateString(1);
 
     setStatus("");
     setTitle("");
-    setDueDate(freshToday);
+    setDueDate(freshTomorow);
     setStartDate(freshToday);
     setTimeEst(0);
     setTestType(-1);

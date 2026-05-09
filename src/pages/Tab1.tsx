@@ -262,7 +262,6 @@ const Tab1: React.FC = () => {
         <IonContent forceOverscroll={false}>
           <Calendar
             controller={calendarController}
-            weekendsVisible={true}
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
