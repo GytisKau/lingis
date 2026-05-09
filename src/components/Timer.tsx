@@ -16,7 +16,7 @@ export function Timer(props: TimerProps) {
   const [showStudyAlert, setShowStudyAlert] = useState(false);
   const [showBreakAlert, setShowBreakAlert] = useState(false);
   
-  const {time, running, mode, start, pause, setTime} = useTimerContext()
+  const {time, running, mode, start, pause, extendTimer} = useTimerContext()
 
   useEffect(() => {
     const handleFinish = (data: { mode: string }) => {
@@ -50,12 +50,14 @@ export function Timer(props: TimerProps) {
         onCloseStudy={() => setShowStudyAlert(false)}
         onCloseBreak={() => setShowBreakAlert(false)}
         onExtendStudy={(minutes: number) => {
-          setTime(minutes * 60);
-          start()
+          extendTimer(minutes * 60)
+          // setTime(minutes * 60);
+          // start()
         }}
         onExtendBreak={(minutes: number) => {
-          setTime(minutes * 60);
-          start()
+          extendTimer(minutes * 60)
+          // setTime(minutes * 60);
+          // start()
         }}
         onGoBreak={props.onSwitchToBreak}
         onGoStudy={props.onGoStudy}

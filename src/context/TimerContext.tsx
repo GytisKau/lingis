@@ -35,6 +35,11 @@ interface TimerContextType {
    * @param t Study time in seconds
    */
   setTime: (t: number) => void;
+  /**
+   * Extends the timer and starts it
+   * @param seconds Time in seconds
+   */
+  extendTimer: (seconds: number) => void;
 }
 
 export const TimerContext = createContext<TimerContextType | null>(null);

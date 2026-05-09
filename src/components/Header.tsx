@@ -4,8 +4,8 @@ import { useTimerContext } from "../context/TimerContext";
 export const Header = ({title, backButton}: {title: string, backButton?: boolean}) => {
   const { time, running } = useTimerContext()
 
-  const minutes = Math.floor(time / 60);
-  const seconds = time % 60;
+  const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+  const seconds = String(time % 60).padStart(2, '0');
 
   return (
     <IonHeader>
@@ -16,11 +16,15 @@ export const Header = ({title, backButton}: {title: string, backButton?: boolean
           </IonButtons>
         )}
         <IonTitle>{title}</IonTitle>
-        {running && (
-          <IonText slot="end" className="ion-padding-end">
-            {String(minutes).padStart(2, '0')}:
-            {String(seconds).padStart(2, '0')}
-          </IonText>
+        {running ? (
+          <>
+            <title>{`${minutes}:${seconds} - ${title}`}</title>
+            <IonText slot="end" className="ion-padding-end">
+              {minutes}:{seconds}
+            </IonText>
+          </>
+        ) : (
+          <title>{title}</title>
         )}
       </IonToolbar>
     </IonHeader>
