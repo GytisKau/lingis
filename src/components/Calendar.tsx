@@ -1,4 +1,4 @@
-import FullCalendar, { DateSelectData, EventClickData, EventDisplayData, EventInput } from '@fullcalendar/react'
+import FullCalendar, { CalendarController, DateSelectInfo, EventClickInfo, EventDisplayInfo, EventInput } from '@fullcalendar/react'
 import themePlugin from '@fullcalendar/react/themes/breezy' // YOUR THEME
 import interactionPlugin from '@fullcalendar/react/interaction'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
@@ -11,19 +11,20 @@ import "../theme/emerald.css"
 import { db, LingisEvent } from "../db/db";
 
 interface Props {
-  events: EventInput[]
-  weekendsVisible: boolean
-  editing: boolean
-  adding: boolean,
-  work_hours_start: number,
-  work_hours_end: number,
-  onSelectAssignment: (id: number) => void,
-  onSelectSession: (start: Date, end: Date, assignment_id: number) => void
+  controller: CalendarController;
+  events: EventInput[];
+  weekendsVisible: boolean;
+  editing: boolean;
+  adding: boolean;
+  work_hours_start: number;
+  work_hours_end: number;
+  onSelectAssignment: (id: number) => void;
+  onSelectSession: (start: Date, end: Date, assignment_id: number) => void;
 }
 
-const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
+const Calendar: React.FC<Props> = ({controller, events, weekendsVisible, editing, adding, work_hours_start, work_hours_end, onSelectAssignment, onSelectSession }) => {
 
-  const handleSelect = async (selectInfo: DateSelectData) => {
+  const handleSelect = async (selectInfo: DateSelectInfo) => {
 
     if (!editing) return
 
@@ -35,7 +36,7 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
     selectInfo.view.calendar.unselect()
   }
 
-  const handleEventClick = async (info: EventClickData) => {
+  const handleEventClick = async (info: EventClickInfo) => {
     const event = info.event
 
     if (event.extendedProps.type == "assignment"){
@@ -47,6 +48,7 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
 
   return (
     <FullCalendar
+      controller={controller}
       plugins={[themePlugin, dayGridPlugin, timeGridPlugin, interactionPlugin]}
       headerToolbar={{
         left: 'prev,today,next',
@@ -67,7 +69,10 @@ const Calendar: React.FC<Props> = ({events, weekendsVisible, editing, adding, wo
       selectLongPressDelay={300}
       selectMinDistance={5}
       firstDay={1}
-      eventClass={(arg: EventDisplayData) => {
+      // eventClass={(arg) => clsx(
+      //   arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session'
+      // )}
+      eventClass={(arg) => {
         if (arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session') {
           return 'ion-display-none';
         }

@@ -1,7 +1,7 @@
 import { IonContent, IonFab, IonFabButton, IonFabList, IonIcon, IonLabel, IonPage, IonSpinner, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
-import { EventInput } from '@fullcalendar/react'
+import { EventInput, useCalendarController } from '@fullcalendar/react'
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -40,6 +40,8 @@ const Tab1: React.FC = () => {
 
   const [currentAssignment, setCurrentAssignment] = useState<Assignment>();
   const [currentSession, setCurrentSession] = useState<RecommendedSession>();
+
+  const calendarController = useCalendarController()
   
   const lingisEvents = useLiveQuery( async () => await db.events.toArray())
   const assignments = useLiveQuery( async () => await db.assignments.toArray())
@@ -256,9 +258,10 @@ const Tab1: React.FC = () => {
   return (
     <>
       <IonPage>
-        <Header title='Calendar'/>
+        <Header title={calendarController.view?.title ?? 'Calendar'}/>
         <IonContent forceOverscroll={false}>
           <Calendar
+            controller={calendarController}
             weekendsVisible={true}
             events={calendarEvents}
             editing={isEditing}
