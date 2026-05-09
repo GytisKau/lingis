@@ -31,6 +31,7 @@ import {
   schoolOutline,
   timeOutline,
   trashOutline,
+  lockOpenOutline,
 } from "ionicons/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -38,6 +39,7 @@ import { db } from "../db/db";
 import { useAuth } from "../hooks/useAuth";
 import "./Tab5.css";
 import { Header } from "../components/Header";
+import { useNotificationPermission } from "../hooks/useNotificationPermission";
 
 interface ProfileForm {
   email: string;
@@ -223,11 +225,16 @@ const SettingsRow: React.FC<SettingsRowProps> = ({
       muted ? "muted" : ""
     }`}
     onClick={onClick}
+    disabled={onClick === undefined}
   >
     <IonIcon icon={icon} />
     <span className="profile-row-label">{label}</span>
     <span className="profile-row-value">{value && value}</span>
-    <IonIcon className="profile-row-chevron" icon={chevronForwardOutline} />
+    {onClick === undefined ? (
+      <span></span>
+    ) : (
+      <IonIcon className="profile-row-chevron" icon={chevronForwardOutline} />
+    )}
   </button>
 );
 
@@ -276,6 +283,7 @@ const ChoiceButtons: React.FC<ChoiceButtonsProps> = ({
 
 const Tab5: React.FC = () => {
   const { user, logout, updateAccount, deleteAccount, resetPassword, resetPasswordError } = useAuth();
+  const permission = useNotificationPermission();
 
   const usernameModal = useRef<HTMLIonModalElement>(null);
   const studyProfileModal = useRef<HTMLIonModalElement>(null);
@@ -574,6 +582,8 @@ const Tab5: React.FC = () => {
     </button>
   );
 
+
+
   return (
     <IonPage>
       <Header title="Profile" />
@@ -685,14 +695,13 @@ const Tab5: React.FC = () => {
             />
           </SettingsCard>
 
-          <SettingsCard icon={notificationsOutline} title="Notifications & alarms">
-            <div className="profile-empty-state">
-              <div className="profile-empty-icon">
-                <IonIcon icon={notificationsOutline} />
-              </div>
-              <h3>Coming soon</h3>
-              <p>Notification settings will be available here.</p>
-            </div>
+          <SettingsCard icon={notificationsOutline} title="Notifications">
+           <SettingsRow
+              icon={permission === "granted" ? lockOpenOutline : lockClosedOutline}
+              label="Permissions"
+              value={permission}
+              onClick={permission === "default" ? () => Notification.requestPermission() : undefined }
+            />
           </SettingsCard>
         </div>
 

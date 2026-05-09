@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TimerContext, TimerMode } from './TimerContext';
 import { db } from '../db/db';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -7,6 +7,7 @@ import { eventBus } from '../utils/eventBus';
 
 const LONG_BREAK_AFTER_MINUTES = 90;
 const MAX_GAP_BETWEEN_SESSIONS_MINUTES = 30;
+const TIMER_SPEED = 1;
 
 async function getConsecutiveStudyMinutes() {
   const sessions = await db.sessions.toArray();
@@ -39,7 +40,7 @@ async function getConsecutiveStudyMinutes() {
   }
 
   return totalMinutes;
-};
+}
 
 export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<TimerMode>('study');
@@ -48,66 +49,151 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState<Date>();
 
-  const users = useLiveQuery(() => db.users.toArray())
-  const user = users !== undefined ? users[0] : undefined
+  const endAtRef = useRef<number | null>(null);
+  const finishedRef = useRef(false);
+
+  const users = useLiveQuery(() => db.users.toArray());
+  const user = users !== undefined ? users[0] : undefined;
   const preferredMinutes = user?.preffered_session_time;
 
   useEffect(() => {
-    if (preferredMinutes)
-      setStudyTime(preferredMinutes * 60)
-  }, [preferredMinutes])
+    if (!preferredMinutes) return;
+
+    const newStudyTime = preferredMinutes * 60;
+    setStudyTime(newStudyTime);
+
+    if (!running && !startedAt && mode === 'study') {
+      setTime(newStudyTime);
+    }
+  }, [preferredMinutes]);
+
+  const emitNotification = (title: string, body: string) => {
+    if (document.visibilityState === 'hidden' && Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        badge: '/logo.svg',
+        icon: '/logo.svg',
+        tag: 'Done',
+      });
+    }
+  };
+
+  const finishTimer = () => {
+    if (finishedRef.current) return;
+
+    finishedRef.current = true;
+    setTime(0);
+    setRunning(false);
+    endAtRef.current = null;
+
+    if (mode === 'study') {
+      eventBus.emit('TimerFinished', { mode: 'study' });
+      emitNotification('Study session finished!', 'Extend session?');
+    } else {
+      eventBus.emit('TimerFinished', { mode: 'break' });
+      emitNotification('Break finished!', 'Extend break?');
+    }
+  };
+
+  const syncTimeWithClock = () => {
+    if (!endAtRef.current) return;
+
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil(((endAtRef.current - Date.now()) / 1000) * TIMER_SPEED)
+    );
+
+    setTime(remainingSeconds);
+
+    if (remainingSeconds <= 0) {
+      finishTimer();
+    }
+  };
 
   useEffect(() => {
     if (!running) return;
 
-    const interval = setInterval(() => {
-      setTime((t) => (t <= 1 ? 0 : t - 60));
-    }, 1000);
+    syncTimeWithClock();
 
-    return () => clearInterval(interval);
-  }, [running]);
+    const interval = window.setInterval(syncTimeWithClock, 1000);
 
-  const emitNotification = (title: string, body: string) => {
-    if (document.visibilityState == 'hidden' && Notification.permission === "granted"){
-      new Notification(title, {
-        body: body,
-        badge: "/logo.svg",
-        icon: "/logo.svg",
-        tag: "Done"
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (time === 0 && running) {
-      if (mode === 'study') {
-        eventBus.emit('TimerFinished', { mode: 'study' });
-        emitNotification("Study session finished!", "Extend session?")
-      } else {
-        eventBus.emit('TimerFinished', { mode: 'break' });
-        emitNotification("Break finished!", "Extend break?")
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Visible change")
+        syncTimeWithClock();
       }
-      setRunning(false)
-    }
-  }, [time, running, mode]);
+    };
 
-  const start = () => setRunning(true);
-  const pause = () => setRunning(false);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [running, mode]);
+
+  const start = () => {
+    if (running || time <= 0) return;
+
+    endAtRef.current = Date.now() + (time * 1000) / TIMER_SPEED;
+    finishedRef.current = false;
+    setRunning(true);
+
+    if (!startedAt) {
+      setStartedAt(new Date());
+    }
+  };
+
+  const pause = () => {
+    if (!running || !endAtRef.current) return;
+
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil(((endAtRef.current - Date.now()) / 1000) * TIMER_SPEED)
+    );
+
+    setTime(remainingSeconds);
+    endAtRef.current = null;
+    setRunning(false);
+  };
 
   const switchToStudy = () => {
+    const duration = studyTime;
+
     setMode('study');
-    setTime(studyTime);
+    setTime(duration);
+    setStartedAt(new Date());
     setRunning(true);
-    setStartedAt(new Date())
+
+    endAtRef.current = Date.now() + (duration * 1000) / TIMER_SPEED;
+    finishedRef.current = false;
   };
 
   const checkLongerBreak = async () => {
-    return await getConsecutiveStudyMinutes() >= LONG_BREAK_AFTER_MINUTES;;
+    return (await getConsecutiveStudyMinutes()) >= LONG_BREAK_AFTER_MINUTES;
   };
 
   const switchToBreak = async () => {
+    const breakMinutes = (await checkLongerBreak())
+      ? 30
+      : getBreakMinutesFromStudy(studyTime);
+
+    const duration = breakMinutes * 60;
+
     setMode('break');
-    setTime((await checkLongerBreak() ? 30 : getBreakMinutesFromStudy(studyTime)) * 60);
+    setTime(duration);
+    setRunning(true);
+
+    endAtRef.current = Date.now() + (duration * 1000) / TIMER_SPEED;
+    finishedRef.current = false;
+  };
+
+  const extendTimer = (seconds: number) => {
+    if (seconds <= 0) return;
+
+    setTime(seconds);
+    endAtRef.current = Date.now() + (seconds * 1000) / TIMER_SPEED;
+    finishedRef.current = false;
     setRunning(true);
   };
 
@@ -125,7 +211,8 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         switchToStudy,
         switchToBreak,
         setStudyTime,
-        setTime
+        setTime,
+        extendTimer
       }}
     >
       {children}

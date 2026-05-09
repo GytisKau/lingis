@@ -571,12 +571,17 @@ const Tab2: React.FC = () => {
     return <IonNote className="stats-type-note">{typeLabel}</IonNote>;
   };
 
-  const renderChips = (item: AssignmentStats) => (
-    <div className="stats-card-footer">
-      {renderTypeChip(item)}
-      {renderModuleChip(item)}
-    </div>
-  );
+  const renderChips = (item: AssignmentStats) => {
+    const typeLabel = getTypeLabel(item.type);
+    if (typeLabel !== "" && item.subjectName !== "")
+      return (
+        <div className="stats-card-footer">
+          {renderTypeChip(item)}
+          {renderModuleChip(item)}
+        </div>
+      )
+    return <></>
+  }
 
   const renderProgress = (item: AssignmentStats) => (
     <div className="stats-card-progress">

@@ -686,66 +686,8 @@ ion-item {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   TASK PROGRESS BAR
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.task-progress-section {
-  background: white;
-  padding: 16px 12px;
-  margin: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.progress-percentage {
-  font-size: 18px;
-  font-weight: 700;
-  color: #491B6D;
-}
-
-.progress-text {
-  font-size: 13px;
-  color: #777;
-  font-weight: 500;
-}
-
-.task-progress-bar {
-  --background: #e0d5f0;
-  --progress-background: #491B6D;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
    TASK TYPE DISTRIBUTION BAR
    ───────────────────────────────────────────────────────────────────────────── */
-
-.task-type-distribution {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.type-bar-container {
-  display: flex;
-  height: 6px;
-  border-radius: 3px;
-  overflow: hidden;
-  background: #e0e0e0;
-  gap: 0;
-}
-
-.type-bar {
-  height: 100%;
-  transition: width 0.3s ease;
-  min-width: 0;
-}
 
 .type-bar-empty {
   width: 100%;
@@ -757,32 +699,6 @@ ion-item {
   justify-content: center;
   font-size: 10px;
   color: #999;
-}
-
-.passive-bar {
-  background: #33b5e5;
-}
-
-.active-bar {
-  background: #ffb81c;
-}
-
-.testing-bar {
-  background: #ff6b6b;
-}
-
-.type-labels {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  justify-content: space-between;
-}
-
-.type-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .type-label.passive::before {
@@ -951,7 +867,7 @@ ion-item-sliding {
 .task-progress-section {
   padding: 16px 14px !important;
   margin: 10px 0 14px 0 !important;
-  border-radius: 22px !important;
+  border-radius: 12px !important;
   border: 1px solid rgba(73, 27, 109, 0.14) !important;
   box-shadow: 0 10px 24px rgba(73, 27, 109, 0.1) !important;
   position: relative;
@@ -976,7 +892,7 @@ ion-item-sliding {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 22px;
+  border-radius: 12px;
   background:
     radial-gradient(
       circle at top right,
