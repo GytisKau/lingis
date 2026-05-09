@@ -17,6 +17,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import QuestionnaireModal from '../forms/QuestionnaireModal'
 import { TimerDisplay } from '../components/TimerDisplay'
 import { useTimerContext } from '../context/TimerContext'
+import { Header } from '../components/Header'
 
 interface AssignmentViewProps extends RouteComponentProps<{ id: string }> {}
 
@@ -40,9 +41,10 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
 
   return (
     <IonPage>
+      <Header title={assignment?.title ?? ""} backButton noTimer></Header>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>{assignment?.title}</IonTitle>
+          <IonTitle></IonTitle>
         </IonToolbar>
       </IonHeader>
 

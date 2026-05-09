@@ -16,6 +16,7 @@ import { BreakLength } from '../data/breakSuggestions';
 import { Timer } from '../components/Timer';
 import { useTimerContext } from '../context/TimerContext';
 import { db } from '../db/db';
+import { Header } from '../components/Header';
 
 const MIN_SESSION_MINUTES = 1;
 
@@ -87,13 +88,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>
-            {mode === 'study' ? 'Study time' : 'Break time'}
-          </IonTitle>
-        </IonToolbar>
-      </IonHeader>
+      <Header title={mode === 'study' ? 'Study time' : 'Break time'} backButton noTimer></Header>
 
       <IonContent className="ion-padding session-page" forceOverscroll={false}>
         <Timer
