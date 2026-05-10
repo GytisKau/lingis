@@ -16,15 +16,10 @@ export const Header = ({title, backButton, noTimer}: {title: string, backButton?
           </IonButtons>
         )}
         <IonTitle>{title}</IonTitle>
-        {running  && !noTimer ? (
-          <>
-            <title>{`${minutes}:${seconds} - ${title}`}</title>
+        {running  && !noTimer && (
             <IonText slot="end" className="ion-padding-end">
               {minutes}:{seconds}
             </IonText>
-          </>
-        ) : (
-          <title>{title}</title>
         )}
       </IonToolbar>
     </IonHeader>

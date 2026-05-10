@@ -1,7 +1,7 @@
 import { IonContent, IonFab, IonFabButton, IonFabList, IonIcon, IonLabel, IonPage, IonSpinner, useIonModal } from '@ionic/react';
 import './Tab1.css';
 import Calendar from '../components/Calendar';
-import { EventInput } from '@fullcalendar/react'
+import { EventInput, useCalendarController } from '@fullcalendar/react'
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { add, remove, pencil, addCircleOutline } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -40,6 +40,8 @@ const Tab1: React.FC = () => {
 
   const [currentAssignment, setCurrentAssignment] = useState<Assignment>();
   const [currentSession, setCurrentSession] = useState<RecommendedSession>();
+
+  const calendarController = useCalendarController()
   
   const lingisEvents = useLiveQuery( async () => await db.events.toArray())
   const assignments = useLiveQuery( async () => await db.assignments.toArray())
@@ -78,9 +80,9 @@ const Tab1: React.FC = () => {
   const calendarEvents = useMemo(() => {
 
     const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
-    const sessionEvents = isEditing ? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
+    const sessionEvents = isEditing || calendarController.view?.type == "dayGridMonth"? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
     const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
-    const doneSessionEvents = doneSessionsToCalendarEvents(doneSessions ?? [], assignments ?? [])
+    const doneSessionEvents = isEditing || calendarController.view?.type == "dayGridMonth"? [] : doneSessionsToCalendarEvents(doneSessions ?? [], assignments ?? [])
 
     return [
       ...freeEvents,
@@ -89,7 +91,7 @@ const Tab1: React.FC = () => {
       ...assignmentEvents
     ]
 
-  }, [lingisEvents, recomendedSessions, assignments,  doneSessions, isEditing])
+  }, [lingisEvents, recomendedSessions, assignments,  doneSessions, isEditing, calendarController.view])
 
   function doneSessionsToCalendarEvents(
   sessions: any[],
@@ -105,7 +107,7 @@ const Tab1: React.FC = () => {
         id: `doneSession-${s.id}`,
         start: s.start,
         end: s.end,
-        title: assignment ? `Done: ${assignment.title}` : "Done session",
+        title: assignment ? `${assignment.title}` : "Done session",
         color: backgroundColor,
         backgroundColor,
         borderColor: getAssignmentBorderColor(assignment?.assignment_type),
@@ -256,10 +258,10 @@ const Tab1: React.FC = () => {
   return (
     <>
       <IonPage>
-        <Header title='Calendar'/>
+        <Header title={calendarController.view?.title ?? 'Calendar'}/>
         <IonContent forceOverscroll={false}>
           <Calendar
-            weekendsVisible={true}
+            controller={calendarController}
             events={calendarEvents}
             editing={isEditing}
             adding={isAdding}
