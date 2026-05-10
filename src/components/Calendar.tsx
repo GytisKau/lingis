@@ -3,6 +3,7 @@ import themePlugin from '@fullcalendar/react/themes/breezy' // YOUR THEME
 import interactionPlugin from '@fullcalendar/react/interaction'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
 import timeGridPlugin from '@fullcalendar/react/timegrid'
+import clsx from 'clsx'
 
 import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
@@ -37,7 +38,7 @@ const Calendar: React.FC<Props> = ({controller, events, editing, adding, work_ho
 
   const handleEventClick = async (info: EventClickInfo) => {
     if ( info.view.type == "dayGridMonth") return;
-    
+
     const event = info.event
 
     if (event.extendedProps.type == "assignment"){
@@ -71,21 +72,9 @@ const Calendar: React.FC<Props> = ({controller, events, editing, adding, work_ho
       selectLongPressDelay={300}
       selectMinDistance={5}
       firstDay={1}
-      eventClass={(arg) => {
-        if (arg.view.type === 'dayGridMonth' && arg.event.extendedProps.type == 'session') {
-          return 'ion-display-none';
-        }
-        return "";
-      }}
       eventClick={handleEventClick}
       borderless={true}
       allDaySlot={true}
-      eventTimeFormat={{
-        hour: "numeric",
-        minute: "2-digit",
-        meridiem: false,
-        hour12: false,
-      }}
       slotHeaderFormat={{
         hour: "numeric",
         minute: "2-digit",
@@ -104,6 +93,7 @@ const Calendar: React.FC<Props> = ({controller, events, editing, adding, work_ho
           info.view.calendar.changeView('timeGridDay', info.date)
         }
       }}
+      eventMinHeight={20}
     />
   )
 }

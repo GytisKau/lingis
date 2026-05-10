@@ -80,9 +80,9 @@ const Tab1: React.FC = () => {
   const calendarEvents = useMemo(() => {
 
     const freeEvents = freeTimesToCalendarEvents(lingisEvents ?? [])
-    const sessionEvents = isEditing ? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
+    const sessionEvents = isEditing || calendarController.view?.type == "dayGridMonth"? [] : recomendedSessionsToCalendarEvents(recomendedSessions, assignments ?? [])
     const assignmentEvents = assignmentsToCalendarEvents(assignments ?? [])
-    const doneSessionEvents = doneSessionsToCalendarEvents(doneSessions ?? [], assignments ?? [])
+    const doneSessionEvents = isEditing || calendarController.view?.type == "dayGridMonth"? [] : doneSessionsToCalendarEvents(doneSessions ?? [], assignments ?? [])
 
     return [
       ...freeEvents,
@@ -91,7 +91,7 @@ const Tab1: React.FC = () => {
       ...assignmentEvents
     ]
 
-  }, [lingisEvents, recomendedSessions, assignments,  doneSessions, isEditing])
+  }, [lingisEvents, recomendedSessions, assignments,  doneSessions, isEditing, calendarController.view])
 
   function doneSessionsToCalendarEvents(
   sessions: any[],
@@ -107,7 +107,7 @@ const Tab1: React.FC = () => {
         id: `doneSession-${s.id}`,
         start: s.start,
         end: s.end,
-        title: assignment ? `Done: ${assignment.title}` : "Done session",
+        title: assignment ? `${assignment.title}` : "Done session",
         color: backgroundColor,
         backgroundColor,
         borderColor: getAssignmentBorderColor(assignment?.assignment_type),
