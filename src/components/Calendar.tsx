@@ -3,7 +3,6 @@ import themePlugin from '@fullcalendar/react/themes/breezy' // YOUR THEME
 import interactionPlugin from '@fullcalendar/react/interaction'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
 import timeGridPlugin from '@fullcalendar/react/timegrid'
-import clsx from 'clsx'
 
 import '@fullcalendar/react/skeleton.css'
 import '@fullcalendar/react/themes/breezy/theme.css' // YOUR THEME
