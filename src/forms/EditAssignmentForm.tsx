@@ -12,33 +12,7 @@ interface EditAssignmentFormProps {
   onSaved: () => void;
 }
 
-type AssignmentTypeNames = {
-  0: string;
-  1: string;
-  2: string;
-};
 
-const ASSIGNMENT_TYPE_NAMES_KEY = "assignmentTypeNames";
-
-const defaultAssignmentTypeNames: AssignmentTypeNames = {
-  0: "Exam",
-  1: "Lab",
-  2: "Other",
-};
-
-const getAssignmentTypeNames = (): AssignmentTypeNames => {
-  try {
-    const saved = localStorage.getItem(ASSIGNMENT_TYPE_NAMES_KEY);
-    if (!saved) return defaultAssignmentTypeNames;
-
-    return {
-      ...defaultAssignmentTypeNames,
-      ...JSON.parse(saved),
-    };
-  } catch {
-    return defaultAssignmentTypeNames;
-  }
-};
 
 function getTodayDateString() {
   const today = new Date();
@@ -97,24 +71,24 @@ export default function EditAssignmentForm({
   const [testType, setTestType] = useState<number>(-1);
   const [status, setStatus] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
-  const [assignmentTypeNames, setAssignmentTypeNames] =
-    useState<AssignmentTypeNames>(getAssignmentTypeNames);
+  
 
   const subjects = useLiveQuery(() => db.subjects.toArray(), []) ?? [];
+  const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
+  const currentUser = users[0];
 
-  useEffect(() => {
-    const refreshTypeNames = () => {
-      setAssignmentTypeNames(getAssignmentTypeNames());
-    };
+  const assignmentTypes =
+    useLiveQuery(
+      async () => {
+        if (!currentUser?.id) return [];
 
-    window.addEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-    window.addEventListener("storage", refreshTypeNames);
-
-    return () => {
-      window.removeEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-      window.removeEventListener("storage", refreshTypeNames);
-    };
-  }, []);
+        return await db.assignment_types
+          .where("fk_user")
+          .equals(currentUser.id)
+          .toArray();
+      },
+      [currentUser?.id]
+    ) ?? [];
 
   useEffect(() => {
     const loadAssignment = async () => {
@@ -242,11 +216,12 @@ export default function EditAssignmentForm({
   }
 
   const typeChoices = [
-    { value: -1, label: "No type" },
-    { value: 0, label: assignmentTypeNames[0] },
-    { value: 1, label: assignmentTypeNames[1] },
-    { value: 2, label: assignmentTypeNames[2] },
-  ];
+  { value: -1, label: "No type" },
+  ...assignmentTypes.map((type) => ({
+    value: type.id,
+    label: type.name,
+  })),
+];
 
   const formHasInvalidDates =
     !isCompleteDateString(dueDate) ||
@@ -275,17 +250,6 @@ export default function EditAssignmentForm({
       </div>
 
       <div className="assignment-form-grid">
-        <div className="assignment-form-group">
-          <label>Due date</label>
-          <IonInput
-            className="assignment-form-input"
-            type="date"
-            min={todayDate}
-            value={dueDate}
-            onIonInput={(e) => handleDueDateChange(e.detail.value)}
-            onIonChange={(e) => handleDueDateChange(e.detail.value)}
-          />
-        </div>
 
         <div className="assignment-form-group">
           <label>Study from</label>
@@ -299,6 +263,19 @@ export default function EditAssignmentForm({
             onIonChange={(e) => handleStartDateChange(e.detail.value)}
           />
         </div>
+
+        <div className="assignment-form-group">
+          <label>Due date</label>
+          <IonInput
+            className="assignment-form-input"
+            type="date"
+            min={todayDate}
+            value={dueDate}
+            onIonInput={(e) => handleDueDateChange(e.detail.value)}
+            onIonChange={(e) => handleDueDateChange(e.detail.value)}
+          />
+        </div>
+        
       </div>
 
       <div className="assignment-form-group">
@@ -372,6 +349,12 @@ export default function EditAssignmentForm({
             </button>
           ))}
         </div>
+
+        {assignmentTypes.length === 0 && (
+          <div className="assignment-empty-modules">
+            Add assignment types in Profile.
+          </div>
+        )}
       </div>
 
       <div className="assignment-form-actions">

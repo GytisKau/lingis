@@ -55,6 +55,12 @@ interface Assignment {
   fk_subject?: number | null;
 }
 
+interface AssignmentType {
+  id: number;
+  name: string;
+  fk_user: number;
+}
+
 interface Session {
   id: number;
   start: Date;
@@ -82,9 +88,9 @@ const db = new Dexie("LingisDatabase") as Dexie & {
   sessions: EntityTable<Session, "id">,
   tasks: EntityTable<Task, "id">,
   subjects: EntityTable<Subject, "id">,
+  assignment_types: EntityTable<AssignmentType, "id">,
 }
 
-// Schema declaration:
 db.version(1).stores({
   users: "++id",
   questionnaires: "++id, fk_user",
@@ -92,8 +98,19 @@ db.version(1).stores({
   assignments: "++id, fk_subject",
   sessions: "++id, fk_assignment",
   tasks: "++id, fk_assignment, parent_task_id",
-  subjects: '++id, fk_user'
-})
+  subjects: "++id, fk_user",
+});
 
-export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject }
+db.version(2).stores({
+  users: "++id",
+  questionnaires: "++id, fk_user",
+  events: "++id",
+  assignments: "++id, fk_subject, assignment_type",
+  assignment_types: "++id, fk_user",
+  sessions: "++id, fk_assignment",
+  tasks: "++id, fk_assignment, parent_task_id",
+  subjects: "++id, fk_user",
+});
+
+export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject, AssignmentType }
 export { db }

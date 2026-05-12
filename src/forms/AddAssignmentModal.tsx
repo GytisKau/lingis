@@ -17,33 +17,7 @@ interface AddAssignmentModalProps {
   trigger: string;
 }
 
-type AssignmentTypeNames = {
-  0: string;
-  1: string;
-  2: string;
-};
 
-const ASSIGNMENT_TYPE_NAMES_KEY = "assignmentTypeNames";
-
-const defaultAssignmentTypeNames: AssignmentTypeNames = {
-  0: "Exam",
-  1: "Lab",
-  2: "Other",
-};
-
-const getAssignmentTypeNames = (): AssignmentTypeNames => {
-  try {
-    const saved = localStorage.getItem(ASSIGNMENT_TYPE_NAMES_KEY);
-    if (!saved) return defaultAssignmentTypeNames;
-
-    return {
-      ...defaultAssignmentTypeNames,
-      ...JSON.parse(saved),
-    };
-  } catch {
-    return defaultAssignmentTypeNames;
-  }
-};
 
 function getDateString(daysOffset = 0) {
   const date = new Date();
@@ -92,25 +66,37 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(
     null
   );
-  const [assignmentTypeNames, setAssignmentTypeNames] =
-    useState<AssignmentTypeNames>(getAssignmentTypeNames);
 
-  const subjects = useLiveQuery(() => db.subjects.toArray(), []) ?? [];
+const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
+const currentUser = users[0];
+
+const subjects =
+  useLiveQuery(
+    async () => {
+      if (!currentUser?.id) return [];
+
+      return await db.subjects
+        .where("fk_user")
+        .equals(currentUser.id)
+        .toArray();
+    },
+    [currentUser?.id]
+  ) ?? [];
+
+const assignmentTypes =
+  useLiveQuery(
+    async () => {
+      if (!currentUser?.id) return [];
+
+      return await db.assignment_types
+        .where("fk_user")
+        .equals(currentUser.id)
+        .toArray();
+    },
+    [currentUser?.id]
+  ) ?? [];
+  
   const modal = useRef<HTMLIonModalElement>(null);
-
-  useEffect(() => {
-    const refreshTypeNames = () => {
-      setAssignmentTypeNames(getAssignmentTypeNames());
-    };
-
-    window.addEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-    window.addEventListener("storage", refreshTypeNames);
-
-    return () => {
-      window.removeEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-      window.removeEventListener("storage", refreshTypeNames);
-    };
-  }, []);
 
   function clearValues() {
     const freshToday = getDateString();
@@ -120,7 +106,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     setTitle("");
     setDueDate(freshTomorow);
     setStartDate(freshToday);
-    setTimeEst(0);
+    setTimeEst(1);
     setTestType(-1);
     setSelectedSubjectId(null);
   }
@@ -231,9 +217,10 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
 
   const typeChoices = [
     { value: -1, label: "No type" },
-    { value: 0, label: assignmentTypeNames[0] },
-    { value: 1, label: assignmentTypeNames[1] },
-    { value: 2, label: assignmentTypeNames[2] },
+    ...assignmentTypes.map((type) => ({
+      value: type.id,
+      label: type.name,
+    })),
   ];
 
   const formHasInvalidDates =
@@ -242,6 +229,13 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     isDateStringBefore(dueDate, todayDate) ||
     isDateStringBefore(startDate, todayDate) ||
     isDateStringAfter(startDate, dueDate);
+
+useEffect(() => {
+  if (testType !== -1) return;
+  if (assignmentTypes.length === 0) return;
+
+  setTestType(assignmentTypes[0].id);
+}, [assignmentTypes, testType]);
 
   return (
     <IonModal
@@ -285,17 +279,6 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
         </div>
 
         <div className="assignment-form-grid">
-          <div className="assignment-form-group">
-            <label>Due date</label>
-            <IonInput
-              className="assignment-form-input"
-              type="date"
-              min={todayDate}
-              value={dueDate}
-              onIonInput={(e) => handleDueDateChange(e.detail.value)}
-              onIonChange={(e) => handleDueDateChange(e.detail.value)}
-            />
-          </div>
 
           <div className="assignment-form-group">
             <label>Study from</label>
@@ -309,6 +292,19 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
               onIonChange={(e) => handleStartDateChange(e.detail.value)}
             />
           </div>
+
+          <div className="assignment-form-group">
+            <label>Due date</label>
+            <IonInput
+              className="assignment-form-input"
+              type="date"
+              min={todayDate}
+              value={dueDate}
+              onIonInput={(e) => handleDueDateChange(e.detail.value)}
+              onIonChange={(e) => handleDueDateChange(e.detail.value)}
+            />
+          </div>
+
         </div>
 
         <div className="assignment-form-group">
@@ -367,6 +363,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
 
         <div className="assignment-form-group">
           <label>Type</label>
+
           <div className="assignment-choice-grid">
             {typeChoices.map((option) => (
               <button
@@ -381,6 +378,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
               </button>
             ))}
           </div>
+
+          {assignmentTypes.length === 0 && (
+            <div className="assignment-empty-modules">
+              Add assignment types in Profile.
+            </div>
+          )}
         </div>
 
         <div className="assignment-form-actions">

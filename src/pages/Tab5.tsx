@@ -35,7 +35,7 @@ import {
 } from "ionicons/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/db";
+import { db, type AssignmentType } from "../db/db";
 import { useAuth } from "../hooks/useAuth";
 import "./Tab5.css";
 import { Header } from "../components/Header";
@@ -57,12 +57,6 @@ interface ProfileForm {
   chronotype: number;
 }
 
-type AssignmentTypeNames = {
-  0: string;
-  1: string;
-  2: string;
-};
-
 type InfoPopoverState = {
   isOpen: boolean;
   event?: Event;
@@ -70,7 +64,6 @@ type InfoPopoverState = {
   content: React.ReactNode;
 };
 
-const ASSIGNMENT_TYPE_NAMES_KEY = "assignmentTypeNames";
 
 const defaultForm: ProfileForm = {
   email: "",
@@ -88,11 +81,8 @@ const defaultForm: ProfileForm = {
   chronotype: 0,
 };
 
-const defaultAssignmentTypeNames: AssignmentTypeNames = {
-  0: "Exam",
-  1: "Lab",
-  2: "Other",
-};
+
+const defaultAssignmentTypes = ["Exam", "Lab", "Other"];
 
 const studyFields = [
   { label: "STEM", value: 0 },
@@ -133,20 +123,6 @@ const timeOptions = [
   { label: "60 min", value: 60 },
   { label: "90 min", value: 90 },
 ];
-
-const getAssignmentTypeNames = (): AssignmentTypeNames => {
-  try {
-    const saved = localStorage.getItem(ASSIGNMENT_TYPE_NAMES_KEY);
-    if (!saved) return defaultAssignmentTypeNames;
-
-    return {
-      ...defaultAssignmentTypeNames,
-      ...JSON.parse(saved),
-    };
-  } catch {
-    return defaultAssignmentTypeNames;
-  }
-};
 
 const labelFor = (
   value: number | undefined,
@@ -300,8 +276,9 @@ const Tab5: React.FC = () => {
   const [subjectColor, setSubjectColor] = useState("#b899ff");
   const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
 
-  const [assignmentTypeNames, setAssignmentTypeNames] =
-    useState<AssignmentTypeNames>(getAssignmentTypeNames);
+  const [assignmentTypeInput, setAssignmentTypeInput] = useState("");
+  const [editingAssignmentTypeId, setEditingAssignmentTypeId] =
+    useState<number | null>(null);
 
   const [infoPopover, setInfoPopover] = useState<InfoPopoverState>({
     isOpen: false,
@@ -324,6 +301,20 @@ const Tab5: React.FC = () => {
       },
       [currentUser?.id]
     ) ?? [];
+
+    const assignmentTypes =
+  useLiveQuery(
+    async () => {
+      if (!currentUser?.id) return [];
+
+      return await db.assignment_types
+        .where("fk_user")
+        .equals(currentUser.id)
+        .toArray();
+    },
+    [currentUser?.id]
+  ) ?? [];
+
 
   useEffect(() => {
     if (currentUser) {
@@ -350,6 +341,7 @@ const Tab5: React.FC = () => {
     return () => clearTimeout(timer);
   }, [status]);
 
+
   const profileEmail = form.email || user?.email || "";
   const profileName = form.username || "Not set yet";
 
@@ -363,7 +355,7 @@ const Tab5: React.FC = () => {
     [form]
   );
 
-  const updateUser = async (patch: Partial<ProfileForm>) => {
+   const updateUser = async (patch: Partial<ProfileForm>) => {
     const nextForm = {
       ...form,
       ...patch,
@@ -387,6 +379,77 @@ const Tab5: React.FC = () => {
     setStatus("Saved.");
     return true;
   };
+
+  const clearAssignmentTypeForm = () => {
+  setAssignmentTypeInput("");
+  setEditingAssignmentTypeId(null);
+};
+
+const handleSaveAssignmentType = async () => {
+  const name = assignmentTypeInput.trim();
+
+  if (!name) {
+    setStatus("Assignment type name is required.");
+    return;
+  }
+
+  if (!currentUser?.id) {
+    const saved = await updateUser({ username: form.username || "User" });
+    if (!saved) return;
+  }
+
+  const userId = currentUser?.id ?? users[0]?.id;
+
+  if (!userId) {
+    setStatus("Save your profile before adding assignment types.");
+    return;
+  }
+
+  if (editingAssignmentTypeId !== null) {
+    await db.assignment_types.update(editingAssignmentTypeId, {
+      name,
+    });
+
+    setStatus("Assignment type renamed.");
+  } else {
+    await db.assignment_types.add({
+      name,
+      fk_user: userId,
+    });
+
+    setStatus("Assignment type added.");
+  }
+
+  clearAssignmentTypeForm();
+};
+
+const handleEditAssignmentType = (assignmentType: AssignmentType) => {
+  setEditingAssignmentTypeId(assignmentType.id ?? null);
+  setAssignmentTypeInput(assignmentType.name);
+};
+
+const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
+  if (assignmentTypeId == null) return;
+
+  const assignmentsUsingType = await db.assignments
+    .where("assignment_type")
+    .equals(assignmentTypeId)
+    .count();
+
+  if (assignmentsUsingType > 0) {
+    setStatus("This assignment type is used by existing assignments.");
+    return;
+  }
+
+  await db.assignment_types.delete(assignmentTypeId);
+
+  if (editingAssignmentTypeId === assignmentTypeId) {
+    clearAssignmentTypeForm();
+  }
+
+  setStatus("Assignment type deleted.");
+};
+
 
   const handleSaveUsername = async () => {
     const saved = await updateUser({ username: form.username.trim() });
@@ -518,29 +581,6 @@ const Tab5: React.FC = () => {
     setStatus("Module deleted.");
   };
 
-  const handleSaveAssignmentTypeNames = () => {
-    const cleaned: AssignmentTypeNames = {
-      0: assignmentTypeNames[0].trim() || defaultAssignmentTypeNames[0],
-      1: assignmentTypeNames[1].trim() || defaultAssignmentTypeNames[1],
-      2: assignmentTypeNames[2].trim() || defaultAssignmentTypeNames[2],
-    };
-
-    localStorage.setItem(ASSIGNMENT_TYPE_NAMES_KEY, JSON.stringify(cleaned));
-    setAssignmentTypeNames(cleaned);
-
-    window.dispatchEvent(new Event("assignmentTypeNamesChanged"));
-
-    setStatus("Assignment type names saved.");
-    assignmentTypesModal.current?.dismiss();
-  };
-
-  const handleResetAssignmentTypeNames = () => {
-    localStorage.removeItem(ASSIGNMENT_TYPE_NAMES_KEY);
-    setAssignmentTypeNames(defaultAssignmentTypeNames);
-    window.dispatchEvent(new Event("assignmentTypeNamesChanged"));
-    setStatus("Assignment type names reset.");
-  };
-
   const openInfoPopover = (
     event: React.MouseEvent<HTMLElement>,
     title: string,
@@ -582,7 +622,27 @@ const Tab5: React.FC = () => {
     </button>
   );
 
+  useEffect(() => {
+  const createDefaults = async () => {
+    if (!currentUser?.id) return;
 
+    const existingCount = await db.assignment_types
+      .where("fk_user")
+      .equals(currentUser.id)
+      .count();
+
+    if (existingCount > 0) return;
+
+    await db.assignment_types.bulkAdd(
+      defaultAssignmentTypes.map((name) => ({
+        name,
+        fk_user: currentUser.id!,
+      }))
+    );
+  };
+
+  createDefaults();
+}, [currentUser?.id]);
 
   return (
     <IonPage>
@@ -689,8 +749,10 @@ const Tab5: React.FC = () => {
 
             <SettingsRow
               icon={readerOutline}
-              label="Assignment type names"
-              value={`${assignmentTypeNames[0]}, ${assignmentTypeNames[1]}, ${assignmentTypeNames[2]}`}
+              label="Manage assignment types"
+              value={`${assignmentTypes.length} type${
+                assignmentTypes.length === 1 ? "" : "s"
+              }`}
               onClick={() => assignmentTypesModal.current?.present()}
             />
           </SettingsCard>
@@ -1167,67 +1229,98 @@ const Tab5: React.FC = () => {
         </IonModal>
 
         {/* ASSIGNMENT TYPES MODAL */}
-        <IonModal ref={assignmentTypesModal} className="profile-settings-modal">
-          <IonHeader>
-            <IonToolbar className="profile-modal-toolbar">
-              <h2 className="profile-modal-title">
-                Assignment type names
-              </h2>
+<IonModal ref={assignmentTypesModal} className="profile-settings-modal">
+  <IonHeader>
+    <IonToolbar className="profile-modal-toolbar">
+      <h2 className="profile-modal-title">Manage assignment types</h2>
 
-              <IonButtons slot="end">
-                <IonButton
-                  fill="clear"
-                  className="profile-modal-close"
-                  onClick={() => assignmentTypesModal.current?.dismiss()}
-                >
-                  <IonIcon icon={close} />
-                </IonButton>
-              </IonButtons>
-            </IonToolbar>
-          </IonHeader>
+      <IonButtons slot="end">
+        <IonButton
+          fill="clear"
+          className="profile-modal-close"
+          onClick={() => assignmentTypesModal.current?.dismiss()}
+        >
+          <IonIcon icon={close} />
+        </IonButton>
+      </IonButtons>
+    </IonToolbar>
+  </IonHeader>
 
-          <div className="profile-modal-content">
-            <p className="profile-field-helper">
-              Rename these types to match the assignment categories you use most.
-            </p>
+  <div className="profile-modal-content scrollable">
+    <p className="profile-modal-label">Assignment type name</p>
+    <p className="profile-field-helper">
+      Add categories such as exam, lab, project, essay, homework, or quiz.
+    </p>
 
-            {[0, 1, 2].map((type) => (
-              <div key={type}>
-                <p className="profile-modal-label">Type {type + 1} name</p>
+    <IonItem className="profile-input-item">
+      <IonInput
+        placeholder="Assignment type name"
+        value={assignmentTypeInput}
+        onIonInput={(e) =>
+          setAssignmentTypeInput(String(e.detail.value ?? ""))
+        }
+      />
+    </IonItem>
 
-                <IonItem className="profile-input-item">
-                  <IonInput
-                    value={assignmentTypeNames[type as 0 | 1 | 2]}
-                    placeholder={defaultAssignmentTypeNames[type as 0 | 1 | 2]}
-                    onIonInput={(e) =>
-                      setAssignmentTypeNames({
-                        ...assignmentTypeNames,
-                        [type]: e.detail.value ?? "",
-                      } as AssignmentTypeNames)
-                    }
-                  />
-                </IonItem>
-              </div>
-            ))}
+    <IonButton
+      expand="block"
+      className="profile-primary-button"
+      onClick={handleSaveAssignmentType}
+    >
+      <IonIcon
+        icon={
+          editingAssignmentTypeId === null
+            ? addOutline
+            : documentTextOutline
+        }
+        slot="start"
+      />
+      {editingAssignmentTypeId === null
+        ? "Add assignment type"
+        : "Save assignment type"}
+    </IonButton>
 
-            <IonButton
-              expand="block"
-              className="profile-primary-button"
-              onClick={handleSaveAssignmentTypeNames}
+    {editingAssignmentTypeId !== null && (
+      <IonButton
+        expand="block"
+        fill="outline"
+        className="profile-secondary-button"
+        onClick={clearAssignmentTypeForm}
+      >
+        Cancel editing
+      </IonButton>
+    )}
+
+    <div className="profile-module-list">
+      {assignmentTypes.length === 0 ? (
+        <div className="profile-empty-mini">
+          <IonIcon icon={readerOutline} />
+          <p>No assignment types yet.</p>
+        </div>
+      ) : (
+        assignmentTypes.map((assignmentType) => (
+          <div className="profile-module-row" key={assignmentType.id}>
+            <button
+              type="button"
+              className="profile-module-main"
+              onClick={() => handleEditAssignmentType(assignmentType)}
             >
-              Save type names
-            </IonButton>
+              <span>{assignmentType.name}</span>
+            </button>
 
-            <IonButton
-              expand="block"
-              fill="outline"
-              className="profile-secondary-button"
-              onClick={handleResetAssignmentTypeNames}
+            <button
+              type="button"
+              className="profile-module-delete"
+              onClick={() => handleDeleteAssignmentType(assignmentType.id)}
             >
-              Reset to Exam / Lab / Other
-            </IonButton>
+              <IonIcon icon={trashOutline} />
+            </button>
           </div>
-        </IonModal>
+        ))
+      )}
+    </div>
+  </div>
+</IonModal>
 
         <IonPopover
           isOpen={infoPopover.isOpen}

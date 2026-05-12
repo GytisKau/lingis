@@ -26,6 +26,8 @@ import "./AssignmentList.css";
 type AssignmentWithMeta = Assignment & {
   subjectName: string;
   subjectColor: string;
+  assignmentTypeName: string;
+  assignmentTypeColor: string;
   completedCount: number;
   totalCount: number;
   isDone: boolean;
@@ -35,6 +37,23 @@ type AssignmentWithMeta = Assignment & {
 };
 
 type SortMode = "deadline" | "subject-deadline";
+
+const assignmentTypeColors = [
+  "#f4b4b4",
+  "#b8d8ff",
+  "#d5c4ff",
+  "#bfe8c8",
+  "#ffe0a8",
+  "#f7c6df",
+  "#c8e7e1",
+  "#e2d6c2",
+];
+
+const getAssignmentTypeColor = (typeId?: number | null) => {
+  if (typeId == null || typeId < 0) return "#d8d8d8";
+
+  return assignmentTypeColors[typeId % assignmentTypeColors.length];
+};
 
 const AssignmentList: React.FC = () => {
   const [sortMode, setSortMode] = useState<SortMode>("deadline");
@@ -47,41 +66,49 @@ const AssignmentList: React.FC = () => {
   const [now] = useState(new Date());
 
   const assignments = useLiveQuery(async () => {
-    const asgns = await db.assignments.toArray();
-    const tasks = await db.tasks.toArray();
-    const subjects = await db.subjects.toArray();
+  const asgns = await db.assignments.toArray();
+  const tasks = await db.tasks.toArray();
+  const subjects = await db.subjects.toArray();
+  const assignmentTypes = await db.assignment_types.toArray();
 
-    return asgns.map((assignment: any) => {
-      const assignmentTasks = tasks.filter(
-        (task) => task.fk_assignment === assignment.id
-      );
+  return asgns.map((assignment: any) => {
+    const assignmentTasks = tasks.filter(
+      (task) => task.fk_assignment === assignment.id
+    );
 
-      const completed = assignmentTasks.filter((task) => task.is_done).length;
-      const subject = subjects.find(
-        (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
-      );
+    const completed = assignmentTasks.filter((task) => task.is_done).length;
 
-      const isDone = Boolean(assignment.is_done);
-      const isDeleted = Boolean(assignment.is_deleted || assignment.deleted_at);
+    const subject = subjects.find(
+      (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
+    );
 
-      const isOverdue =
-        !isDone &&
-        !isDeleted &&
-        new Date(assignment.date).getTime() < new Date().getTime();
+    const assignmentType = assignmentTypes.find(
+      (type) => type.id === Number(assignment.assignment_type)
+    );
 
-      return {
-        ...assignment,
-        subjectName: subject?.name ?? "",
-        subjectColor: subject?.color ?? "",
-        completedCount: completed,
-        totalCount: assignmentTasks.length,
-        isDone,
-        isOverdue,
-        isDeleted,
-        deleted_at: assignment.deleted_at ?? null
-      } as AssignmentWithMeta;
-    });
-  }, []);
+    const isDone = Boolean(assignment.is_done);
+    const isDeleted = Boolean(assignment.is_deleted || assignment.deleted_at);
+
+    const isOverdue =
+      !isDone &&
+      !isDeleted &&
+      new Date(assignment.date).getTime() < new Date().getTime();
+
+    return {
+      ...assignment,
+      subjectName: subject?.name ?? "",
+      subjectColor: subject?.color ?? "",
+      assignmentTypeName: assignmentType?.name ?? "No type",
+      assignmentTypeColor: getAssignmentTypeColor(assignment.assignment_type),
+      completedCount: completed,
+      totalCount: assignmentTasks.length,
+      isDone,
+      isOverdue,
+      isDeleted,
+      deleted_at: assignment.deleted_at ?? null,
+    } as AssignmentWithMeta;
+  });
+}, []);
 
   const visibleAssignments =
     assignments?.filter(
@@ -214,13 +241,6 @@ const AssignmentList: React.FC = () => {
     } as any);
   };
 
-  const getTypeClass = (type: number) => {
-    if (type === 0) return "exam";
-    if (type === 1) return "lab";
-    if (type === 2) return "other";
-    return "unset";
-  };
-
   const getTimeLeft = (date: string | Date) => {
     const dueDate = new Date(date).getTime();
     const currentTime = new Date().getTime();
@@ -323,9 +343,13 @@ const AssignmentList: React.FC = () => {
           <IonItem
             button
             detail={false}
-            className={`assignment-card-item ${getTypeClass(
-              assignment.assignment_type
-            )}`}
+            className="assignment-card-item"
+            style={
+              {
+                "--assignment-type-color": assignment.assignmentTypeColor || "#d8d8d8",
+                borderLeft: `6px solid ${assignment.assignmentTypeColor || "#d8d8d8"}`,
+              } as React.CSSProperties
+            }
             routerLink={`/tabs/tab4/viewassignment/${assignment.id}`}
           >
             <IonLabel>

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { IonCard, IonCardContent, IonChip } from "@ionic/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Assignment, db } from "../db/db";
@@ -9,49 +8,21 @@ interface AssignmentCardProps {
   children?: React.ReactNode;
 }
 
-type AssignmentTypeNames = {
-  0: string;
-  1: string;
-  2: string;
-};
+const assignmentTypeColors = [
+  "#ffecec", // light version of #f4b4b4
+  "#eef4ff", // light version of #b8d8ff
+  "#f3efff", // light version of #d5c4ff
+  "#eafaf1", // light version of #bfe8c8
+  "#fff3dc", // light version of #ffe0a8
+  "#fff0f8", // light version of #f7c6df
+  "#eefaf7", // light version of #c8e7e1
+  "#f7f1e8", // light version of #e2d6c2
+];
 
-const ASSIGNMENT_TYPE_NAMES_KEY = "assignmentTypeNames";
+const getAssignmentTypeColor = (typeId?: number | null) => {
+  if (typeId == null || typeId < 0) return "#f3efff";
 
-const defaultAssignmentTypeNames: AssignmentTypeNames = {
-  0: "Exam",
-  1: "Lab",
-  2: "Other",
-};
-
-const getAssignmentTypeNames = (): AssignmentTypeNames => {
-  try {
-    const saved = localStorage.getItem(ASSIGNMENT_TYPE_NAMES_KEY);
-    if (!saved) return defaultAssignmentTypeNames;
-
-    return {
-      ...defaultAssignmentTypeNames,
-      ...JSON.parse(saved),
-    };
-  } catch {
-    return defaultAssignmentTypeNames;
-  }
-};
-
-const getTypeClass = (type?: number | null) => {
-  if (type === 0) return "exam";
-  if (type === 1) return "lab";
-  if (type === 2) return "other";
-  return "unset";
-};
-
-const getTypeLabel = (
-  type: number | null | undefined,
-  assignmentTypeNames: AssignmentTypeNames
-) => {
-  if (type === 0) return assignmentTypeNames[0];
-  if (type === 1) return assignmentTypeNames[1];
-  if (type === 2) return assignmentTypeNames[2];
-  return "";
+  return assignmentTypeColors[(typeId) % assignmentTypeColors.length];
 };
 
 const formatDate = (value: Date | string) =>
@@ -81,6 +52,7 @@ const getDaysUntilDue = (value: Date | string) => {
   const diff = Math.ceil((due.getTime() - today.getTime()) / 86400000);
 
   if (Number.isNaN(diff)) return "No due date";
+
   if (diff < 0) {
     const days = Math.abs(diff);
     return `${days} day${days !== 1 ? "s" : ""} overdue`;
@@ -98,30 +70,17 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 }) => {
   const subjects = useLiveQuery(() => db.subjects.toArray(), []) ?? [];
 
-  const [assignmentTypeNames, setAssignmentTypeNames] =
-    useState<AssignmentTypeNames>(getAssignmentTypeNames);
-
-  useEffect(() => {
-    const refreshTypeNames = () => {
-      setAssignmentTypeNames(getAssignmentTypeNames());
-    };
-
-    window.addEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-    window.addEventListener("storage", refreshTypeNames);
-
-    return () => {
-      window.removeEventListener("assignmentTypeNamesChanged", refreshTypeNames);
-      window.removeEventListener("storage", refreshTypeNames);
-    };
-  }, []);
+  const assignmentTypes =
+    useLiveQuery(() => db.assignment_types.toArray(), []) ?? [];
 
   if (!assignment) return <p>No Assignment</p>;
 
-  const typeClass = getTypeClass(assignment.assignment_type);
-  const typeLabel = getTypeLabel(
-    assignment.assignment_type,
-    assignmentTypeNames
+  const assignmentType = assignmentTypes.find(
+    (type) => type.id === Number(assignment.assignment_type)
   );
+
+  const typeLabel = assignmentType?.name ?? "";
+  const typeColor = getAssignmentTypeColor(assignment.assignment_type);
 
   const subject = subjects.find(
     (s) => s.id === Number(assignment.fk_subject)
@@ -131,7 +90,14 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
   const daysLeft = getDaysUntilDue(assignment.date);
 
   return (
-    <IonCard className={`assignment-preview-card ${typeClass}`}>
+    <IonCard
+      className="assignment-preview-card"
+      style={
+        {
+          "--assignment-type-color": typeColor,
+        } as React.CSSProperties
+      }
+    >
       <IonCardContent>
         <div className="assignment-preview-header">
           <div className="assignment-preview-main">

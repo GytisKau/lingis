@@ -5,43 +5,16 @@
   border: 1px solid rgba(73, 27, 109, 0.14);
   box-shadow: 0 12px 28px rgba(73, 27, 109, 0.12);
   position: relative;
+
+  --background: var(--assignment-type-color, #f3efff);
+  background: var(--assignment-type-color, #f3efff) !important;
 }
 
 /* Ionic overwrite shield */
-.assignment-preview-card.exam {
-  --background: #ffecec;
-  background: #ffecec !important;
-}
-
-.assignment-preview-card.lab {
-  --background: #eef4ff;
-  background: #eef4ff !important;
-}
-
-.assignment-preview-card.other {
-  --background: #eafaf1;
-  background: #eafaf1 !important;
-}
-
-.assignment-preview-card.unset {
-  --background: #f3efff;
-  background: #f3efff !important;
-}
-
-.assignment-preview-card.exam::part(native) {
-  background: #ffecec !important;
-}
-
-.assignment-preview-card.lab::part(native) {
-  background: #eef4ff !important;
-}
-
-.assignment-preview-card.other::part(native) {
-  background: #eafaf1 !important;
-}
-
-.assignment-preview-card.unset::part(native) {
-  background: #f3efff !important;
+.assignment-preview-card::part(native) {
+  background: var(--assignment-type-color, #f3efff) !important;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 .assignment-preview-card ion-card-content {
