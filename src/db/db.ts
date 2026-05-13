@@ -35,6 +35,7 @@ interface Questionnaire {
   physical: number;
   sleep_quality: number;
   created_at: Date;
+  fk_break?: number | null;
 }
 
 interface LingisEvent {
@@ -69,6 +70,14 @@ interface Session {
   fk_assignment: number;
 }
 
+interface Break {
+  id: number;
+  start: Date;
+  end: Date;
+  fk_assignment: number;
+  break_type: number;
+}
+
 interface Task {
   id: number;
   title: string;
@@ -89,6 +98,7 @@ const db = new Dexie("LingisDatabase") as Dexie & {
   tasks: EntityTable<Task, "id">,
   subjects: EntityTable<Subject, "id">,
   assignment_types: EntityTable<AssignmentType, "id">,
+  breaks: EntityTable<Break, "id">,
 }
 
 db.version(1).stores({
@@ -103,14 +113,15 @@ db.version(1).stores({
 
 db.version(2).stores({
   users: "++id",
-  questionnaires: "++id, fk_user",
+  questionnaires: "++id, fk_user, fk_break",
   events: "++id",
   assignments: "++id, fk_subject, assignment_type",
   assignment_types: "++id, fk_user",
   sessions: "++id, fk_assignment",
   tasks: "++id, fk_assignment, parent_task_id",
   subjects: "++id, fk_user",
+  breaks: "++id, fk_assignment, break_type",
 });
 
-export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject, AssignmentType }
+export type { User, Assignment, LingisEvent, Session, Task, Questionnaire, Subject, AssignmentType, Break}
 export { db }

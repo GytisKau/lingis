@@ -14,18 +14,48 @@ import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';
 import { Header } from '../components/Header';
 
-const getAssignmentTypeColor = (type?: number | null) => {
-  if (type === 0) return "#ffcfcf"; // exam
-  if (type === 1) return "#d6e6ff"; // lab
-  if (type === 2) return "#d4f5df"; // other
-  return "#e6d8ff"; // unset / no type
+const assignmentTypeColors = [
+  "#f4b4b4",
+  "#b8d8ff",
+  "#d5c4ff",
+  "#bfe8c8",
+  "#ffe0a8",
+  "#f7c6df",
+  "#c8e7e1",
+  "#e2d6c2",
+];
+
+const assignmentTypeLightColors = [
+  "#ffecec",
+  "#eef4ff",
+  "#f3efff",
+  "#eafaf1",
+  "#fff3dc",
+  "#fff0f8",
+  "#eefaf7",
+  "#f7f1e8",
+];
+
+const getAssignmentTypeColorIndex = (typeId?: number | null) => {
+  if (typeId == null || typeId < 0) return -1;
+
+  return (typeId - 1) % assignmentTypeColors.length;
 };
 
-const getAssignmentBorderColor = (type?: number | null) => {
-  if (type === 0) return "#ff9f9f";
-  if (type === 1) return "#9fc4ff";
-  if (type === 2) return "#9be8b5";
-  return "#c7a8ff";
+const getAssignmentTypeColor = (typeId?: number | null) => {
+  const index = getAssignmentTypeColorIndex(typeId);
+
+  if (index === -1) return "#f3efff";
+
+  return assignmentTypeColors[index];
+};
+
+const getAssignmentBorderColor = (typeId?: number | null) => {
+  const index = getAssignmentTypeColorIndex(typeId);
+
+  if (index === -1) return "#c7a8ff";
+
+  return assignmentTypeColors[index];
 };
 
 const getAssignmentTextColor = () => {

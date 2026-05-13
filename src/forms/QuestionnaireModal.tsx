@@ -52,9 +52,10 @@ interface Props {
   trigger?: string;
   onClosed?: () => void;
   onCalculated?: (calculatedMinutes: number) => void;
+  breakId?: number | null;
 }
 
-const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalculated }) => {
+const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalculated, breakId=null }) => {
   const [step, setStep] = useState<"questions" | "result">("questions");
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
@@ -92,6 +93,7 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
         physical: formData.physical,
         sleep_quality: formData.sleepHours,
         created_at: now,
+        fk_break: breakId,
       });
 
       const input: FeaturesInput = {
