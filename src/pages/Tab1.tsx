@@ -14,6 +14,17 @@ import TaskList from '../components/TaskList';
 import ScheduleAllAssignments from '../utils/ScheduleSessions';
 import { Header } from '../components/Header';
 
+const assignmentTypeDarkColors = [
+  "#c94f4f",
+  "#4f97e6",
+  "#8b63df",
+  "#56b96d",
+  "#d99a24",
+  "#cc5f99",
+  "#55b3a5",
+  "#9b7f5f",
+];
+
 const assignmentTypeColors = [
   "#f4b4b4",
   "#b8d8ff",
@@ -39,7 +50,7 @@ const assignmentTypeLightColors = [
 const getAssignmentTypeColorIndex = (typeId?: number | null) => {
   if (typeId == null || typeId < 0) return -1;
 
-  return (typeId - 1) % assignmentTypeColors.length;
+  return (typeId) % assignmentTypeColors.length;
 };
 
 const getAssignmentTypeColor = (typeId?: number | null) => {
@@ -48,6 +59,22 @@ const getAssignmentTypeColor = (typeId?: number | null) => {
   if (index === -1) return "#f3efff";
 
   return assignmentTypeColors[index];
+};
+
+const getAssignmentTypeLightColor = (typeId?: number | null) => {
+  const index = getAssignmentTypeColorIndex(typeId);
+
+  if (index === -1) return "#f3efff";
+
+  return assignmentTypeLightColors[index];
+};
+
+const getAssignmentTypeDarkColor = (typeId?: number | null) => {
+  const index = getAssignmentTypeColorIndex(typeId);
+
+  if (index === -1) return "#b792e6";
+
+  return assignmentTypeDarkColors[index];
 };
 
 const getAssignmentBorderColor = (typeId?: number | null) => {
@@ -131,7 +158,7 @@ const Tab1: React.FC = () => {
     .filter((s) => s.is_done)
     .map((s) => {
       const assignment = assignments.find((a) => a.id === s.fk_assignment);
-      const backgroundColor = getAssignmentTypeColor(assignment?.assignment_type);
+      const backgroundColor = getAssignmentTypeDarkColor(assignment?.assignment_type);
 
       return {
         id: `doneSession-${s.id}`,
@@ -191,6 +218,10 @@ const Tab1: React.FC = () => {
 
     return (
       <IonContent className="ion-padding">
+        <IonLabel>
+          {currentSession.type === "reflection" ? "Reflection session" : "Study session"}
+        </IonLabel>
+
         <div className="session-preview-time">
           <IonLabel>
             {startDay == endDay ?
@@ -253,6 +284,7 @@ const Tab1: React.FC = () => {
         start,
         end,
         fk_assignment: assignment_id,
+        type: "study",
       } as RecommendedSession);
 
     setCurrentAssignment(foundAssignment);
@@ -331,22 +363,35 @@ function recomendedSessionsToCalendarEvents(
 ): EventInput[] {
 
   return sessions.map((s, i) => {
-    const assignment = assignments.filter(a => a.id == s.fk_assignment)[0]
-    const backgroundColor = getAssignmentTypeColor(assignment?.assignment_type)
+    const assignment = assignments.find(a => a.id == s.fk_assignment)
+    const isReflection = s.type === "reflection"
+
+    const backgroundColor = isReflection
+      ? getAssignmentTypeLightColor(assignment?.assignment_type)
+      : getAssignmentTypeColor(assignment?.assignment_type)
 
     return {
       id: `recommendedSession-${i}`,
       start: s.start,
       end: s.end,
-      title: assignment.title,
+      title: assignment
+        ? isReflection
+          ? `${assignment.title} (Reflection)`
+          : assignment.title
+        : isReflection
+          ? "Reflection"
+          : "Study session",
       color: backgroundColor,
       backgroundColor,
       borderColor: getAssignmentBorderColor(assignment?.assignment_type),
       textColor: getAssignmentTextColor(),
-      extendedProps: {type: "recommendedSession", fk_assignment: s.fk_assignment}
+      extendedProps: {
+        type: "recommendedSession",
+        sessionType: s.type,
+        fk_assignment: s.fk_assignment
+      }
     }
   })
-
 }
 
 function freeTimesToCalendarEvents(

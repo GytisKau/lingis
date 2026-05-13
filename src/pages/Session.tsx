@@ -18,7 +18,7 @@ import { useTimerContext } from '../context/TimerContext';
 import { db } from '../db/db';
 import { Header } from '../components/Header';
 
-const MIN_SESSION_MINUTES = 5;
+const MIN_SESSION_MINUTES = 10;
 
 interface SessionProps extends RouteComponentProps<{ id: string }> {} 
 
