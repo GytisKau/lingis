@@ -1,0 +1,214 @@
+.ad-gate-modal {
+  --width: 100%;
+  --height: 100%;
+  --max-width: 100%;
+  --max-height: 100%;
+  --border-radius: 0;
+  --background: transparent;
+}
+
+.ad-gate-modal::part(content) {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ad-gate-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.ad-full-page {
+  min-height: 100%;
+  width: 100%;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(234, 216, 245, 0.95), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(238, 244, 255, 0.96), transparent 40%),
+    rgba(255, 255, 255, 0.96);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ad-close-button {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 10;
+
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(73, 27, 109, 0.18);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.78);
+  color: #491B6D;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  box-shadow: 0 8px 18px rgba(73, 27, 109, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.ad-close-button ion-icon {
+  color: #491B6D;
+  font-size: 24px;
+}
+
+.ad-card {
+  width: min(100%, 460px);
+  border-radius: 30px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 2px solid rgba(73, 27, 109, 0.16);
+  box-shadow: 0 24px 55px rgba(73, 27, 109, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.ad-label {
+  width: fit-content;
+  margin: 0 0 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.1);
+  color: #491B6D;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ad-visual {
+  position: relative;
+  min-height: 260px;
+  border-radius: 26px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, #f3efff, #eef4ff 52%, #eafaf1);
+  border: 1px solid rgba(73, 27, 109, 0.12);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  padding: 28px;
+}
+
+.ad-visual::before {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(73, 27, 109, 0.08);
+  top: -60px;
+  right: -50px;
+}
+
+.ad-visual::after {
+  content: "";
+  position: absolute;
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  bottom: -50px;
+  left: -35px;
+}
+
+.ad-visual h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 8px;
+  color: #491B6D;
+  font-size: 42px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.ad-visual p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(73, 27, 109, 0.72);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ad-sparkle {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.18);
+}
+
+.ad-sparkle-one {
+  width: 16px;
+  height: 16px;
+  top: 42px;
+  left: 46px;
+}
+
+.ad-sparkle-two {
+  width: 10px;
+  height: 10px;
+  top: 70px;
+  right: 70px;
+}
+
+.ad-sparkle-three {
+  width: 12px;
+  height: 12px;
+  bottom: 54px;
+  right: 92px;
+}
+
+.ad-text-box {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 22px;
+  background: rgba(73, 27, 109, 0.06);
+  border: 1px solid rgba(73, 27, 109, 0.1);
+}
+
+.ad-text-box h2 {
+  margin: 0 0 6px;
+  color: #491B6D;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.ad-text-box p {
+  margin: 0;
+  color: rgba(73, 27, 109, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 430px) {
+  .ad-full-page {
+    padding: 16px;
+  }
+
+  .ad-card {
+    padding: 14px;
+    border-radius: 26px;
+  }
+
+  .ad-visual {
+    min-height: 230px;
+  }
+
+  .ad-visual h1 {
+    font-size: 36px;
+  }
+}

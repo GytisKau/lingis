@@ -10,74 +10,6 @@
   color: #491B6D;
 }
 
-
-
-
-/* assignment modal */
-.assignment-modal::part(content) {
-  width: 90%;
-  max-width: 400px;
-  max-height: 60vh;
-  border: 2px solid #491B6D;
-  border-radius: 16px;
-  background: white;
-  overflow: hidden;
-}
-
-.assignment-toolbar {
-  --background: transparent;
-  --color: #491B6D;
-  --min-height: 28px;
-  --padding-top: 0;
-  --padding-bottom: 0;
-}
-
-.assignment-title {
-  color: #491B6D;
-  font-weight: 600;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  text-align: center;
-  font-size: 16px;
-  line-height: 1.2;
-}
-
-.assignment-content {
-  --background: white;
-  --padding-top: 0;
-  --padding-bottom: 10px;
-  --padding-start: 14px;
-  --padding-end: 14px;
-  overflow-y: auto;
-}
-
-.assignment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 0;
-  margin-top: 0;
-}
-
-.assignment-item {
-  --background: transparent;
-  --border-color: #491B6D;
-  --border-style: solid;
-  --border-width: 2px;
-  --border-radius: 12px;
-}
-
-.assignment-button {
-  --color: #491B6D;
-  width: 100%;
-  justify-content: flex-start;
-  font-weight: 600;
-  text-transform: none;
-  white-space: normal;
-  text-align: left;
-}
-
 /* shared x */
 .close-x {
   --background: transparent;
@@ -237,4 +169,279 @@
   box-shadow: 0 8px 18px rgba(73, 27, 109, 0.08) !important;
   color: #491B6D !important;
   font-weight: 800 !important;
+}
+
+.continue-session-button::part(native) {
+  background: rgba(73, 27, 109, 0.92) !important;
+  color: white !important;
+}
+
+/* session picker popup */
+.session-picker-popover {
+  --width: 92%;
+  --max-width: 460px;
+  --height: auto;
+  --max-height: 82vh;
+  --border-radius: 28px;
+  --background: transparent;
+}
+
+.session-picker-popover::part(content) {
+  border-radius: 28px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.session-picker-popover::part(backdrop) {
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.session-picker-shell {
+  position: relative;
+  width: 100%;
+  max-height: 82vh;
+  overflow-y: auto;
+  padding: 22px 16px 18px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid rgba(73, 27, 109, 0.22);
+  box-shadow: 0 22px 48px rgba(73, 27, 109, 0.28);
+}
+
+.session-picker-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.1);
+  color: #491B6D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.session-picker-close ion-icon {
+  font-size: 22px;
+  color: #491B6D;
+}
+
+.session-picker-title {
+  margin: 4px 46px 16px 0;
+  color: #491B6D;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.session-picker-empty {
+  margin: 4px 2px 0;
+  color: rgba(73, 27, 109, 0.72);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.session-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.session-pick-card {
+  position: relative;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  color: #491B6D;
+  box-shadow: 0 8px 18px rgba(73, 27, 109, 0.08);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  overflow: hidden;
+}
+
+.session-pick-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.38), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
+}
+
+.session-pick-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.session-pick-card:active {
+  transform: scale(0.98);
+}
+
+.session-pick-card-exam {
+  background: #ffecec !important;
+}
+
+.session-pick-card-lab {
+  background: #eef4ff !important;
+}
+
+.session-pick-card-other {
+  background: #eafaf1 !important;
+}
+
+.session-pick-card-unset {
+  background: #f3efff !important;
+}
+
+.session-pick-recommended {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(73, 27, 109, 0.12);
+  color: #491B6D;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.session-pick-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.session-pick-top h3 {
+  margin: 0 0 5px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.session-pick-top p {
+  margin: 0;
+  color: #777;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.session-due-badge {
+  color: #491b6d;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid rgba(73, 27, 109, 0.12);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.session-overdue-badge {
+  color: #8e2a3d;
+  background: rgba(255, 214, 220, 0.82);
+  border-color: rgba(142, 42, 61, 0.26);
+}
+
+.session-pick-progress {
+  margin-top: 10px;
+}
+
+.session-pick-progress ion-progress-bar {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  --background: rgba(73, 27, 109, 0.12) !important;
+  --progress-background: rgba(73, 27, 109, 0.68) !important;
+}
+
+.session-pick-progress ion-progress-bar::part(track) {
+  background: rgba(73, 27, 109, 0.12) !important;
+}
+
+.session-pick-progress ion-progress-bar::part(progress) {
+  background: rgba(73, 27, 109, 0.68) !important;
+}
+
+.session-pick-task-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  background: rgba(73, 27, 109, 0.08);
+  border: 1px solid rgba(73, 27, 109, 0.12);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #491b6d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.session-pick-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.session-pick-chip {
+  color: #491b6d;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(73, 27, 109, 0.1);
+  border-radius: 999px;
+  padding: 4px 9px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(73, 27, 109, 0.05);
+  font-weight: 900;
+}
+
+.session-pick-module-chip {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5),
+    color-mix(in srgb, var(--module-color) 20%, white)
+  );
+  border: 1px solid color-mix(in srgb, var(--module-color) 55%, rgba(73, 27, 109, 0.12));
+}
+
+.session-add-assignment-button {
+  margin-top: 2px;
+  min-height: 48px;
+  --border-radius: 18px;
+  --background: rgba(73, 27, 109, 0.08);
+  --background-hover: rgba(73, 27, 109, 0.12);
+  --background-activated: rgba(73, 27, 109, 0.16);
+  --color: #491B6D;
+  --box-shadow: none;
+  font-weight: 900;
+  text-transform: none;
+}
+
+@media (max-width: 430px) {
+  .session-picker-shell {
+    padding: 20px 12px 14px;
+  }
+
+  .session-picker-title {
+    font-size: 20px;
+  }
+
+  .session-pick-top {
+    align-items: flex-start;
+  }
 }

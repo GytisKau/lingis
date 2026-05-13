@@ -31,7 +31,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
   const { studyTime, setStudyTime, switchToStudy } = useTimerContext();
 
   const startSession = () => {
-    switchToStudy()
+    switchToStudy(id)
     history.push(`/tabs/tab3/session/${id}`)
   }
 

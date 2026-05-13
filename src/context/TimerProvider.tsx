@@ -48,6 +48,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [studyTime, setStudyTime] = useState(30 * 60);
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState<Date>();
+  const [activeAssignmentId, setActiveAssignmentId] = useState<number | null>(null);
 
   const endAtRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
@@ -165,8 +166,12 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setRunning(false);
   };
 
-  const switchToStudy = () => {
+  const switchToStudy = (assignmentId?: number) => {
     const duration = studyTime;
+
+    if (assignmentId !== undefined) {
+      setActiveAssignmentId(assignmentId);
+    }
 
     setMode('study');
     setTime(duration);
@@ -205,6 +210,14 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setRunning(true);
   };
 
+  const clearActiveSession = () => {
+    setActiveAssignmentId(null);
+    setStartedAt(undefined);
+    setRunning(false);
+    endAtRef.current = null;
+    document.title = "Lingis";
+  };
+
   return (
     <TimerContext.Provider
       value={{
@@ -214,13 +227,15 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         running,
         mode,
         startedAt,
+        activeAssignmentId,
         start,
         pause,
         switchToStudy,
         switchToBreak,
         setStudyTime,
         setTime,
-        extendTimer
+        extendTimer,
+        clearActiveSession
       }}
     >
       {children}

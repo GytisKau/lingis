@@ -321,6 +321,7 @@ const AssignmentList: React.FC = () => {
           className="assignment-sliding-item"
         >
           <IonItem
+            id={index === 0 ? "assignment-card-example" : undefined}
             button
             detail={false}
             className={`assignment-card-item ${getTypeClass(
@@ -450,6 +451,7 @@ const AssignmentList: React.FC = () => {
       {overdueAssignments.length > 0 && (
         <>
           <button
+            id="overdue-button"
             type="button"
             className={`assignment-overdue-button ${
               showOverdueAssignments ? "active" : ""
