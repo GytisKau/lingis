@@ -14,7 +14,10 @@ import { close } from "ionicons/icons";
 import { useLiveQuery } from "dexie-react-hooks";
 
 interface AddAssignmentModalProps {
-  trigger: string;
+  trigger?: string;
+  isOpen?: boolean;
+  onDidDismiss?: () => void;
+  onAssignmentAdded?: (assignmentId: number) => void;
 }
 
 type AssignmentTypeNames = {
@@ -79,7 +82,12 @@ function isDateStringAfter(value: string, compareTo: string) {
   return dateStringToLocalDate(value) > dateStringToLocalDate(compareTo);
 }
 
-const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
+const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({
+  trigger,
+  isOpen,
+  onDidDismiss,
+  onAssignmentAdded,
+}) => {
   const todayDate = getDateString();
   const tomorowDate = getDateString(1);
 
@@ -120,9 +128,14 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     setTitle("");
     setDueDate(freshTomorow);
     setStartDate(freshToday);
-    setTimeEst(0);
+    setTimeEst(1);
     setTestType(-1);
     setSelectedSubjectId(null);
+  }
+
+  function handleDismiss() {
+    clearValues();
+    onDidDismiss?.();
   }
 
   function handleDueDateChange(value?: string | null) {
@@ -213,7 +226,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     }
 
     try {
-      await db.assignments.add({
+      const newAssignmentId = await db.assignments.add({
         title: title.trim(),
         date: dateStringToLocalDate(dueDate),
         is_done: false,
@@ -224,6 +237,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
       });
 
       modal.current?.dismiss();
+      onAssignmentAdded?.(Number(newAssignmentId));
     } catch (error) {
       setStatus(`Failed to add ${title}: ${error}`);
     }
@@ -247,7 +261,8 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
     <IonModal
       ref={modal}
       trigger={trigger}
-      onDidDismiss={clearValues}
+      isOpen={isOpen}
+      onDidDismiss={handleDismiss}
       className="assignment-form-modal"
     >
       <IonHeader className="assignment-form-header">
@@ -367,6 +382,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
 
         <div className="assignment-form-group">
           <label>Type</label>
+
           <div className="assignment-choice-grid">
             {typeChoices.map((option) => (
               <button

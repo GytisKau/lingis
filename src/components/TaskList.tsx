@@ -13,6 +13,7 @@ import {
   IonItemOptions,
   IonItemOption,
   IonModal,
+  IonPopover,
   IonProgressBar,
 } from "@ionic/react";
 import {
@@ -21,6 +22,7 @@ import {
   chevronForward,
   add,
   chevronBack,
+  helpCircleOutline,
 } from "ionicons/icons";
 import { ReorderEndCustomEvent } from "@ionic/core/components";
 import { db } from "../db/db";
@@ -101,6 +103,29 @@ const ModernCheckbox: React.FC<ModernCheckboxProps> = ({
   </div>
 );
 
+
+const ModalHelpHeader = ({
+  title,
+  onHelpClick,
+}: {
+  title: string;
+  onHelpClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}) => (
+  <div className="add-form-help-header">
+    <h2>{title}</h2>
+
+    <button
+      id="task-topic-help-button"
+      type="button"
+      className="add-form-help-button"
+      onClick={onHelpClick}
+      aria-label={`${title} explanation`}
+    >
+      <IonIcon icon={helpCircleOutline} />
+    </button>
+  </div>
+);
+
 interface AddTaskModalProps {
   isOpen: boolean;
   onSave: (title: string, difficulty: number, type: number) => void;
@@ -115,6 +140,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState(-1);
   const [type, setType] = useState(-1);
+  const [taskHelpOpen, setTaskHelpOpen] = useState(false);
+  const [taskHelpEvent, setTaskHelpEvent] = useState<Event | undefined>(undefined);
   const modalRef = useRef<HTMLIonModalElement>(null);
 
   const isValid = title.trim() !== "" && difficulty !== -1 && type !== -1;
@@ -146,7 +173,44 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       breakpoints={[0, 0.75, 1]}
     >
       <div className="ion-padding">
-        <h2>Add New Task</h2>
+        <ModalHelpHeader
+          title="Add New Task"
+          onHelpClick={(event) => {
+            setTaskHelpEvent(event.nativeEvent);
+            setTaskHelpOpen(true);
+          }}
+        />
+
+        <IonPopover
+          isOpen={taskHelpOpen}
+          event={taskHelpEvent}
+          onDidDismiss={() => setTaskHelpOpen(false)}
+          className="plan-help-popover"
+        >
+          <div className="plan-help-cloud">
+            <h3>What is a task?</h3>
+
+            <p>
+              A task is a specific action you need to complete for this
+              assignment. For example: read a chapter, solve exercises, write
+              an introduction, or finish a lab report.
+            </p>
+
+            <h4>Difficulty</h4>
+            <ul>
+              <li><strong>1</strong> - easy or quick task</li>
+              <li><strong>2</strong> - medium task</li>
+              <li><strong>3</strong> - harder or more important task</li>
+            </ul>
+
+            <h4>Type</h4>
+            <ul>
+              <li><strong>Passive</strong> - reading, watching, reviewing notes</li>
+              <li><strong>Active</strong> - writing, solving, creating, practicing</li>
+              <li><strong>Testing</strong> - quizzes, self-checks, mock questions</li>
+            </ul>
+          </div>
+        </IonPopover>
 
         <div className="modal-body">
           <div className="form-group">
@@ -237,6 +301,8 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({
   onCancel,
 }) => {
   const [title, setTitle] = useState("");
+  const [topicHelpOpen, setTopicHelpOpen] = useState(false);
+  const [topicHelpEvent, setTopicHelpEvent] = useState<Event | undefined>(undefined);
   const modalRef = useRef<HTMLIonModalElement>(null);
   const isValid = title.trim() !== "";
 
@@ -263,7 +329,58 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({
       breakpoints={[0, 0.75, 1]}
     >
       <div className="ion-padding">
-        <h2>Add New Topic</h2>
+        <ModalHelpHeader
+          title="Add New Topic"
+          onHelpClick={(event) => {
+            setTopicHelpEvent(event.nativeEvent);
+            setTopicHelpOpen(true);
+          }}
+        />
+
+        <IonPopover
+          isOpen={topicHelpOpen}
+          event={topicHelpEvent}
+          onDidDismiss={() => setTopicHelpOpen(false)}
+          className="plan-help-popover"
+        >
+          <div className="plan-help-cloud">
+            <h3>What is a topic?</h3>
+
+            <p>
+              A topic is a quick way to add one learning area with ready-made subtasks.
+              When you add a topic, the app also creates three subtasks for it:
+            </p>
+
+            <ul>
+              <li>
+                <strong>Passive</strong> - reading, watching, reviewing notes, or learning the theory.
+              </li>
+              <li>
+                <strong>Active</strong> - solving, writing, practicing, or creating something yourself.
+              </li>
+              <li>
+                <strong>Testing</strong> - checking what you remember with questions, quizzes, or self-tests.
+              </li>
+            </ul>
+
+            <p>
+              This is useful because most assignments need all three learning types, so
+              you do not need to add them separately every time.
+            </p>
+
+            <p>
+              You can add more subtasks later if the topic needs extra steps.
+            </p>
+
+            <h4>Example</h4>
+            <ul>
+              <li><strong>Topic:</strong> Sorting algorithms</li>
+              <li><strong>Passive:</strong> Read the theory</li>
+              <li><strong>Active:</strong> Solve sorting exercises</li>
+              <li><strong>Testing:</strong> Do practice questions</li>
+            </ul>
+          </div>
+        </IonPopover>
 
         <div className="modal-body">
           <div className="form-group">
@@ -1693,6 +1810,7 @@ const TaskList: React.FC<TaskListProps> = ({
           </IonButton>
 
           <IonButton
+            id="session-add-task-button"
             expand="block"
             onClick={() => {
               blurActive();
@@ -1702,7 +1820,7 @@ const TaskList: React.FC<TaskListProps> = ({
             style={
               {
                 "--background": "#491B6D",
-                "--border-radius": "10px",
+ "--border-radius": "10px",
               } as React.CSSProperties
             }
           >

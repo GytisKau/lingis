@@ -40,6 +40,7 @@ import { useAuth } from "../hooks/useAuth";
 import "./Tab5.css";
 import { Header } from "../components/Header";
 import { useNotificationPermission } from "../hooks/useNotificationPermission";
+import { startLingisGuide } from "../components/GuideOverlay";
 
 interface ProfileForm {
   email: string;
@@ -381,7 +382,7 @@ const Tab5: React.FC = () => {
       await db.users.add(nextForm);
     }
 
-    updateAccount(nextForm.username.trim())
+    updateAccount(nextForm.username.trim());
 
     setForm(nextForm);
     setStatus("Saved.");
@@ -457,6 +458,32 @@ const Tab5: React.FC = () => {
     } else {
       setStatus(resetPasswordError?.message ?? "Could not send reset email.");
     }
+  };
+
+  const toggleMockPremium = async () => {
+    if (currentUser?.id) {
+      await db.users.update(currentUser.id, {
+        is_premium: !(currentUser as any).is_premium,
+      } as any);
+
+      setStatus(
+        (currentUser as any).is_premium
+          ? "Premium mock turned off. Ads can appear again."
+          : "Premium mock turned on. Ads are hidden."
+      );
+
+      return;
+    }
+
+    const newUser = {
+      ...form,
+      email: profileEmail,
+      username: form.username.trim() || "User",
+      is_premium: true,
+    };
+
+    await db.users.add(newUser as any);
+    setStatus("Premium mock turned on. Ads are hidden.");
   };
 
   const clearSubjectForm = () => {
@@ -582,8 +609,6 @@ const Tab5: React.FC = () => {
     </button>
   );
 
-
-
   return (
     <IonPage>
       <Header title="Profile" />
@@ -677,32 +702,80 @@ const Tab5: React.FC = () => {
             />
           </SettingsCard>
 
-          <SettingsCard icon={cubeOutline} title="Modules & assignment types">
-            <SettingsRow
-              icon={bookOutline}
-              label="Manage modules"
-              value={`${subjects.length} module${
-                subjects.length === 1 ? "" : "s"
-              }`}
-              onClick={() => modulesModal.current?.present()}
-            />
+          <div id="profile-modules-types-section">
+            <SettingsCard icon={cubeOutline} title="Modules & assignment types">
+              <SettingsRow
+                icon={bookOutline}
+                label="Manage modules"
+                value={`${subjects.length} module${
+                  subjects.length === 1 ? "" : "s"
+                }`}
+                onClick={() => modulesModal.current?.present()}
+              />
 
-            <SettingsRow
-              icon={readerOutline}
-              label="Assignment type names"
-              value={`${assignmentTypeNames[0]}, ${assignmentTypeNames[1]}, ${assignmentTypeNames[2]}`}
-              onClick={() => assignmentTypesModal.current?.present()}
-            />
-          </SettingsCard>
+              <SettingsRow
+                icon={readerOutline}
+                label="Assignment type names"
+                value={`${assignmentTypeNames[0]}, ${assignmentTypeNames[1]}, ${assignmentTypeNames[2]}`}
+                onClick={() => assignmentTypesModal.current?.present()}
+              />
+            </SettingsCard>
+          </div>
 
           <SettingsCard icon={notificationsOutline} title="Notifications">
-           <SettingsRow
+            <SettingsRow
               icon={permission === "granted" ? lockOpenOutline : lockClosedOutline}
               label="Permissions"
               value={permission}
-              onClick={permission === "default" ? () => Notification.requestPermission() : undefined }
+              onClick={
+                permission === "default"
+                  ? () => Notification.requestPermission()
+                  : undefined
+              }
             />
           </SettingsCard>
+
+          <div id="profile-guide-section">
+            <SettingsCard icon={helpCircleOutline} title="Help & Guide">
+              <button
+                id="profile-guide-button"
+                type="button"
+                className="profile-settings-row"
+                onClick={startLingisGuide}
+              >
+                <IonIcon icon={helpCircleOutline} />
+                <span className="profile-row-label">Start guide again</span>
+                <span className="profile-row-value">Quick tour</span>
+                <IonIcon
+                  className="profile-row-chevron"
+                  icon={chevronForwardOutline}
+                />
+              </button>
+            </SettingsCard>
+          </div>
+
+          <section className="premium-mock-section">
+            <button
+              type="button"
+              className={`premium-mock-card ${
+                (currentUser as any)?.is_premium ? "active" : ""
+              }`}
+              onClick={toggleMockPremium}
+            >
+              <span className="premium-mock-check">
+                {(currentUser as any)?.is_premium ? "✓" : ""}
+              </span>
+
+              <div className="premium-mock-text">
+                <h3>Premium mock</h3>
+                <p>
+                  {(currentUser as any)?.is_premium
+                    ? "Premium is active. Ads are hidden."
+                    : "Tap to become premium and hide ads."}
+                </p>
+              </div>
+            </button>
+          </section>
         </div>
 
         {/* USERNAME MODAL */}
@@ -1255,7 +1328,7 @@ const Tab5: React.FC = () => {
             {
               text: "Delete",
               role: "destructive",
-              handler: () => deleteAccount()
+              handler: () => deleteAccount(),
             },
           ]}
         />

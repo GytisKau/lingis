@@ -1,9 +1,17 @@
-import { IonIcon, IonLabel, IonRouterOutlet, IonBadge, IonTabBar, IonTabButton, IonTabs } from "@ionic/react";
+import {
+  IonIcon,
+  IonLabel,
+  IonRouterOutlet,
+  IonBadge,
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+} from "@ionic/react";
 import {
   calendarOutline,
   statsChartOutline,
   bookOutline,
-  personOutline
+  personOutline,
 } from "ionicons/icons";
 
 import { Redirect, Route } from "react-router";
@@ -17,9 +25,9 @@ import SessionView from "../pages/SessionView";
 import AssignmentsView from "../pages/AssignmentView";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
+import GuideOverlay from "./GuideOverlay";
 
 const TabsLayout: React.FC = () => {
-  
   return (
     <IonTabs>
       <IonRouterOutlet animated={false}>
@@ -60,6 +68,8 @@ const TabsLayout: React.FC = () => {
           <IonLabel>Profile</IonLabel>
         </IonTabButton>
       </IonTabBar>
+
+      <GuideOverlay />
     </IonTabs>
   );
 };
