@@ -42,6 +42,23 @@ async function getConsecutiveStudyMinutes() {
   return totalMinutes;
 }
 
+async function checkLongerBreak(){
+  return (await getConsecutiveStudyMinutes()) >= LONG_BREAK_AFTER_MINUTES;
+};
+
+async function calculateBreakTime(studyTime: number) {
+  console.log("Calculating break time for study time (seconds):", studyTime);
+  const needLongerBreak = await checkLongerBreak();
+  //console.log("Need longer break?", needLongerBreak);
+  if (!needLongerBreak) {
+    const breakMinutes = getBreakMinutesFromStudy(studyTime/60);
+    //console.log(`Recommended break time based on study time: ${breakMinutes} minutes`);
+    return breakMinutes;
+  } 
+  //console.log(`Study time exceeded ${LONG_BREAK_AFTER_MINUTES} minutes. Recommending long break of 30 minutes.`);
+  return needLongerBreak ? 30 : getBreakMinutesFromStudy(studyTime/60);
+}
+
 export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<TimerMode>('study');
   const [time, setTime] = useState(30 * 60);
@@ -52,6 +69,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const endAtRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
+  const breakTime = useRef(getBreakMinutesFromStudy(studyTime/60) * 60);
 
   const users = useLiveQuery(() => db.users.toArray());
   const user = users !== undefined ? users[0] : undefined;
@@ -62,6 +80,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const newStudyTime = preferredMinutes * 60;
     setStudyTime(newStudyTime);
+    breakTime.current = getBreakMinutesFromStudy(newStudyTime/60) * 60;
 
     if (!running && !startedAt && mode === 'study') {
       setTime(newStudyTime);
@@ -182,16 +201,12 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     finishedRef.current = false;
   };
 
-  const checkLongerBreak = async () => {
-    return (await getConsecutiveStudyMinutes()) >= LONG_BREAK_AFTER_MINUTES;
-  };
-
   const switchToBreak = async () => {
-    const breakMinutes = (await checkLongerBreak())
-      ? 30
-      : getBreakMinutesFromStudy(studyTime);
+    const breakMinutes = await calculateBreakTime(studyTime);
 
     const duration = breakMinutes * 60;
+
+    breakTime.current = duration;
 
     setMode('break');
     setTime(duration);
@@ -223,7 +238,7 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         time,
         studyTime,
-        breakTime: getBreakMinutesFromStudy(studyTime) * 60,
+        breakTime: breakTime.current,
         running,
         mode,
         startedAt,
@@ -232,7 +247,10 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         pause,
         switchToStudy,
         switchToBreak,
-        setStudyTime,
+        setStudyTime: async (newStudyTime) => {
+          setStudyTime(newStudyTime);
+          breakTime.current = await calculateBreakTime(newStudyTime) * 60;
+        },
         setTime,
         extendTimer,
         clearActiveSession

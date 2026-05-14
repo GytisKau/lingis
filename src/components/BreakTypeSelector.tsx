@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 import {
   IonButton,
   IonButtons,
@@ -6,26 +6,32 @@ import {
   IonHeader,
   IonIcon,
   IonModal,
-  IonTitle,
-  IonToolbar
-} from '@ionic/react';
-import { informationCircleOutline } from 'ionicons/icons';
+  IonToolbar,
+} from "@ionic/react";
+import { informationCircleOutline } from "ionicons/icons";
 import {
   BREAK_TYPES,
   BreakLength,
-  BreakTypeDefinition
-} from '../data/breakSuggestions';
+  BreakTypeDefinition,
+} from "../data/breakSuggestions";
+
+type BreakTypeId = 0 | 1 | 2 | 3 | 4;
 
 interface BreakTypeSelectorProps {
   breakMinutes: BreakLength;
   resetKey: number;
+  value: BreakTypeId;
+  onChange: (value: BreakTypeId) => void;
 }
 
 const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
   breakMinutes,
-  resetKey
+  resetKey,
+  value,
+  onChange,
 }) => {
-  const [selectedType, setSelectedType] = useState<BreakTypeDefinition | null>(null);
+  const [selectedType, setSelectedType] =
+    useState<BreakTypeDefinition | null>(null);
   const [infoType, setInfoType] = useState<BreakTypeDefinition | null>(null);
 
   const availableTypes = useMemo(() => {
@@ -37,9 +43,25 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
   useEffect(() => {
     setSelectedType(null);
     setInfoType(null);
-  }, [breakMinutes, resetKey]);
+    onChange(0);
+  }, [breakMinutes, resetKey, onChange]);
+
+  useEffect(() => {
+    const selected = availableTypes.find((type) => type.id === value) ?? null;
+    setSelectedType(selected);
+  }, [availableTypes, value]);
 
   const selectedSuggestions = selectedType?.suggestions[breakMinutes] ?? [];
+
+  const handleSelectType = (type: BreakTypeDefinition) => {
+    setSelectedType(type);
+    onChange(type.id as BreakTypeId);
+  };
+
+  const handleChooseAnother = () => {
+    setSelectedType(null);
+    onChange(0);
+  };
 
   return (
     <>
@@ -47,7 +69,9 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
         {!selectedType ? (
           <>
             <div className="break-helper-head">
-              <p className="break-helper-eyebrow">{breakMinutes}-minute break</p>
+              <p className="break-helper-eyebrow">
+                {breakMinutes}-minute break
+              </p>
               <h3 className="break-helper-title">Choose your break type</h3>
             </div>
 
@@ -57,7 +81,7 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
                   <button
                     type="button"
                     className="break-type-main"
-                    onClick={() => setSelectedType(type)}
+                    onClick={() => handleSelectType(type)}
                   >
                     <span className="break-type-main-title">{type.title}</span>
                     <span className="break-type-main-subtitle">
@@ -80,7 +104,9 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
         ) : (
           <>
             <div className="break-helper-head">
-              <p className="break-helper-eyebrow">{breakMinutes}-minute break</p>
+              <p className="break-helper-eyebrow">
+                {breakMinutes}-minute break
+              </p>
               <h3 className="break-helper-title">{selectedType.title}</h3>
             </div>
 
@@ -95,7 +121,7 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
             <button
               type="button"
               className="break-change-button"
-              onClick={() => setSelectedType(null)}
+              onClick={handleChooseAnother}
             >
               Choose another break type
             </button>
@@ -109,21 +135,19 @@ const BreakTypeSelector: React.FC<BreakTypeSelectorProps> = ({
         className="break-info-modal"
       >
         <IonHeader>
-        <IonToolbar className="break-info-toolbar">
-            <div className="break-info-title">
-            {infoType?.title ?? ''}
-            </div>
+          <IonToolbar className="break-info-toolbar">
+            <div className="break-info-title">{infoType?.title ?? ""}</div>
 
             <IonButtons slot="end">
-            <IonButton
+              <IonButton
                 fill="clear"
                 className="close-x"
                 onClick={() => setInfoType(null)}
-            >
+              >
                 ✕
-            </IonButton>
+              </IonButton>
             </IonButtons>
-        </IonToolbar>
+          </IonToolbar>
         </IonHeader>
 
         <IonContent className="ion-padding break-info-content">

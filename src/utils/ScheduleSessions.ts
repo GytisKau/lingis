@@ -5,6 +5,7 @@ export interface RecommendedSession {
   start: Date,
   end: Date,
   fk_assignment: number;
+  type: "study" | "reflection"
 }
 
 function breakTime(sessionTime: number) {
@@ -80,7 +81,8 @@ function ScheduleAllAssignments(
 
       allSessions.push({
         ...session,
-        fk_assignment: plan.assignment.id
+        fk_assignment: plan.assignment.id,
+        type: "study"
       })
 
       plan.sessionsScheduled++
@@ -90,8 +92,251 @@ function ScheduleAllAssignments(
     }
   }
 
+  const reflectionSessions = scheduleReflectionSessions(
+    availableSlots,
+    allSessions,
+    assignments,
+    user,
+    now
+  )
+
+  allSessions.push(...reflectionSessions)
+
   return sortSessionsByDate(allSessions)
 }
+
+function scheduleReflectionSessions(
+  availableSlots: LingisEvent[],
+  studySessions: RecommendedSession[],
+  assignments: Assignment[],
+  user: User,
+  now: Date
+): RecommendedSession[] {
+
+  const reflectionSessions: RecommendedSession[] = []
+
+  for (const studySession of studySessions) {
+    if (studySession.type !== "study") continue
+
+    const assignment = assignments.find(
+      a => a.id === studySession.fk_assignment
+    )
+
+    if (!assignment) continue
+
+    const reflectionMinutes = getReflectionMinutes(studySession)
+
+    const offsets = reflectionOffsetsForSession(
+      studySession,
+      assignment
+    )
+
+    for (const offsetHours of offsets) {
+      const targetDate = new Date(
+        studySession.end.getTime() + offsetHours * 3600000
+      )
+
+      if (targetDate < assignment.start_date) continue
+      if (targetDate > assignment.date) continue
+
+      const reflection = findBestReflectionSession(
+        availableSlots,
+        assignment,
+        reflectionMinutes,
+        now,
+        studySession.end,
+        targetDate,
+        offsetHours,
+        user,
+        [...studySessions, ...reflectionSessions]
+      )
+
+      if (!reflection) continue
+
+      const fullReflection: RecommendedSession = {
+        ...reflection,
+        fk_assignment: assignment.id,
+        type: "reflection"
+      }
+
+      reflectionSessions.push(fullReflection)
+
+      availableSlots = consumeSlots(
+        availableSlots,
+        [fullReflection],
+        user
+      )
+    }
+  }
+
+  return reflectionSessions
+}
+
+function getReflectionMinutes(
+  studySession: RecommendedSession
+): number {
+  const studyMinutes = minutesBetween(
+    studySession.start,
+    studySession.end
+  )
+
+  if (studyMinutes <= 30) return 5
+
+  return 10
+}
+
+function reflectionToleranceHours(offsetHours: number): number {
+  if (offsetHours <= 4) return 2
+  if (offsetHours <= 24) return 8
+  if (offsetHours <= 72) return 18
+  return 36
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.toDateString() === b.toDateString()
+}
+
+function hoursBetween(a: Date, b: Date): number {
+  return Math.abs(a.getTime() - b.getTime()) / 3600000
+}
+
+function violatesReflectionSpacing(
+  start: Date,
+  existingSessions: RecommendedSession[]
+): boolean {
+  const sameDayReflections = existingSessions.filter(s =>
+    s.type === "reflection" &&
+    isSameDay(s.start, start)
+  )
+
+  // No more than 2 reflection sessions per day
+  if (sameDayReflections.length >= 2) {
+    return true
+  }
+
+  // Reflections must be at least 4 hours apart
+  return sameDayReflections.some(s =>
+    hoursBetween(s.start, start) < 4
+  )
+}
+
+function findBestReflectionSession(
+  slots: LingisEvent[],
+  assignment: Assignment,
+  reflectionMinutes: number,
+  now: Date,
+  studySessionEnd: Date,
+  targetDate: Date,
+  offsetHours: number,
+  user: User,
+  existingSessions: RecommendedSession[]
+): { start: Date, end: Date } | null {
+
+  let bestSession: { start: Date, end: Date } | null = null
+  let bestScore = Infinity
+
+  const preferredHour = preferredChronotypeHour(user.chronotype)
+
+  const tolerance = reflectionToleranceHours(offsetHours)
+
+  const allowedStart = new Date(
+    targetDate.getTime() - tolerance * 3600000
+  )
+
+  const allowedEnd = new Date(
+    targetDate.getTime() + tolerance * 3600000
+  )
+
+  for (const slot of slots) {
+    const windowStart = new Date(Math.max(
+      slot.start.getTime(),
+      assignment.start_date.getTime(),
+      now.getTime(),
+      studySessionEnd.getTime(),
+      allowedStart.getTime()
+    ))
+
+    const windowEnd = new Date(Math.min(
+      slot.end.getTime(),
+      assignment.date.getTime(),
+      allowedEnd.getTime()
+    ))
+
+    if (windowStart >= windowEnd) continue
+
+    let cursor = new Date(windowStart)
+
+    while (true) {
+      const sessionEnd = new Date(
+        cursor.getTime() + reflectionMinutes * 60000
+      )
+
+      if (sessionEnd > windowEnd) break
+
+      if (violatesReflectionSpacing(cursor, existingSessions)) {
+        cursor = new Date(cursor.getTime() + 15 * 60000)
+        continue
+      }
+
+      const hour = hoursFromMidnight(cursor)
+
+      const chronotypeDistance =
+        Math.abs(hour - preferredHour)
+
+      const targetDistanceHours =
+        Math.abs(cursor.getTime() - targetDate.getTime()) / 3600000
+
+      const sameDaySessions = existingSessions.filter(s =>
+        s.start.toDateString() === cursor.toDateString()
+      )
+
+      const sameDayPenalty = sameDaySessions.length * 3
+
+      const score =
+        targetDistanceHours * 5 +
+        chronotypeDistance * 2 +
+        sameDayPenalty
+
+      if (score < bestScore) {
+        bestScore = score
+        bestSession = {
+          start: new Date(cursor),
+          end: sessionEnd
+        }
+      }
+
+      cursor = new Date(cursor.getTime() + 15 * 60000)
+    }
+  }
+
+  return bestSession
+}
+
+function reflectionOffsetsForSession(
+  studySession: RecommendedSession,
+  assignment: Assignment
+): number[] {
+  const hoursAvailable =
+    (assignment.date.getTime() - studySession.end.getTime()) / 3600000
+
+  if (hoursAvailable < 4) return []
+
+  if (hoursAvailable < 24) {
+    return [2]
+  }
+
+  if (hoursAvailable < 72) {
+    return [4, 24]
+  }
+
+  if (hoursAvailable < 168) {
+    return [4, 24, 72]
+  }
+
+  return [4, 24, 72, 168]
+}
+
+
 
 function findNextSessionForAssignment(
   slots: LingisEvent[],
@@ -260,17 +505,25 @@ function consumeSlots(
       const result: LingisEvent[] = []
 
       if (session.start > slot.start) {
-        result.push({
+        const leftSlot = {
           ...slot,
           end: new Date(session.start.getTime() - gap * 60000)
-        })
+        }
+
+        if (leftSlot.end > leftSlot.start) {
+          result.push(leftSlot)
+        }
       }
 
       if (session.end < slot.end) {
-        result.push({
+        const rightSlot = {
           ...slot,
           start: new Date(session.end.getTime() + gap * 60000)
-        })
+        }
+
+        if (rightSlot.end > rightSlot.start) {
+          result.push(rightSlot)
+        }
       }
 
       return result

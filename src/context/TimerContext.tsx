@@ -32,7 +32,7 @@ interface TimerContextType {
    * Sets the studyTime and breakTime
    * @param t Study time in seconds
    */
-  setStudyTime: (t: number) => void;
+  setStudyTime: (t: number) => Promise<void>;
   /**
    * Sets the Timer time
    * @param t Study time in seconds

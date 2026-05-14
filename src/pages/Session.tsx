@@ -18,7 +18,7 @@ import { Header } from '../components/Header';
 import { close } from 'ionicons/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 
-const MIN_SESSION_MINUTES = 1;
+const MIN_SESSION_MINUTES = 10;
 
 const MAX_DAILY_ADS = 4;
 const AD_LIMIT_STORAGE_PREFIX = 'lingis_daily_ads';
@@ -143,6 +143,8 @@ const Session: React.FC<SessionProps> = ({ match }) => {
   } = useTimerContext();
 
   const id = Number(match.params.id);
+  const [selectedBreakType, setSelectedBreakType] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [lastBreakId, setLastBreakId] = useState<number | null>(null);
 
   const saveStudySession = async () => {
     if (startedAt == undefined) {
@@ -184,15 +186,46 @@ const Session: React.FC<SessionProps> = ({ match }) => {
     return reserveDailyAdView(userKey, premium);
   };
 
-  const continueToBreak = () => {
+  const saveBreak = async () => {
+    if (startedAt === undefined) {
+      console.error("Failed to save break: Break start time is unknown.");
+      return null;
+    }
+
+    const end = new Date();
+
+    try {
+      const breakId = await db.breaks.add({
+        start: startedAt,
+        end,
+        fk_assignment: id,
+        break_type: selectedBreakType,
+      });
+
+      return Number(breakId);
+    } catch (error) {
+      console.error("Failed to save break:", error);
+      return null;
+    }
+  };
+
+  const continueToBreak = async () => {
     setBreakResetKey((prev) => prev + 1);
-    saveStudySession();
+    await saveStudySession();
     switchToBreak();
   };
 
-  const continueToFinish = () => {
-    saveStudySession();
+  const continueToFinish = async () => {
     clearActiveSession();
+
+    if (mode === "study") {
+      await saveStudySession();
+    }
+
+    if (mode === "break") {
+      await saveBreak();
+    }
+
     router.push('/tabs/tab3');
   };
 
@@ -233,13 +266,18 @@ const Session: React.FC<SessionProps> = ({ match }) => {
     }
   };
 
-  const handleSwitchToBreak = () => {
-    runAfterOptionalAd('break');
+  const handleSwitchToStudy = async () => {
+    pause();
+
+    const savedBreakId = await saveBreak();
+    setLastBreakId(savedBreakId);
+
+    modal.current?.present();
   };
 
-  const handleSwitchToStudy = () => {
-    pause();
-    modal.current?.present();
+
+  const handleSwitchToBreak = () => {
+    runAfterOptionalAd('break');
   };
 
   const handleFinishStudying = () => {
@@ -255,6 +293,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
   };
 
   const handleQuestionaireClosed = () => {
+    setLastBreakId(null);
     switchToStudy(id);
   };
 
@@ -280,6 +319,8 @@ const Session: React.FC<SessionProps> = ({ match }) => {
           <BreakTypeSelector
             breakMinutes={(breakTime / 60) as BreakLength}
             resetKey={breakResetKey}
+            value={selectedBreakType}
+            onChange={setSelectedBreakType}
           />
         )}
 
@@ -287,6 +328,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
           modal={modal}
           onCalculated={handleQuestionaireCalculated}
           onClosed={handleQuestionaireClosed}
+          breakId={lastBreakId}
         />
 
         {mode === 'study' && (

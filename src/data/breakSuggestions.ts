@@ -2,6 +2,7 @@ export type BreakLength = 5 | 10 | 15 | 20 | 30;
 export type BreakTypeKey = 'recharge' | 'stress' | 'focus' | 'nap';
 
 export interface BreakTypeDefinition {
+  id: number;
   key: BreakTypeKey;
   title: string;
   description: string;
@@ -10,6 +11,7 @@ export interface BreakTypeDefinition {
 
 export const BREAK_TYPES: BreakTypeDefinition[] = [
   {
+    id: 1,
     key: 'recharge',
     title: 'Recharge your energy',
     description:
@@ -38,6 +40,7 @@ export const BREAK_TYPES: BreakTypeDefinition[] = [
     }
   },
   {
+    id: 2,
     key: 'stress',
     title: 'Reduce stress',
     description:
@@ -65,6 +68,7 @@ export const BREAK_TYPES: BreakTypeDefinition[] = [
     }
   },
   {
+    id: 3,
     key: 'focus',
     title: 'Restore focus',
     description:
@@ -95,6 +99,7 @@ export const BREAK_TYPES: BreakTypeDefinition[] = [
     }
   },
   {
+    id: 4,
     key: 'nap',
     title: 'Quick nap',
     description:
