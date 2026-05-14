@@ -14,7 +14,10 @@ import { close } from "ionicons/icons";
 import { useLiveQuery } from "dexie-react-hooks";
 
 interface AddAssignmentModalProps {
-  trigger: string;
+  trigger?: string;
+  isOpen?: boolean;
+  onDidDismiss?: () => void;
+  onAssignmentAdded?: (assignmentId: number) => void;
 }
 
 
@@ -53,7 +56,12 @@ function isDateStringAfter(value: string, compareTo: string) {
   return dateStringToLocalDate(value) > dateStringToLocalDate(compareTo);
 }
 
-const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ trigger }) => {
+const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({
+  trigger,
+  isOpen,
+  onDidDismiss,
+  onAssignmentAdded,
+}) => {
   const todayDate = getDateString();
   const tomorowDate = getDateString(1);
 
@@ -109,6 +117,11 @@ const assignmentTypes =
     setTimeEst(1);
     setTestType(-1);
     setSelectedSubjectId(null);
+  }
+
+  function handleDismiss() {
+    clearValues();
+    onDidDismiss?.();
   }
 
   function handleDueDateChange(value?: string | null) {
@@ -199,7 +212,7 @@ const assignmentTypes =
     }
 
     try {
-      await db.assignments.add({
+      const newAssignmentId = await db.assignments.add({
         title: title.trim(),
         date: dateStringToLocalDate(dueDate),
         is_done: false,
@@ -210,6 +223,7 @@ const assignmentTypes =
       });
 
       modal.current?.dismiss();
+      onAssignmentAdded?.(Number(newAssignmentId));
     } catch (error) {
       setStatus(`Failed to add ${title}: ${error}`);
     }
@@ -241,7 +255,8 @@ useEffect(() => {
     <IonModal
       ref={modal}
       trigger={trigger}
-      onDidDismiss={clearValues}
+      isOpen={isOpen}
+      onDidDismiss={handleDismiss}
       className="assignment-form-modal"
     >
       <IonHeader className="assignment-form-header">

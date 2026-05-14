@@ -17,12 +17,15 @@ interface TimerContextType {
   /** Study start time */
   startedAt: Date | undefined;
 
+  /** Active assignment id, used for Continue session */
+  activeAssignmentId: number | null;
+
   /** Starts or unpauses the timer */
   start: () => void;
   /** Pauses the timer */
   pause: () => void;
   /** Switches the mode to study, starts the timer from studyTime and sets startedAt to now*/
-  switchToStudy: () => void;
+  switchToStudy: (assignmentId?: number) => void;
   /** Switches the mode to break and starts the timer from breakTime */
   switchToBreak: () => void;
   /**
@@ -40,6 +43,9 @@ interface TimerContextType {
    * @param seconds Time in seconds
    */
   extendTimer: (seconds: number) => void;
+
+  /** Clears active session info after finishing */
+  clearActiveSession: () => void;
 }
 
 export const TimerContext = createContext<TimerContextType | null>(null);
