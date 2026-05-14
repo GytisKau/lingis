@@ -3,6 +3,7 @@ import { db } from "../db/db";
 import {
   IonButton,
   IonInput,
+  IonNote,
   IonText,
 } from "@ionic/react";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -226,8 +227,6 @@ export default function EditAssignmentForm({
   const formHasInvalidDates =
     !isCompleteDateString(dueDate) ||
     !isCompleteDateString(startDate) ||
-    isDateStringBefore(dueDate, todayDate) ||
-    isDateStringBefore(startDate, todayDate) ||
     isDateStringAfter(startDate, dueDate);
 
   return (
@@ -356,6 +355,16 @@ export default function EditAssignmentForm({
           </div>
         )}
       </div>
+
+      {!title.trim() && (
+        <IonNote>Title is empty</IonNote>
+      )}
+      {timeEst <= 0 && (
+        <IonNote>No estimated asiggnemnt time</IonNote>
+      )}
+      {formHasInvalidDates && (
+        <IonNote>Form has invalid dates</IonNote>
+      )}
 
       <div className="assignment-form-actions">
         <IonButton
