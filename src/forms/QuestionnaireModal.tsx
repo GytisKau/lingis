@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonButton,
   IonModal,
@@ -33,7 +33,7 @@ const INITIAL_DATA: FormData = {
   mentalEnergy: -1,
   emotional: -1,
   physical: -1,
-  sleepHours: 7,
+  sleepHours: -1,
   created_at: null,
 };
 
@@ -63,6 +63,36 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
 
   const users = useLiveQuery(() => db.users.toArray())
   const user = users !== undefined ? users[0] : undefined
+  const questionnaires = useLiveQuery(() => db.questionnaires.toArray(), []);
+  const getInitialSleepHours = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todaysQuestionnaires = (questionnaires ?? [])
+    .filter((q: any) => {
+      const date = new Date(q.created_at);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime() === today.getTime();
+    })
+    .sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+  if (todaysQuestionnaires.length > 0) {
+  return Math.round(Number(todaysQuestionnaires[0].sleep_quality));
+}
+
+ return Math.round(Number(user?.avg_sleep_hours ?? 7));
+};
+useEffect(() => {
+  if (!user || questionnaires === undefined) return;
+
+  setFormData((prev) => ({
+    ...prev,
+    sleepHours: getInitialSleepHours(),
+  }));
+}, [user, questionnaires]);
 
   const isFormValid = Object.entries(formData)
     .filter(([key]) => key !== "created_at")
@@ -122,14 +152,18 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
       setIsSaving(false);
     }
   };
+  const getInitialFormData = () => ({
+    ...INITIAL_DATA,
+    sleepHours: getInitialSleepHours(),
+  });
 
   const resetForm = () => {
-    setStep("questions");
-    setFormData(INITIAL_DATA);
-    setRecommendation(undefined);
+  setStep("questions");
+  setFormData(getInitialFormData());
+  setRecommendation(undefined);
 
-    onClosed?.()
-  };
+  onClosed?.();
+};
 
   return (
     <IonModal
