@@ -82,6 +82,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
               modal={modal}
               trigger="mental-test"
               onCalculated={handleQuestionaireCalculated}
+              assignmentId={id}
             />
           </div>
         </div>

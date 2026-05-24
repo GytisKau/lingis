@@ -24,8 +24,9 @@ import "./Tab2.css";
 import AssignmentCard from "../components/AssignmentCard";
 import TaskList from "../components/TaskList";
 import { Header } from "../components/Header";
+import { BREAK_TYPES } from "../data/breakSuggestions";
 
-type StatsView = "overview" | "assignments" | "history";
+type StatsView = "overview" | "assignments" | "history" | "habits";
 
 interface AssignmentStats {
   id: number;
@@ -64,6 +65,7 @@ type ActiveDateGroup = {
 };
 
 const SIX_DAYS_IN_MS = 6 * 24 * 60 * 60 * 1000;
+const MIN_DATA_POINTS_FOR_CHRONOTYPE = 2;
 
 const Tab2: React.FC = () => {
   const [view, setView] = useState<StatsView>("overview");
@@ -78,6 +80,7 @@ const Tab2: React.FC = () => {
   const subjects = useLiveQuery(() => db.subjects.toArray(), []);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []);
   const questionnaires = useLiveQuery(() => db.questionnaires.toArray(), []);
+  const breaks = useLiveQuery(() => db.breaks.toArray(), []);
 
   const closeAllSlidingItems = () => {
     slidingRefs.current.forEach((slidingItem) => {
@@ -209,7 +212,84 @@ const Tab2: React.FC = () => {
       longestMinutes,
     };
   }, [doneSessions]);
+  const breakEffectiveness = useMemo(() => {
+  if (!questionnaires?.length || !breaks?.length) return [];
 
+  const grouped = new Map<
+    number,
+    {
+      total: number;
+      count: number;
+    }
+  >();
+
+  questionnaires.forEach((q: any) => {
+    if (q.fk_break == null) return;
+
+    const linkedBreak = breaks.find(
+      (b: any) => b.id === q.fk_break
+    );
+
+    if (!linkedBreak) return;
+
+    const sleep = sleepHoursToScore(Number(q.sleep_quality));
+
+    const positive =
+      (
+        Number(q.motivation) +
+        Number(q.mental_energy) +
+        Number(q.emotional) +
+        Number(q.physical) +
+        sleep
+      ) / 5;
+
+    const fatigue =
+      (
+        Number(q.mental_tiredness) +
+        Number(q.physical_tiredness)
+      ) / 2;
+
+    const readiness =
+      ((positive - 1) / 4) * 70 +
+      ((5 - fatigue) / 4) * 30;
+
+    const existing = grouped.get(linkedBreak.break_type);
+
+    if (existing) {
+      existing.total += readiness;
+      existing.count += 1;
+    } else {
+      grouped.set(linkedBreak.break_type, {
+        total: readiness,
+        count: 1,
+      });
+    }
+  });
+
+  return Array.from(grouped.entries())
+    .map(([type, stats]) => ({
+      type,
+      score: Math.round(stats.total / stats.count),
+      samples: stats.count,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+}, [questionnaires, breaks]);
+  const averageBreakMinutes = useMemo(() => {
+        if (!breaks?.length) return 0;
+
+        const durations = breaks.map((breakItem: any) => {
+          const start = new Date(breakItem.start).getTime();
+          const end = new Date(breakItem.end).getTime();
+
+          return Math.max(0, Math.round((end - start) / 60000));
+        });
+
+        return Math.round(
+          durations.reduce((sum, value) => sum + value, 0) / durations.length
+        );
+      }, [breaks]);
+      
   const questionnaireTrend = useMemo<QuestionnairePoint[]>(() => {
     if (!questionnaires?.length) return [];
 
@@ -344,6 +424,31 @@ const Tab2: React.FC = () => {
     };
   }, [questionnaireTrend]);
 
+      const mostChosenBreakType = useMemo(() => {
+        if (!breaks?.length) return null;
+
+        const counts = breaks.reduce<Record<number, number>>((acc, item: any) => {
+          acc[item.break_type] = (acc[item.break_type] ?? 0) + 1;
+          return acc;
+        }, {});
+
+        const [type, count] = Object.entries(counts).sort(
+          (a, b) => Number(b[1]) - Number(a[1])
+        )[0];
+
+        return {
+          type: Number(type),
+          count,
+        };
+      }, [breaks]);
+
+    const getBreakTypeLabel = (type: number) => {
+        return (
+          BREAK_TYPES.find((breakType) => breakType.id === type)?.title ??
+          "Unknown break type"
+        );
+      };
+
   const active = stats.filter((item) => !item.isDone && !item.isDeleted);
   const completed = stats.filter((item) => item.isDone && !item.isDeleted);
   const deleted = stats.filter((item) => item.isDeleted);
@@ -401,6 +506,103 @@ const Tab2: React.FC = () => {
       return a.title.localeCompare(b.title);
     });
   }, [active]);
+  
+  const energyByTimeOfDay = useMemo(() => {
+  if (!questionnaires?.length) return [];
+
+  const grouped = new Map<
+    string,
+    {
+      label: string;
+      total: number;
+      count: number;
+      sortValue: number;
+    }
+  >();
+
+  questionnaires.forEach((row: any) => {
+    if (!row.created_at) return;
+
+    const date = new Date(row.created_at);
+
+    const mentalEnergy = Number(row.mental_energy);
+    const physicalEnergy = Number(row.physical);
+
+    if (Number.isNaN(mentalEnergy) || Number.isNaN(physicalEnergy)) return;
+
+    const energy = (mentalEnergy + physicalEnergy) / 2;
+
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const roundedMinutes = minutes < 30 ? 0 : 30;
+
+    const key = `${hours}:${roundedMinutes}`;
+
+    const label = `${String(hours).padStart(2, "0")}:${String(
+      roundedMinutes
+    ).padStart(2, "0")}`;
+
+    const sortValue = hours * 60 + roundedMinutes;
+
+    const existing = grouped.get(key);
+
+    if (existing) {
+      existing.total += energy;
+      existing.count += 1;
+    } else {
+      grouped.set(key, {
+        label,
+        total: energy,
+        count: 1,
+        sortValue,
+      });
+    }
+  });
+
+  return Array.from(grouped.values())
+    .map((group) => ({
+      label: group.label,
+      value: Number((group.total / group.count).toFixed(1)),
+    }))
+    .sort((a, b) => {
+      const [aHours, aMinutes] = a.label.split(":").map(Number);
+      const [bHours, bMinutes] = b.label.split(":").map(Number);
+
+      return aHours * 60 + aMinutes - (bHours * 60 + bMinutes);
+    });
+}, [questionnaires]);
+
+const estimatedChronotype = useMemo(() => {
+  if (energyByTimeOfDay.length < MIN_DATA_POINTS_FOR_CHRONOTYPE) return null;
+
+  const highestPoint = [...energyByTimeOfDay].sort(
+    (a, b) => b.value - a.value
+  )[0];
+
+  const [hours] = highestPoint.label.split(":").map(Number);
+
+  if (hours >= 5 && hours < 11) {
+    return {
+      type: "Morning type",
+      description: "You tend to feel most energetic earlier in the day.",
+      peak: highestPoint.label,
+    };
+  }
+
+  if (hours >= 11 && hours < 17) {
+    return {
+      type: "Intermediate type",
+      description: "Your energy appears strongest around midday or afternoon.",
+      peak: highestPoint.label,
+    };
+  }
+
+  return {
+    type: "Evening type",
+    description: "You tend to become more energetic later in the day.",
+    peak: highestPoint.label,
+  };
+}, [energyByTimeOfDay]);
 
   const nextWeekAssignments = useMemo(() => {
     const nextWeek = sortedActive.filter(
@@ -628,6 +830,7 @@ const Tab2: React.FC = () => {
     </div>
   );
 
+
   const renderHistoryCard = (item: AssignmentStats) => (
     <IonItemSliding
       key={`${item.isDeleted ? "deleted" : "done"}-${item.id}`}
@@ -686,7 +889,7 @@ const Tab2: React.FC = () => {
 
       <IonContent className="ion-padding stats-page" forceOverscroll={false}>
         <div className="top-tabs">
-          {(["overview", "assignments", "history"] as StatsView[]).map(
+          {(["overview", "assignments", "history", "habits"] as StatsView[]).map(
             (tabValue) => (
               <button
                 key={tabValue}
@@ -816,24 +1019,33 @@ const Tab2: React.FC = () => {
                       </strong>
                     </div>
                   </div>
+                
+                  {questionnaireTrend.length >= 3 ? (
+                    <>
+                      <div className="chart-wrap">
+                        <ReadinessTrendChart
+                          data={questionnaireTrend.slice(-7).map((point) => ({
+                            label: point.label,
+                            value: point.readiness,
+                          }))}
+                        />
+                      </div>
 
-                  <div className="chart-wrap">
-                    <MiniLineChart
-                      data={questionnaireTrend.map((point) => ({
-                        label: point.label,
-                        value: point.readiness,
-                      }))}
-                    />
-                  </div>
-
-                  <div className="chart-caption">
-                    Based on {questionnaireTrend.length} questionnaire day
-                    {questionnaireTrend.length !== 1 ? "s" : ""}
-                    {rhythmSummary.latest
-                      ? ` • Latest readiness ${rhythmSummary.latest.readiness}%`
-                      : ""}
-                  </div>
+                      <div className="chart-caption">
+                        Based on {questionnaireTrend.length} questionnaire day
+                        {questionnaireTrend.length !== 1 ? "s" : ""}
+                        {rhythmSummary.latest
+                          ? ` • Latest readiness ${rhythmSummary.latest.readiness}%`
+                          : ""}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="stats-empty-text">
+                      More questionnaire data needs to be collected to show the daily rhythm graph.
+                    </p>
+                  )}
                 </div>
+                
               </div>
             )}
           </>
@@ -933,10 +1145,295 @@ const Tab2: React.FC = () => {
             </section>
           </div>
         )}
+
+        {view === "habits" && (
+          
+          <div className="list">
+            <div className="section">
+
+              <h3> Chronotype habits </h3>
+                {energyByTimeOfDay.length >= MIN_DATA_POINTS_FOR_CHRONOTYPE && (
+                  <div className="section">
+                    <div className="chart-caption">
+                    <p> Energy by time of day graph:</p>
+                    </div>
+                    <div className="questionnaire-card">
+                      <div className="chart-wrap">
+                        <EnergyTimeChart data={energyByTimeOfDay} />
+                      </div>
+
+                      <div className="chart-caption">
+                        Based on average mental and physical energy from questionnaires.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <p className="chart-caption">
+                  {estimatedChronotype
+                    ? `Estimated chronotype: ${estimatedChronotype.type}. Peak energy around ${estimatedChronotype.peak}.`
+                    : "Estimated chronotype will be shown after collecting more questionnaire data."}
+                </p>
+                
+                <h3>Break habits </h3>
+
+                {mostChosenBreakType && mostChosenBreakType.count >= 3 ? (
+                  <div className="mini-info-card">
+                    <h4>{getBreakTypeLabel(mostChosenBreakType.type)}</h4>
+                    <p>
+                      Most often chosen break type · {mostChosenBreakType.count} time
+                      {mostChosenBreakType.count !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="chart-caption">
+                    Most chosen break type will be shown after collecting more break data.
+                  </p>
+                )}
+                
+                <p className="chart-caption">
+                  {breakEffectiveness.length
+                    ? `When you answer questionnaires after breaks, ${
+                        getBreakTypeLabel(breakEffectiveness[0].type)
+                      } is associated with your highest average readiness (${breakEffectiveness[0].score}%).`
+                    : "Effectiveness insights will appear after questionnaires are completed after breaks."}
+                </p>
+
+                {breaks && breaks.length >= 3 ? (
+                  <p className="chart-caption">
+                    Average break time based on {breaks.length} break
+                    {breaks.length !== 1 ? "s" : ""}: {formatMinutes(averageBreakMinutes)}
+                  </p>
+                ) : (
+                  <p className="chart-caption">
+                    Average break time will be shown after collecting more break data.
+                  </p>
+                )}
+
+                <h3>Study habits</h3>
+
+                  {doneSessions.length >= 3 ? (
+                    <p className="chart-caption">
+                      Average study time based on {doneSessions.length} completed session
+                      {doneSessions.length !== 1 ? "s" : ""}:{" "}
+                      {formatMinutes(sessionSummary.averageMinutes)}
+                    </p>
+                  ) : (
+                    <p className="chart-caption">
+                      Average study time will be shown after collecting more completed study sessions.
+                    </p>
+                  )}
+
+            </div>
+          </div>
+        )}
+              
       </IonContent>
     </IonPage>
   );
 };
+
+function EnergyTimeChart({
+  data,
+}: {
+  data: { label: string; value: number }[];
+}) {
+  if (!data.length) return null;
+
+  const width = 320;
+  const height = 160;
+  const paddingLeft = 70;
+  const paddingRight = 16;
+  const paddingTop = 12;
+  const paddingBottom = 28;
+
+  const max = 5;
+  const min = 1;
+
+  const points = data.map((item, index) => {
+    const x =
+      data.length === 1
+        ? width / 2
+        : paddingLeft +
+          (index / (data.length - 1)) *
+            (width - paddingLeft - paddingRight);
+
+    const y =
+      paddingTop +
+      ((max - item.value) / (max - min)) *
+        (height - paddingTop - paddingBottom);
+
+    return { x, y, ...item };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
+      <line
+        x1={paddingLeft}
+        y1={paddingTop}
+        x2={paddingLeft}
+        y2={height - paddingBottom}
+        className="chart-axis"
+      />
+
+      <line
+        x1={paddingLeft}
+        y1={height - paddingBottom}
+        x2={width - paddingRight}
+        y2={height - paddingBottom}
+        className="chart-axis"
+      />
+
+      {[1, 2, 3, 4, 5].map((tick) => {
+        const y =
+          paddingTop +
+          ((max - tick) / (max - min)) *
+            (height - paddingTop - paddingBottom);
+
+        return (
+          <g key={tick}>
+            <line
+              x1={paddingLeft}
+              y1={y}
+              x2={width - paddingRight}
+              y2={y}
+              className="chart-grid-line"
+            />
+            <text x={8} y={y + 4} className="chart-label">
+              {tick}
+            </text>
+          </g>
+        );
+      })}
+
+      <path d={linePath} className="chart-line" />
+
+      {points.map((point, index) => {
+  const shouldShowLabel =
+    index === 0 ||
+    index === points.length - 1 ||
+    index % Math.ceil(points.length / 4) === 0;
+
+  return (
+    <g key={index}>
+      <circle cx={point.x} cy={point.y} r="3" className="chart-point" />
+
+      {shouldShowLabel && (
+        <text
+          x={point.x}
+          y={height - 8}
+          textAnchor="middle"
+          className="chart-label"
+        >
+          {point.label}
+        </text>
+      )}
+    </g>
+  );
+})}
+    </svg>
+  );
+}
+
+function ReadinessTrendChart({
+  data,
+}: {
+  data: { label: string; value: number }[];
+}) {
+  if (!data.length) return null;
+
+  const width = 320;
+  const height = 160;
+  const paddingLeft = 48;
+  const paddingRight = 16;
+  const paddingTop = 12;
+  const paddingBottom = 28;
+
+  const max = 100;
+  const min = 0;
+
+  const points = data.map((item, index) => {
+    const x =
+      data.length === 1
+        ? width / 2
+        : paddingLeft +
+          (index / (data.length - 1)) *
+            (width - paddingLeft - paddingRight);
+
+    const y =
+      paddingTop +
+      ((max - item.value) / (max - min)) *
+        (height - paddingTop - paddingBottom);
+
+    return { x, y, ...item };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
+      <line
+        x1={paddingLeft}
+        y1={paddingTop}
+        x2={paddingLeft}
+        y2={height - paddingBottom}
+        className="chart-axis"
+      />
+
+      <line
+        x1={paddingLeft}
+        y1={height - paddingBottom}
+        x2={width - paddingRight}
+        y2={height - paddingBottom}
+        className="chart-axis"
+      />
+
+      {[0, 25, 50, 75, 100].map((tick) => {
+        const y =
+          paddingTop +
+          ((max - tick) / (max - min)) *
+            (height - paddingTop - paddingBottom);
+
+        return (
+          <g key={tick}>
+            <line
+              x1={paddingLeft}
+              y1={y}
+              x2={width - paddingRight}
+              y2={y}
+              className="chart-grid-line"
+            />
+            <text x={10} y={y + 4} className="chart-label">
+              {tick}
+            </text>
+          </g>
+        );
+      })}
+
+      <path d={linePath} className="chart-line" />
+
+      {points.map((point, index) => (
+        <g key={index}>
+          <circle cx={point.x} cy={point.y} r="3" className="chart-point" />
+          <text
+            x={point.x}
+            y={height - 8}
+            textAnchor="middle"
+            className="chart-label"
+          >
+            {point.label}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 function MiniLineChart({
   data,
@@ -1066,15 +1563,15 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function formatMinutes(minutes: number) {
-  if (!minutes || minutes <= 0) return "0m";
+  if (!minutes || minutes <= 0) return "0 min";
 
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
 
-  if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
-  if (hours > 0) return `${hours}h`;
+  if (hours > 0 && mins > 0) return `${hours} h ${mins} min`;
+  if (hours > 0) return `${hours} h`;
 
-  return `${mins}m`;
+  return `${mins} min`;
 }
 
 function getExpectedProgress(startDate: Date | null, dueDate: Date) {

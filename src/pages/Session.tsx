@@ -329,6 +329,7 @@ const Session: React.FC<SessionProps> = ({ match }) => {
           onCalculated={handleQuestionaireCalculated}
           onClosed={handleQuestionaireClosed}
           breakId={lastBreakId}
+          assignmentId={id}
         />
 
         {mode === 'study' && (

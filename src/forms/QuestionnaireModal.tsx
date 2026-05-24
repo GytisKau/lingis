@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonButton,
   IonModal,
@@ -33,7 +33,7 @@ const INITIAL_DATA: FormData = {
   mentalEnergy: -1,
   emotional: -1,
   physical: -1,
-  sleepHours: 7,
+  sleepHours: -1,
   created_at: null,
 };
 
@@ -53,16 +53,53 @@ interface Props {
   onClosed?: () => void;
   onCalculated?: (calculatedMinutes: number) => void;
   breakId?: number | null;
+  assignmentId: number;
 }
 
-const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalculated, breakId=null }) => {
-  const [step, setStep] = useState<"questions" | "result">("questions");
+const QuestionnaireModal: React.FC<Props> = ({
+  modal,
+  trigger,
+  onClosed,
+  onCalculated,
+  breakId = null,
+  assignmentId,
+}) => {  const [step, setStep] = useState<"questions" | "result">("questions");
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [recommendation, setRecommendation] = useState<number>();
 
   const users = useLiveQuery(() => db.users.toArray())
   const user = users !== undefined ? users[0] : undefined
+  const questionnaires = useLiveQuery(() => db.questionnaires.toArray(), []);
+  const getInitialSleepHours = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todaysQuestionnaires = (questionnaires ?? [])
+    .filter((q: any) => {
+      const date = new Date(q.created_at);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime() === today.getTime();
+    })
+    .sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+  if (todaysQuestionnaires.length > 0) {
+  return Math.round(Number(todaysQuestionnaires[0].sleep_quality));
+}
+
+ return Math.round(Number(user?.avg_sleep_hours ?? 7));
+};
+useEffect(() => {
+  if (!user || questionnaires === undefined) return;
+
+  setFormData((prev) => ({
+    ...prev,
+    sleepHours: getInitialSleepHours(),
+  }));
+}, [user, questionnaires]);
 
   const isFormValid = Object.entries(formData)
     .filter(([key]) => key !== "created_at")
@@ -71,6 +108,73 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
   const handleChange = (field: keyof FormData, value: number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+  const getRecommendationType = async (): Promise<"theory" | "practice"> => {
+  const PASSIVE_TYPE = 0;
+  const ACTIVE_TYPE = 1;
+  const TESTING_TYPE = 2;
+  const TOPIC_TYPE = -1;
+
+  const allTasks = await db.tasks
+    .where("fk_assignment")
+    .equals(assignmentId)
+    .toArray();
+
+  const sortedTasks = [...allTasks].sort(
+    (a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)
+  );
+
+  const childrenByParent = new Map<number, typeof allTasks>();
+
+  for (const task of sortedTasks) {
+    if (task.parent_task_id != null) {
+      const children = childrenByParent.get(task.parent_task_id) ?? [];
+      children.push(task);
+      childrenByParent.set(task.parent_task_id, children);
+    }
+  }
+
+  const isTopicTask = (task: typeof allTasks[number]) =>
+    task.task_type === TOPIC_TYPE && task.parent_task_id == null;
+
+  const isDoneForPriority = (task: typeof allTasks[number]) => {
+    if (!isTopicTask(task)) return task.is_done;
+
+    const children = childrenByParent.get(task.id) ?? [];
+
+    if (children.length === 0) return task.is_done;
+
+    return children.every((child) => child.is_done);
+  };
+
+  const priorityTopLevelTasks = sortedTasks
+    .filter((task) => task.parent_task_id == null)
+    .filter((task) => !isDoneForPriority(task))
+    .slice(0, 3);
+
+  const priorityTasks = priorityTopLevelTasks.flatMap((task) => {
+    if (!isTopicTask(task)) return [task];
+
+    return (childrenByParent.get(task.id) ?? []).filter(
+      (child) => !child.is_done
+    );
+  });
+
+  if (priorityTasks.length === 0) {
+    return "theory";
+  }
+
+  const passiveCount = priorityTasks.filter(
+    (task) => task.task_type === PASSIVE_TYPE
+  ).length;
+
+  const activeTestingCount = priorityTasks.filter(
+    (task) =>
+      task.task_type === ACTIVE_TYPE ||
+      task.task_type === TESTING_TYPE
+  ).length;
+
+  return activeTestingCount > passiveCount ? "practice" : "theory";
+};
 
   const handleConfirm = async () => {
     if (step === "result") {
@@ -112,7 +216,8 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
         effectiveness: user.effectiveness_rating,
       };
 
-      const result = await Recommendation(input, "practice");
+      const recommendationType = await getRecommendationType();
+      const result = await Recommendation(input, recommendationType);
       result.minutes && onCalculated?.(result.minutes)
       setRecommendation(result.minutes);
       setStep("result");
@@ -122,14 +227,18 @@ const QuestionnaireModal: React.FC<Props> = ({ modal, trigger, onClosed, onCalcu
       setIsSaving(false);
     }
   };
+  const getInitialFormData = () => ({
+    ...INITIAL_DATA,
+    sleepHours: getInitialSleepHours(),
+  });
 
   const resetForm = () => {
-    setStep("questions");
-    setFormData(INITIAL_DATA);
-    setRecommendation(undefined);
+  setStep("questions");
+  setFormData(getInitialFormData());
+  setRecommendation(undefined);
 
-    onClosed?.()
-  };
+  onClosed?.();
+};
 
   return (
     <IonModal
