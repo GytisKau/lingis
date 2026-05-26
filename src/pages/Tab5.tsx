@@ -32,6 +32,7 @@ import {
   timeOutline,
   trashOutline,
   lockOpenOutline,
+  bugOutline,
 } from "ionicons/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -684,7 +685,9 @@ const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
             </div>
 
             <h1>{profileName}</h1>
-            <p>{profileEmail || "No email found"}</p>
+            {!user!.isAnonymous && (
+              <p>{profileEmail || "No email found"}</p>
+            )}
           </section>
 
           {status && <div className="profile-status">{status}</div>}
@@ -697,12 +700,14 @@ const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
               onClick={() => usernameModal.current?.present()}
             />
 
-            <SettingsRow
-              icon={lockClosedOutline}
-              label="Change password"
-              value="Send reset email"
-              onClick={handlePasswordReset}
-            />
+            {!user!.isAnonymous && (
+              <SettingsRow
+                icon={lockClosedOutline}
+                label="Change password"
+                value="Send reset email"
+                onClick={handlePasswordReset}
+              />
+            )}
 
             <SettingsRow
               icon={logOutOutline}
@@ -815,6 +820,13 @@ const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
                   icon={chevronForwardOutline}
                 />
               </button>
+              <SettingsRow
+                icon={bugOutline}
+                label="Report issue"
+                onClick={ () =>
+                  window.open('https://docs.google.com/forms/d/e/1FAIpQLSeLBcSH6rOKcJUawoiYCgtiGRKXn4vbLr2ov2zEMUJEOyCbNw/viewform?usp=header', '_blank')
+                }
+              />
             </SettingsCard>
           </div>
 
