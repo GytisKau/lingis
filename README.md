@@ -65,11 +65,6 @@ firebase login
 firebase emulators:start --only auth
 ```
 
-Taip pat reikia atkomentuoti `src/utils/Firebase.ts` failo `24` eilutę:
-```ts
-connectAuthEmulator(auth, 'http://localhost:9099', {disableWarnings: true})
-```
-
 ## PWA informacija
 
 Projektas veikia kaip Progressive Web App (PWA). Ionic naudojamas tik vartotojo sąsajos komponentams.
