@@ -194,7 +194,7 @@ const LoginWizard: React.FC = () => {
   );
 
   const saveWizardUser = async (shouldValidateUsername: boolean) => {
-    if (!user?.email) {
+    if (!user) {
       setStatus("Firebase user error.");
       return false;
     }
@@ -213,7 +213,7 @@ const LoginWizard: React.FC = () => {
 
     const userData = {
       ...form,
-      email: user.email,
+      email: user.email ?? "",
       username: username || getFallbackUsername(user.email),
     };
 
@@ -223,7 +223,8 @@ const LoginWizard: React.FC = () => {
       await db.users.add(userData);
     }
 
-    updateAccount(username)
+    if (!user.isAnonymous)
+      updateAccount(username)
 
     return true;
   };

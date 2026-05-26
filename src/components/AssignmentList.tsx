@@ -32,8 +32,6 @@ type AssignmentWithMeta = Assignment & {
   totalCount: number;
   isDone: boolean;
   isOverdue: boolean;
-  isDeleted: boolean;
-  deleted_at?: Date | string | null;
 };
 
 type SortMode = "deadline" | "subject-deadline";
@@ -66,53 +64,50 @@ const AssignmentList: React.FC = () => {
   const [now] = useState(new Date());
 
   const assignments = useLiveQuery(async () => {
-  const asgns = await db.assignments.toArray();
-  const tasks = await db.tasks.toArray();
-  const subjects = await db.subjects.toArray();
-  const assignmentTypes = await db.assignment_types.toArray();
+    const asgns = await db.assignments.toArray();
+    const tasks = await db.tasks.toArray();
+    const subjects = await db.subjects.toArray();
+    const assignmentTypes = await db.assignment_types.toArray();
 
-  return asgns.map((assignment: any) => {
-    const assignmentTasks = tasks.filter(
-      (task) => task.fk_assignment === assignment.id
-    );
+    return asgns.map((assignment) => {
+      const assignmentTasks = tasks.filter(
+        (task) => task.fk_assignment === assignment.id
+      );
 
-    const completed = assignmentTasks.filter((task) => task.is_done).length;
+      const completed = assignmentTasks.filter((task) => task.is_done).length;
 
-    const subject = subjects.find(
-      (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
-    );
+      const subject = subjects.find(
+        (subjectItem) => subjectItem.id === Number(assignment.fk_subject)
+      );
 
-    const assignmentType = assignmentTypes.find(
-      (type) => type.id === Number(assignment.assignment_type)
-    );
+      const assignmentType = assignmentTypes.find(
+        (type) => type.id === Number(assignment.assignment_type)
+      );
 
-    const isDone = Boolean(assignment.is_done);
-    const isDeleted = Boolean(assignment.is_deleted || assignment.deleted_at);
+      const isDone = Boolean(assignment.is_done);
 
-    const isOverdue =
-      !isDone &&
-      !isDeleted &&
-      new Date(assignment.date).getTime() < new Date().getTime();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    return {
-      ...assignment,
-      subjectName: subject?.name ?? "",
-      subjectColor: subject?.color ?? "",
-      assignmentTypeName: assignmentType?.name ?? "No type",
-      assignmentTypeColor: getAssignmentTypeColor(assignment.assignment_type),
-      completedCount: completed,
-      totalCount: assignmentTasks.length,
-      isDone,
-      isOverdue,
-      isDeleted,
-      deleted_at: assignment.deleted_at ?? null,
-    } as AssignmentWithMeta;
-  });
-}, []);
+      const isOverdue = Math.ceil((assignment.date.getTime() - today.getTime()) / 86400000) < 1;
+
+      return {
+        ...assignment,
+        subjectName: subject?.name ?? "",
+        subjectColor: subject?.color ?? "",
+        assignmentTypeName: assignmentType?.name ?? "No type",
+        assignmentTypeColor: getAssignmentTypeColor(assignment.assignment_type),
+        completedCount: completed,
+        totalCount: assignmentTasks.length,
+        isDone,
+        isOverdue,
+      } as AssignmentWithMeta;
+    });
+  }, []);
 
   const visibleAssignments =
     assignments?.filter(
-      (assignment) => !assignment.isDone && !assignment.isDeleted
+      (assignment) => !assignment.isDone
     ) ?? [];
 
   const timeForAssignments =
@@ -469,7 +464,7 @@ const AssignmentList: React.FC = () => {
           )}
         </IonList>
       ) : (
-        <p className="centered-text">No active assignments.</p>
+        <p>No active assignments.</p>
       )}
 
       {overdueAssignments.length > 0 && (

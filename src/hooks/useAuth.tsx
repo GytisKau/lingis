@@ -8,7 +8,8 @@ import {
   User,
   sendPasswordResetEmail,
   deleteUser,
-  updateProfile
+  updateProfile,
+  signInAnonymously
 } from "firebase/auth"
 import { logEvent, setUserId } from "firebase/analytics";
 import { db } from "../db/db";
@@ -21,12 +22,14 @@ interface AuthError {
 interface AuthState {
   user: User | null
   loggedIn: boolean
+  isAnonymous: boolean
   wizardDone: boolean
   loginError: AuthError | null
   registerError: AuthError | null
   resetPasswordError: AuthError | null
   resetPassword: (email: string) => Promise<boolean>
   login: (email: string, password: string) => Promise<boolean>
+  guestLogin: () => Promise<boolean>
   register: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   updateAccount: (displayName: string) => Promise<boolean>
@@ -134,6 +137,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false
     }
   }
+
+  const guestLogin = async (): Promise<boolean> => {
+    setLoginError(null)
+
+    try {
+      await signInAnonymously(auth)
+
+      logEvent(analytics, "login", {
+        method: "anonymous"
+      })
+
+      return true
+    } catch (err: any) {
+      logEvent(analytics, "login_error", {
+        method: "anonymous",
+        error_code: err.code
+      })
+
+      switch (err.code) {
+        case "auth/operation-not-allowed":
+          setLoginError({
+            type: "other",
+            message: "Anonymous login is not enabled in Firebase."
+          })
+          break
+        case "auth/too-many-requests":
+          setLoginError({
+            type: "other",
+            message: "Too many attempts. Try again later."
+          })
+          break
+        default:
+          setLoginError({
+            type: "other",
+            message: "Error during anonymous login."
+          })
+      }
+
+      return false
+    }
+  }
+
   const register = async (email: string, password: string): Promise<boolean> => {
     setRegisterError(null)
 
@@ -243,6 +288,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearErrors = () => {
     setLoginError(null)
     setRegisterError(null)
+    setResetPasswordError(null)
   }
 
   if (loading) return null // arba loaderis
@@ -252,12 +298,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loggedIn: !!user,
+        isAnonymous: !!user?.isAnonymous,
         wizardDone,
         loginError,
         registerError,
         resetPasswordError,
         resetPassword,
         login,
+        guestLogin,
         register,
         logout,
         updateAccount,

@@ -684,7 +684,9 @@ const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
             </div>
 
             <h1>{profileName}</h1>
-            <p>{profileEmail || "No email found"}</p>
+            {!user!.isAnonymous && (
+              <p>{profileEmail || "No email found"}</p>
+            )}
           </section>
 
           {status && <div className="profile-status">{status}</div>}
@@ -697,12 +699,14 @@ const handleDeleteAssignmentType = async (assignmentTypeId?: number) => {
               onClick={() => usernameModal.current?.present()}
             />
 
-            <SettingsRow
-              icon={lockClosedOutline}
-              label="Change password"
-              value="Send reset email"
-              onClick={handlePasswordReset}
-            />
+            {!user!.isAnonymous && (
+              <SettingsRow
+                icon={lockClosedOutline}
+                label="Change password"
+                value="Send reset email"
+                onClick={handlePasswordReset}
+              />
+            )}
 
             <SettingsRow
               icon={logOutOutline}

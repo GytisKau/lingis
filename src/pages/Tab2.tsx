@@ -109,8 +109,8 @@ const Tab2: React.FC = () => {
   useEffect(() => {
     if (!assignments || !tasks || !subjects) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // const today = new Date();
+    // today.setHours(0, 0, 0, 0);
 
     const data: AssignmentStats[] = assignments.map((assignment: any) => {
       const assignmentTasks = tasks.filter(
@@ -126,8 +126,8 @@ const Tab2: React.FC = () => {
       const due = new Date(assignment.date);
       due.setHours(0, 0, 0, 0);
 
-      const daysUntilDue = Math.ceil(
-        (due.getTime() - today.getTime()) / 86400000
+      const daysUntilDue = Math.floor(
+        (due.getTime() - new Date().getTime()) / 86400000
       );
 
       const subject = subjects.find(
@@ -606,7 +606,7 @@ const estimatedChronotype = useMemo(() => {
 
   const nextWeekAssignments = useMemo(() => {
     const nextWeek = sortedActive.filter(
-      (item) => item.daysUntilDue >= 0 && item.daysUntilDue <= 7
+      (item) => item.daysUntilDue >= 1 && item.daysUntilDue <= 7
     );
 
     return nextWeek.length > 0 ? nextWeek : sortedActive.slice(0, 3);
@@ -801,7 +801,6 @@ const estimatedChronotype = useMemo(() => {
   const renderAssignmentCard = (
     item: AssignmentStats,
     extraLabel?: string,
-    statusPill?: React.ReactNode
   ) => (
     <div
       key={item.id}
@@ -811,18 +810,15 @@ const estimatedChronotype = useMemo(() => {
       <div className="stats-card-header">
         <div>
           <h3>{item.title}</h3>
-          <p>{extraLabel ?? getDueLabel(item)}</p>
         </div>
 
-        {statusPill ?? (
-          <span
-            className={`due-date-badge ${
-              item.daysUntilDue < 0 ? "overdue-badge" : ""
-            }`}
-          >
-            {item.daysUntilDue < 0 ? "Overdue" : `${item.daysUntilDue}d`}
-          </span>
-        )}
+        <span
+          className={`due-date-badge ${
+            item.daysUntilDue < 0 ? "overdue-badge" : ""
+          }`}
+        >
+          {item.daysUntilDue < 0 ? "Overdue" : `${getDueLabel(item)}`}
+        </span>
       </div>
 
       {renderProgress(item)}

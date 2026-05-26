@@ -8,6 +8,7 @@ import {
 import Login from "../components/Login"
 import Register from "../components/Register"
 import { useAuth } from "../hooks/useAuth"
+import GuestLoginButton from "../components/GuestLoginButton"
 
 const Welcome: React.FC = () => {
   const { clearErrors } = useAuth()
@@ -22,6 +23,7 @@ const Welcome: React.FC = () => {
           </IonText>
           <IonButton id="loginButton" expand="block">Login</IonButton>
           <IonButton id="registerButton" expand="block" fill="outline">Register</IonButton>
+          <GuestLoginButton />
         </div>
         <IonModal trigger="loginButton" initialBreakpoint={0.5} breakpoints={[0, 0.5, 0.9]} onIonModalDidDismiss={clearErrors}>
           <Login />
