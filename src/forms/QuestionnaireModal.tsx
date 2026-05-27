@@ -71,35 +71,36 @@ const QuestionnaireModal: React.FC<Props> = ({
   const users = useLiveQuery(() => db.users.toArray())
   const user = users !== undefined ? users[0] : undefined
   const questionnaires = useLiveQuery(() => db.questionnaires.toArray(), []);
+
   const getInitialSleepHours = () => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const todaysQuestionnaires = (questionnaires ?? [])
-    .filter((q: any) => {
-      const date = new Date(q.created_at);
-      date.setHours(0, 0, 0, 0);
-      return date.getTime() === today.getTime();
-    })
-    .sort(
-      (a: any, b: any) =>
+    const todaysQuestionnaires = (questionnaires ?? [])
+      .filter((q: any) => {
+        const date = new Date(q.created_at);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime() === today.getTime();
+      })
+      .sort((a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+      );
 
-  if (todaysQuestionnaires.length > 0) {
-  return Math.round(Number(todaysQuestionnaires[0].sleep_quality));
-}
+    if (todaysQuestionnaires.length > 0) {
+      return Math.round(Number(todaysQuestionnaires[0].sleep_quality));
+    }
 
- return Math.round(Number(user?.avg_sleep_hours ?? 7));
-};
-useEffect(() => {
-  if (!user || questionnaires === undefined) return;
+    return Math.round(Number(user?.avg_sleep_hours ?? 7));
+  };
 
-  setFormData((prev) => ({
-    ...prev,
-    sleepHours: getInitialSleepHours(),
-  }));
-}, [user, questionnaires]);
+  useEffect(() => {
+    if (!user || questionnaires === undefined) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      sleepHours: getInitialSleepHours(),
+    }));
+  }, [user, questionnaires]);
 
   const isFormValid = Object.entries(formData)
     .filter(([key]) => key !== "created_at")
@@ -108,73 +109,74 @@ useEffect(() => {
   const handleChange = (field: keyof FormData, value: number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
   const getRecommendationType = async (): Promise<"theory" | "practice"> => {
-  const PASSIVE_TYPE = 0;
-  const ACTIVE_TYPE = 1;
-  const TESTING_TYPE = 2;
-  const TOPIC_TYPE = -1;
+    const PASSIVE_TYPE = 0;
+    const ACTIVE_TYPE = 1;
+    const TESTING_TYPE = 2;
+    const TOPIC_TYPE = -1;
 
-  const allTasks = await db.tasks
-    .where("fk_assignment")
-    .equals(assignmentId)
-    .toArray();
+    const allTasks = await db.tasks
+      .where("fk_assignment")
+      .equals(assignmentId)
+      .toArray();
 
-  const sortedTasks = [...allTasks].sort(
-    (a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)
-  );
-
-  const childrenByParent = new Map<number, typeof allTasks>();
-
-  for (const task of sortedTasks) {
-    if (task.parent_task_id != null) {
-      const children = childrenByParent.get(task.parent_task_id) ?? [];
-      children.push(task);
-      childrenByParent.set(task.parent_task_id, children);
-    }
-  }
-
-  const isTopicTask = (task: typeof allTasks[number]) =>
-    task.task_type === TOPIC_TYPE && task.parent_task_id == null;
-
-  const isDoneForPriority = (task: typeof allTasks[number]) => {
-    if (!isTopicTask(task)) return task.is_done;
-
-    const children = childrenByParent.get(task.id) ?? [];
-
-    if (children.length === 0) return task.is_done;
-
-    return children.every((child) => child.is_done);
-  };
-
-  const priorityTopLevelTasks = sortedTasks
-    .filter((task) => task.parent_task_id == null)
-    .filter((task) => !isDoneForPriority(task))
-    .slice(0, 3);
-
-  const priorityTasks = priorityTopLevelTasks.flatMap((task) => {
-    if (!isTopicTask(task)) return [task];
-
-    return (childrenByParent.get(task.id) ?? []).filter(
-      (child) => !child.is_done
+    const sortedTasks = [...allTasks].sort(
+      (a, b) => (a.toggle_order ?? 0) - (b.toggle_order ?? 0)
     );
-  });
 
-  if (priorityTasks.length === 0) {
-    return "theory";
-  }
+    const childrenByParent = new Map<number, typeof allTasks>();
 
-  const passiveCount = priorityTasks.filter(
-    (task) => task.task_type === PASSIVE_TYPE
-  ).length;
+    for (const task of sortedTasks) {
+      if (task.parent_task_id != null) {
+        const children = childrenByParent.get(task.parent_task_id) ?? [];
+        children.push(task);
+        childrenByParent.set(task.parent_task_id, children);
+      }
+    }
 
-  const activeTestingCount = priorityTasks.filter(
-    (task) =>
-      task.task_type === ACTIVE_TYPE ||
-      task.task_type === TESTING_TYPE
-  ).length;
+    const isTopicTask = (task: typeof allTasks[number]) =>
+      task.task_type === TOPIC_TYPE && task.parent_task_id == null;
 
-  return activeTestingCount > passiveCount ? "practice" : "theory";
-};
+    const isDoneForPriority = (task: typeof allTasks[number]) => {
+      if (!isTopicTask(task)) return task.is_done;
+
+      const children = childrenByParent.get(task.id) ?? [];
+
+      if (children.length === 0) return task.is_done;
+
+      return children.every((child) => child.is_done);
+    };
+
+    const priorityTopLevelTasks = sortedTasks
+      .filter((task) => task.parent_task_id == null)
+      .filter((task) => !isDoneForPriority(task))
+      .slice(0, 3);
+
+    const priorityTasks = priorityTopLevelTasks.flatMap((task) => {
+      if (!isTopicTask(task)) return [task];
+
+      return (childrenByParent.get(task.id) ?? []).filter(
+        (child) => !child.is_done
+      );
+    });
+
+    if (priorityTasks.length === 0) {
+      return "theory";
+    }
+
+    const passiveCount = priorityTasks.filter(
+      (task) => task.task_type === PASSIVE_TYPE
+    ).length;
+
+    const activeTestingCount = priorityTasks.filter(
+      (task) =>
+        task.task_type === ACTIVE_TYPE ||
+        task.task_type === TESTING_TYPE
+    ).length;
+
+    return activeTestingCount > passiveCount ? "practice" : "theory";
+  };
 
   const handleConfirm = async () => {
     if (step === "result") {
@@ -227,18 +229,19 @@ useEffect(() => {
       setIsSaving(false);
     }
   };
+
   const getInitialFormData = () => ({
     ...INITIAL_DATA,
     sleepHours: getInitialSleepHours(),
   });
 
   const resetForm = () => {
-  setStep("questions");
-  setFormData(getInitialFormData());
-  setRecommendation(undefined);
+    setStep("questions");
+    setFormData(getInitialFormData());
+    setRecommendation(undefined);
 
-  onClosed?.();
-};
+    onClosed?.();
+  };
 
   return (
     <IonModal
@@ -318,14 +321,9 @@ useEffect(() => {
               disabled={!isFormValid || isSaving}
               onClick={handleConfirm}
             >
-              Confirm
+              {isSaving ? "Calculating..." : "Confirm"}
             </IonButton>
           </div>
-        ) : recommendation === undefined ? (
-          <IonText className="ion-text-center result-text">
-            <p>Calculating session time</p>
-            <IonSpinner />
-          </IonText>
         ) : (
           <div className="result-wrap">
             <IonText className="ion-text-center result-text">

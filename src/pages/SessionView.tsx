@@ -35,7 +35,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
     history.push(`/tabs/tab3/session/${id}`)
   }
 
-  const handleQuestionaireCalculated = (calculatedMinutes: number) => {
+  const handleQuestionnaireCalculated = (calculatedMinutes: number) => {
     setStudyTime(calculatedMinutes * 60)
   }
 
@@ -81,7 +81,7 @@ const SessionView: React.FC<AssignmentViewProps> = ({ match }) => {
             <QuestionnaireModal
               modal={modal}
               trigger="mental-test"
-              onCalculated={handleQuestionaireCalculated}
+              onCalculated={handleQuestionnaireCalculated}
               assignmentId={id}
             />
           </div>
