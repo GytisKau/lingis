@@ -288,11 +288,11 @@ const Session: React.FC<SessionProps> = ({ match }) => {
     modal.current?.present();
   };
 
-  const handleQuestionaireCalculated = (calculatedMinutes: number) => {
+  const handleQuestionnaireCalculated = (calculatedMinutes: number) => {
     setStudyTime(calculatedMinutes * 60);
   };
 
-  const handleQuestionaireClosed = () => {
+  const handleQuestionnaireClosed = () => {
     setLastBreakId(null);
     switchToStudy(id);
   };
@@ -326,8 +326,8 @@ const Session: React.FC<SessionProps> = ({ match }) => {
 
         <QuestionnaireModal
           modal={modal}
-          onCalculated={handleQuestionaireCalculated}
-          onClosed={handleQuestionaireClosed}
+          onCalculated={handleQuestionnaireCalculated}
+          onClosed={handleQuestionnaireClosed}
           breakId={lastBreakId}
           assignmentId={id}
         />
