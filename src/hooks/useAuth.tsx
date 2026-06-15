@@ -13,6 +13,7 @@ import {
 } from "firebase/auth"
 import { logEvent, setUserId } from "firebase/analytics";
 import { db } from "../db/db";
+import { seedGuestDatabaseOnce } from "../db/seedGuestData"
 
 interface AuthError {
   type: "email" | "password" | "other";
@@ -142,7 +143,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoginError(null)
 
     try {
-      await signInAnonymously(auth)
+      const res = await signInAnonymously(auth)
+
+      try {
+        await seedGuestDatabaseOnce(res.user.uid)
+
+        logEvent(analytics, "guest_seed_success", {
+          user_id: res.user.uid
+        })
+      } catch (seedErr: any) {
+        console.error("Failed to seed guest database:", seedErr)
+
+        logEvent(analytics, "guest_seed_error", {
+          error_message: seedErr?.message ?? "Unknown seed error"
+        })
+      }
 
       logEvent(analytics, "login", {
         method: "anonymous"

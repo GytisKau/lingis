@@ -35,6 +35,7 @@ interface Questionnaire {
   physical: number;
   sleep_quality: number;
   created_at: Date;
+  fk_user?: number | null;
   fk_break?: number | null;
 }
 
@@ -103,7 +104,7 @@ const db = new Dexie("LingisDatabase") as Dexie & {
 
 db.version(1).stores({
   users: "++id",
-  questionnaires: "++id, fk_user",
+  questionnaires: "++id, fk_user, fk_break",
   events: "++id",
   assignments: "++id, fk_subject",
   sessions: "++id, fk_assignment",
